@@ -39,13 +39,6 @@ class _MenuViewState extends ConsumerState {
   @override
   void initState() {
     super.initState();
-
-    // scrollController.addListener(() {
-    //   if ((scrollController.position.pixels + 400) >=
-    //       scrollController.position.maxScrollExtent) {
-    //     ref.read(menuProvider.notifier).loadNextPage();
-    //   }
-    // });
   }
 
   @override

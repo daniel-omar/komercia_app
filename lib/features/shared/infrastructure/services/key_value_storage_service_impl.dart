@@ -14,10 +14,8 @@ class KeyValueStorageServiceImpl extends KeyValueStorageService {
     switch (T) {
       case int:
         return prefs.getInt(key) as T?;
-
       case String:
         return prefs.getString(key) as T?;
-
       default:
         throw UnimplementedError(
             'GET not implemented for type ${T.runtimeType}');
@@ -38,11 +36,9 @@ class KeyValueStorageServiceImpl extends KeyValueStorageService {
       case int:
         prefs.setInt(key, value as int);
         break;
-
       case String:
         prefs.setString(key, value as String);
         break;
-
       default:
         throw UnimplementedError(
             'Set not implemented for type ${T.runtimeType}');
