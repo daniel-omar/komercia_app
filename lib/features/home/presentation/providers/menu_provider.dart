@@ -7,42 +7,43 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'menu_repository_provider.dart';
 
-final menuProvider = StateNotifierProvider<MenuNotifier, MenuState>((ref) {
+final menusProvider = StateNotifierProvider<MenusNotifier, MenusState>((ref) {
   final menuRepository = ref.watch(menuRepositoryProvider);
   final goRouterNotifier = ref.read(goRouterNotifierProvider);
 
-  return MenuNotifier(
+  return MenusNotifier(
       menuRepository: menuRepository, user: goRouterNotifier.user);
 });
 
-class MenuNotifier extends StateNotifier<MenuState> {
+class MenusNotifier extends StateNotifier<MenusState> {
   final MenuRepository menuRepository;
   final User user;
 
-  MenuNotifier({
+  MenusNotifier({
     required this.menuRepository,
     required this.user,
-  }) : super(MenuState()) {
-    loadNextPage();
+  }) : super(MenusState()) {
+    loadMenus();
   }
 
-  Future loadNextPage() async {
-    if (state.isLoading || state.isLastPage) return;
+  Future loadMenus() async {
+    if (state.isLoading) return;
 
     state = state.copyWith(isLoading: true);
 
     final menus = await menuRepository.getMenusByUser(user.idUsuario!);
+    final menusTabBar = await menuRepository.getMenusTabBarByUser(user);
+    final menusSideBar = await menuRepository.getMenusSideBarByUser(user);
 
     if (menus.isEmpty) {
-      state = state.copyWith(isLoading: false, isLastPage: true);
+      state = state.copyWith(isLoading: false);
       return;
     }
-
     state = state.copyWith(
-        isLastPage: false,
         isLoading: false,
-        offset: state.offset + 10,
-        menus: [...state.menus, ...menus]);
+        menus: [...state.menus, ...menus],
+        menusTabBar: [...state.menusTabBar, ...menusTabBar],
+        menusSideBar: [...state.menusSideBar, ...menusSideBar]);
   }
 
   Future getMenus() async {
@@ -51,58 +52,52 @@ class MenuNotifier extends StateNotifier<MenuState> {
     state = state.copyWith(isLoading: true);
 
     final menus = await menuRepository.getMenusByUser(1);
-
+    final menusTabBar = await menuRepository.getMenusTabBarByUser(user);
+    final menusSideBar = await menuRepository.getMenusSideBarByUser(user);
+    
     if (menus.isEmpty) {
-      state = state.copyWith(isLoading: false, isLastPage: true);
+      state = state.copyWith(isLoading: false);
       return;
     }
 
     state = state.copyWith(
-        isLastPage: false,
         isLoading: false,
-        offset: state.offset + 10,
-        menus: [...state.menus, ...menus]);
+        menus: [...state.menus, ...menus],
+        menusTabBar: [...state.menusTabBar, ...menusTabBar],
+        menusSideBar: [...state.menusSideBar, ...menusSideBar]);
   }
 
   Future setMenu(Menu menu) async {
-    state = state.copyWith(
-        isLastPage: false,
-        isLoading: false,
-        offset: state.offset,
-        menus: [...state.menus],
-        menu: menu);
+    state =
+        state.copyWith(isLoading: false, menus: [...state.menus], menu: menu);
   }
 }
 
-class MenuState {
-  final bool isLastPage;
-  final int limit;
-  final int offset;
+class MenusState {
   final bool isLoading;
   final List<Menu> menus;
+  final List<Menu> menusSideBar;
+  final List<Menu> menusTabBar;
   final Menu? menu;
 
-  MenuState(
-      {this.isLastPage = false,
-      this.limit = 10,
-      this.offset = 0,
-      this.isLoading = false,
+  MenusState(
+      {this.isLoading = false,
       this.menus = const [],
+      this.menusSideBar = const [],
+      this.menusTabBar = const [],
       this.menu});
 
-  MenuState copyWith(
-          {bool? isLastPage,
-          int? limit,
-          int? offset,
-          bool? isLoading,
+  MenusState copyWith(
+          {bool? isLoading,
           List<Menu>? menus,
+          List<Menu>? menusSideBar,
+          List<Menu>? menusTabBar,
           Menu? menu}) =>
-      MenuState(
-        isLastPage: isLastPage ?? this.isLastPage,
-        limit: limit ?? this.limit,
-        offset: offset ?? this.offset,
+      MenusState(
         isLoading: isLoading ?? this.isLoading,
         menus: menus ?? this.menus,
+        menusSideBar: menusSideBar ?? this.menusSideBar,
+        menusTabBar: menusTabBar ?? this.menusTabBar,
         menu: menu ?? this.menu,
       );
 }

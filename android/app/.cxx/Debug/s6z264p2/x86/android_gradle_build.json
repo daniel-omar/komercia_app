@@ -4,14 +4,14 @@
   ],
   "cleanCommandsComponents": [
     [
-      "C:\\Users\\USUARIO\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "C:\\Users\\USUARIO\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
       "-C",
       "D:\\APRENDIZAJE\\PROYECTOS\\KathyGirl\\komercia_app\\android\\app\\.cxx\\Debug\\s6z264p2\\x86",
       "clean"
     ]
   ],
   "buildTargetsCommandComponents": [
-    "C:\\Users\\USUARIO\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "C:\\Users\\USUARIO\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
     "-C",
     "D:\\APRENDIZAJE\\PROYECTOS\\KathyGirl\\komercia_app\\android\\app\\.cxx\\Debug\\s6z264p2\\x86",
     "{LIST_OF_TARGETS_TO_BUILD}"

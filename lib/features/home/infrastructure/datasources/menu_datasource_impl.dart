@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:komercia_app/config/config.dart';
+import 'package:komercia_app/features/auth/domain/entities/user.dart';
 import 'package:komercia_app/features/home/domain/domain.dart';
 import 'package:komercia_app/features/shared/infrastructure/providers/dio_client.dart';
 import 'package:flutter/material.dart';
@@ -30,35 +31,87 @@ class MenuDatasourceImpl extends MenuDatasource {
   Future<List<Menu>> getMenusByUser(int idUsuario) async {
     await Future.delayed(const Duration(milliseconds: 100));
 
-    //final response = await dioClient.dio.get<List>('/permisos/$idUsuario');
+    final List<Menu> menus = [];
+    menus.addAll([
+      Menu(
+          idMenu: 2,
+          codigoMenu: "0002",
+          nombreMenu: "Registrar venta",
+          descripcionMenu: "Registrar venta",
+          rutaMenu: "/new_sale",
+          icono: Icons.analytics_rounded),
+      Menu(
+          idMenu: 3,
+          codigoMenu: "0003",
+          nombreMenu: "Inventario",
+          descripcionMenu: "Inventario",
+          rutaMenu: "/products",
+          icono: Icons.image_search_rounded)
+    ]);
+
+    return menus;
+  }
+
+  @override
+  Future<List<Menu>> getMenusTabBarByUser(User user) async {
+    await Future.delayed(const Duration(milliseconds: 100));
+
     final List<Menu> menus = [];
     menus.addAll([
       Menu(
           idMenu: 1,
           codigoMenu: "0001",
-          nombreMenu: "Materiales",
-          descripcionMenu: "Materiales técnico",
-          rutaMenu: "/materials",
-          icono: Icons.image_search_rounded),
+          nombreMenu: "Inicio",
+          descripcionMenu: "Inicio",
+          rutaMenu: "/",
+          icono: Icons.home),
       Menu(
           idMenu: 2,
           codigoMenu: "0002",
-          nombreMenu: "Ordenes",
-          descripcionMenu: "Ordenes",
-          rutaMenu: "/orders",
+          nombreMenu: "Ventas",
+          descripcionMenu: "Ventas",
+          rutaMenu: "/sales",
           icono: Icons.warehouse_rounded),
-      // Menu(
-      //     idMenu: 3,
-      //     codigoMenu: "0003",
-      //     nombreMenu: "Materiales",
-      //     descripcionMenu: "Materiales técnico",
-      //     rutaMenu: "/materials",
-      //     icono: Icons.warehouse_outlined),
+      Menu(
+          idMenu: 3,
+          codigoMenu: "0003",
+          nombreMenu: "Inventario",
+          descripcionMenu: "Inventario",
+          rutaMenu: "/products",
+          icono: Icons.image_search_rounded)
     ]);
-    // for (final product in response.data ?? []) {
-    //   products.add(MenuMapper.jsonToEntity(product));
-    // }
 
+    return menus;
+  }
+
+  @override
+  Future<List<Menu>> getMenusSideBarByUser(User user) async {
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    final List<Menu> menus = [];
+    menus.addAll([
+      Menu(
+          idMenu: 1,
+          codigoMenu: "0001",
+          nombreMenu: "Inicio",
+          descripcionMenu: "Inicio",
+          rutaMenu: "/",
+          icono: Icons.home),
+      Menu(
+          idMenu: 2,
+          codigoMenu: "0002",
+          nombreMenu: "Ventas",
+          descripcionMenu: "Ventas",
+          rutaMenu: "/sales",
+          icono: Icons.warehouse_rounded),
+      Menu(
+          idMenu: 3,
+          codigoMenu: "0003",
+          nombreMenu: "Inventario",
+          descripcionMenu: "Inventario",
+          rutaMenu: "/products",
+          icono: Icons.image_search_rounded)
+    ]);
     return menus;
   }
 }

@@ -1,0 +1,1 @@
+export 'new_sale_screen.dart';

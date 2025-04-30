@@ -1,6 +1,5 @@
 import 'package:komercia_app/features/home/domain/domain.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class MenuCard extends StatelessWidget {
   final Menu menu;
@@ -12,12 +11,6 @@ class MenuCard extends StatelessWidget {
     return Material(
       // color: Colors.amber,
       child: InkWell(
-        onTap: () {
-          //  Navigator.of(context).pop(true);
-          //Navigator.of(context).pushNamed(menu.rutaMenu);
-
-          context.push(menu.rutaMenu);
-        },
         borderRadius: BorderRadius.circular(20),
         child: Ink(
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),

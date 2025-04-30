@@ -1,3 +1,5 @@
+import 'package:go_router/go_router.dart';
+import 'package:komercia_app/config/router/app_router.dart';
 import 'package:komercia_app/features/home/presentation/providers/providers.dart';
 import 'package:komercia_app/features/home/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -11,29 +13,19 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scaffoldKey = GlobalKey<ScaffoldState>();
-
-    return Scaffold(
-      drawer: SideMenu(scaffoldKey: scaffoldKey),
-      appBar: AppBar(
-        title: const Text('Home'),
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.search_rounded))
-        ],
-      ),
-      body: const _MenuView(),
-    );
+    return const _MenuHome();
   }
 }
 
-class _MenuView extends ConsumerStatefulWidget {
-  const _MenuView();
+class _MenuHome extends ConsumerStatefulWidget {
+  const _MenuHome();
 
   @override
-  _MenuViewState createState() => _MenuViewState();
+  _MenuHomeState createState() => _MenuHomeState();
 }
 
-class _MenuViewState extends ConsumerState {
+class _MenuHomeState extends ConsumerState<_MenuHome>
+    with SingleTickerProviderStateMixin {
   final ScrollController scrollController = ScrollController();
 
   @override
@@ -49,7 +41,7 @@ class _MenuViewState extends ConsumerState {
 
   @override
   Widget build(BuildContext context) {
-    final menuState = ref.watch(menuProvider);
+    final menuState = ref.watch(menusProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -64,25 +56,13 @@ class _MenuViewState extends ConsumerState {
         itemBuilder: (context, index) {
           final menu = menuState.menus[index];
           return GestureDetector(
-              onTap: () => ref.read(menuProvider.notifier).setMenu(menu),
+              onTap: () {
+                ref.read(menusProvider.notifier).setMenu(menu);
+                context.push(menu.rutaMenu);
+              },
               child: MenuCard(menu: menu));
         },
       ),
     );
   }
-
-  // _crearListado() {
-  //   return GridView.builder(
-  //     itemCount: pages.length,
-  //     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-  //         crossAxisCount: 2,
-  //         childAspectRatio: MediaQuery.of(context).size.width /
-  //             (MediaQuery.of(context).size.height / 2),
-  //         crossAxisSpacing: 30,
-  //         mainAxisSpacing: 30),
-  //     itemBuilder: (context, index) {
-  //       return _crearItem(context, pages[index]);
-  //     },
-  //   );
-  // }
 }

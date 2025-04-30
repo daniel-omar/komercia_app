@@ -28,7 +28,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
     final hasNotch = MediaQuery.of(context).viewPadding.top > 35;
     final textStyles = Theme.of(context).textTheme;
     final goRouterNotifier = ref.read(goRouterNotifierProvider);
-    final menuState = ref.watch(menuProvider);
+    final menuState = ref.watch(menusProvider);
 
     return NavigationDrawer(
         elevation: 1,
@@ -39,7 +39,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
           });
 
           if (navDrawerIndex == 0) {
-            ref.read(menuProvider.notifier).setMenu(Menu(
+            ref.read(menusProvider.notifier).setMenu(Menu(
                 idMenu: 0,
                 codigoMenu: "",
                 nombreMenu: "",
@@ -49,7 +49,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
             context.push("/");
           } else {
             final menuItem = menuState.menus[navDrawerIndex - 1];
-            ref.read(menuProvider.notifier).setMenu(menuItem);
+            ref.read(menusProvider.notifier).setMenu(menuItem);
             context.push(menuItem.rutaMenu);
           }
           widget.scaffoldKey.currentState?.closeDrawer();
