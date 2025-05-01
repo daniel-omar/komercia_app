@@ -1,40 +1,30 @@
 import 'package:flutter/material.dart';
 
-class CustomProductField extends StatelessWidget {
+class CustomIncrementProductField extends StatelessWidget {
   final bool isTopField; // La idea es que tenga bordes redondeados arriba
   final bool isBottomField; // La idea es que tenga bordes redondeados abajo
   final bool obscureText;
   final String initialValue;
-  final Function(String)? onChanged;
-  final bool? readOnly;
-  final String? label;
-  final String? hint;
-  final double? width;
+  final Function()? onDecrement;
+  final Function()? onIncrement;
   final TextEditingController? textEditingController;
-  final IconData? iconData;
+  final bool? readOnly;
+  final double? width;
 
-  const CustomProductField(
+  const CustomIncrementProductField(
       {super.key,
       this.isTopField = false,
       this.isBottomField = false,
-      this.label,
-      this.hint,
       this.obscureText = false,
       this.initialValue = '',
-      this.onChanged,
+      this.onDecrement,
+      this.onIncrement,
       this.readOnly = false,
       this.width,
-      this.textEditingController,
-      this.iconData});
+      this.textEditingController});
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    final border = OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.transparent),
-        borderRadius: BorderRadius.circular(40));
-
     const borderRadius = Radius.circular(15);
 
     return Container(
@@ -64,47 +54,50 @@ class CustomProductField extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(iconData),
-            onPressed: () => {},
+            icon: const Icon(Icons.remove),
+            onPressed: onDecrement,
             visualDensity: VisualDensity.compact,
-            color: Colors.black,
+            color: Colors.white,
             style: ButtonStyle(
-              // backgroundColor: WidgetStateProperty.all<Color>(Colors.black),
+              backgroundColor: WidgetStateProperty.all<Color>(Colors.black),
               padding:
                   WidgetStateProperty.all<EdgeInsets>(const EdgeInsets.all(1)),
             ),
-          ),
-          const SizedBox(
-            width: 25,
-            child: Text(
-              "S/",
-              style: TextStyle(
-                  fontSize: 17,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold),
+            constraints: const BoxConstraints(
+              minWidth: 36, // Ancho mínimo
+              minHeight: 36, // Alto mínimo
             ),
           ),
           SizedBox(
-            width: width != null ? width! / 2 : 75,
-            child: TextFormField(
+            width: width != null ? width! / 2 : 50,
+            child: TextField(
               controller: textEditingController,
-              readOnly: readOnly!,
-              onChanged: onChanged,
-              obscureText: obscureText,
               keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                   fontSize: 17,
                   color: Colors.black54,
                   fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-              // initialValue: initialValue,
-              decoration: InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  hintText: hint,
-                  focusColor: colors.primary
-                  // icon: Icon( Icons.supervised_user_circle_outlined, color: colors.primary, )
-                  ),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 8),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: onIncrement,
+            visualDensity: VisualDensity.compact,
+            color: Colors.white,
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.all<Color>(Colors.black),
+              padding:
+                  WidgetStateProperty.all<EdgeInsets>(const EdgeInsets.all(1)),
+            ),
+            constraints: const BoxConstraints(
+              minWidth: 36, // Ancho mínimo
+              minHeight: 36, // Alto mínimo
             ),
           ),
         ],

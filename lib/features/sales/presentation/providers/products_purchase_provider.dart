@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
-import 'package:komercia_app/features/sales/presentation/providers/product_repository_provider.dart';
 
 final productsPurchaseProvider =
     StateNotifierProvider<ProductsNotifier, List<ProductPurchaseState>>((ref) {
@@ -14,7 +13,9 @@ class ProductsNotifier extends StateNotifier<List<ProductPurchaseState>> {
     final productPurchaseState = ProductPurchaseState(
         idProducto: producto.idProducto,
         producto: producto,
-        idCategoria: producto.idCategoria);
+        idCategoria: producto.idCategoria,
+        precio: producto.precio,
+        cantidad: 1);
 
     state = [...state, productPurchaseState];
   }
@@ -28,7 +29,7 @@ class ProductsNotifier extends StateNotifier<List<ProductPurchaseState>> {
               precio: precio ?? item.precio,
               cantidad: cantidad ?? item.cantidad,
               idTalla: idTalla ?? item.idTalla,
-              idColor: cantidad ?? item.idColor)
+              idColor: idColor ?? item.idColor)
         else
           item,
     ];
@@ -53,6 +54,7 @@ class ProductPurchaseState {
   final int cantidad;
   final bool isLoading;
   final bool isSaving;
+  final double? total;
 
   ProductPurchaseState(
       {this.isLoading = true,
@@ -63,7 +65,8 @@ class ProductPurchaseState {
       this.idCategoria = 0,
       this.idTalla = 0,
       this.idColor = 0,
-      this.cantidad = 0});
+      this.cantidad = 0,
+      this.total = 0});
 
   ProductPurchaseState copyWith(
           {bool? isLoading,
@@ -74,7 +77,8 @@ class ProductPurchaseState {
           int? idCategoria,
           int? idTalla,
           int? idColor,
-          int? cantidad}) =>
+          int? cantidad,
+          double? total}) =>
       ProductPurchaseState(
           isLoading: isLoading ?? this.isLoading,
           isSaving: isSaving ?? this.isSaving,
@@ -84,5 +88,6 @@ class ProductPurchaseState {
           idCategoria: idCategoria ?? this.idCategoria,
           idTalla: idTalla ?? this.idTalla,
           idColor: idColor ?? this.idColor,
-          cantidad: cantidad ?? this.cantidad);
+          cantidad: cantidad ?? this.cantidad,
+          total: total ?? this.total);
 }

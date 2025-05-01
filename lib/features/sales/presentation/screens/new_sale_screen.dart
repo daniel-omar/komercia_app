@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:komercia_app/features/sales/presentation/providers/product_colors_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_provider.dart';
-import 'package:komercia_app/features/sales/presentation/providers/products_provider.dart';
+import 'package:komercia_app/features/sales/presentation/providers/product_sizes_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/products_purchase_provider.dart';
 import 'package:komercia_app/features/sales/presentation/widgets/product_purchase_card.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
@@ -139,89 +139,40 @@ class __ProductsPurcharseState extends ConsumerState {
   @override
   Widget build(BuildContext context) {
     final productsPurchaseState = ref.watch(productsPurchaseProvider);
+    final productColorsState = ref.watch(productColorsProvider);
+    final productSizesState = ref.watch(productSizesProvider);
 
-    return Padding( 
+    final hasColors = productColorsState.productColors != null &&
+        productColorsState.productColors!.isNotEmpty;
+    final hasSizes = productSizesState.productSizes != null &&
+        productSizesState.productSizes!.isNotEmpty;
+
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: MasonryGridView.count(
+      child: ListView.builder(
         controller: scrollController,
         physics: const BouncingScrollPhysics(),
-        crossAxisCount: 1,
-        mainAxisSpacing: 20,
-        crossAxisSpacing: 35,
+        // crossAxisCount: 1,
+        // mainAxisSpacing: 20,
+        // crossAxisSpacing: 35,
         itemCount: productsPurchaseState.length,
         itemBuilder: (context, index) {
           final productPurchaseState = productsPurchaseState[index];
-          return GestureDetector(
-              child: ProductPurcharseCard(
-                  product: productPurchaseState.producto!));
-        },
-      ),
-    );
-  }
-}
 
-class _SizeSelector extends StatelessWidget {
-  final List<String> selectedSizes;
-  final List<String> sizes = const ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+          if (!hasColors || !hasSizes) {
+            return const SizedBox.shrink(); // o CircularProgressIndicator()
+          }
 
-  final void Function(List<String> selectedSizes) onSizesChanged;
-
-  const _SizeSelector({
-    required this.selectedSizes,
-    required this.onSizesChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SegmentedButton(
-      emptySelectionAllowed: true,
-      showSelectedIcon: false,
-      segments: sizes.map((size) {
-        return ButtonSegment(
-            value: size,
-            label: Text(size, style: const TextStyle(fontSize: 10)));
-      }).toList(),
-      selected: Set.from(selectedSizes),
-      onSelectionChanged: (newSelection) {
-        FocusScope.of(context).unfocus();
-        onSizesChanged(List.from(newSelection));
-      },
-      multiSelectionEnabled: true,
-    );
-  }
-}
-
-class _GenderSelector extends StatelessWidget {
-  final String selectedGender;
-  final void Function(String selectedGender) onGenderChanged;
-
-  final List<String> genders = const ['men', 'women', 'kid'];
-  final List<IconData> genderIcons = const [
-    Icons.man,
-    Icons.woman,
-    Icons.boy,
-  ];
-
-  const _GenderSelector(
-      {required this.selectedGender, required this.onGenderChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SegmentedButton(
-        multiSelectionEnabled: false,
-        showSelectedIcon: false,
-        style: const ButtonStyle(visualDensity: VisualDensity.compact),
-        segments: genders.map((size) {
-          return ButtonSegment(
-              icon: Icon(genderIcons[genders.indexOf(size)]),
-              value: size,
-              label: Text(size, style: const TextStyle(fontSize: 12)));
-        }).toList(),
-        selected: {selectedGender},
-        onSelectionChanged: (newSelection) {
-          FocusScope.of(context).unfocus();
-          onGenderChanged(newSelection.first);
+          return ProductPurcharseCard(
+            product: productPurchaseState.producto!,
+            state: productPurchaseState,
+            productColors: productColorsState.productColors != null
+                ? productColorsState.productColors!
+                : [],
+            productSizes: productSizesState.productSizes != null
+                ? productSizesState.productSizes!
+                : [],
+          );
         },
       ),
     );

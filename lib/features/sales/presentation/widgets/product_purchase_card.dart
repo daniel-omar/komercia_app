@@ -1,15 +1,115 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:komercia_app/features/sales/domain/entities/product.dart';
-import 'package:komercia_app/features/shared/widgets/custom_filled_button.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:komercia_app/features/sales/domain/domain.dart';
+import 'package:komercia_app/features/sales/presentation/providers/products_purchase_provider.dart';
+import 'package:komercia_app/features/shared/widgets/custom_increment_product_field.dart';
+import 'package:komercia_app/features/shared/widgets/custom_product_field.dart';
 
-class ProductPurcharseCard extends StatelessWidget {
+class ProductPurcharseCard extends ConsumerStatefulWidget {
   final Product product;
-  const ProductPurcharseCard({super.key, required this.product});
+  final ProductPurchaseState state;
+  final List<ProductColor> productColors;
+  final List<ProductSize> productSizes;
+
+  const ProductPurcharseCard(
+      {super.key,
+      required this.product,
+      required this.state,
+      required this.productColors,
+      required this.productSizes});
+
+  @override
+  ConsumerState<ProductPurcharseCard> createState() =>
+      _ProductPurcharseCardState();
+}
+
+class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
+  late final TextEditingController quantityController;
+  late final TextEditingController priceController;
+
+  @override
+  void initState() {
+    super.initState();
+    quantityController =
+        TextEditingController(text: widget.state.cantidad.toString());
+    priceController =
+        TextEditingController(text: widget.state.precio.toString());
+  }
+
+  @override
+  void dispose() {
+    quantityController.dispose();
+    priceController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final textStyles = Theme.of(context).textTheme;
+
+    final total =
+        (widget.state.cantidad * (widget.state.precio ?? 0)).toStringAsFixed(2);
+
+    void updateQuantity(int value) {
+      print(value);
+      ref.read(productsPurchaseProvider.notifier).updateProduct(
+            widget.product.idProducto,
+            cantidad: value,
+          );
+    }
+
+    void updatePrice(String value) {
+      print(value);
+      final price = double.tryParse(value) ?? 0;
+      ref.read(productsPurchaseProvider.notifier).updateProduct(
+            widget.product.idProducto,
+            precio: price,
+          );
+    }
+
+    void onSizeChanged(int idSize) {
+      ref.read(productsPurchaseProvider.notifier).updateProduct(
+            widget.product.idProducto,
+            idTalla: idSize,
+          );
+      print(idSize);
+    }
+
+    void onColorChanged(int idColor) {
+      ref.read(productsPurchaseProvider.notifier).updateProduct(
+            widget.product.idProducto,
+            idColor: idColor,
+          );
+      print(idColor);
+    }
+
+    // int get _currentValue => int.tryParse(quantityController.text) ?? 0;
+    int currentValue() => int.tryParse(quantityController.text) ?? 0;
+
+    void onIncrement() {
+      String cantidad = (currentValue() + 1).toString();
+      quantityController.text = cantidad;
+      updateQuantity(int.parse(cantidad));
+    }
+
+    void onDecrement() {
+      if (currentValue() > 0) {
+        String cantidad = (currentValue() - 1).toString();
+        quantityController.text = cantidad;
+        updateQuantity(int.parse(cantidad));
+      }
+    }
+
+    void onChangePrice(String precio) {
+      if (precio.startsWith("0")) {
+        precio = precio.replaceFirst("0", "");
+      }
+      if (precio == "") {
+        precio = "0";
+      }
+      // priceController.text = precio;
+      updatePrice(precio);
+    }
 
     const TextStyle styleField =
         TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
@@ -18,13 +118,13 @@ class ProductPurcharseCard extends StatelessWidget {
     return Material(
       // color: Colors.amber,
       child: InkWell(
-        onTap: () => {},
+        // onTap: () => {},
         borderRadius: BorderRadius.circular(20),
         child: Ink(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
           // margin: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: const Color.fromARGB(244, 241, 241, 241),
               borderRadius: BorderRadius.circular(20),
               // border: Border.all(color: Colors.blueAccent),
               boxShadow: const [
@@ -44,47 +144,167 @@ class ProductPurcharseCard extends StatelessWidget {
                       icon: const Icon(Icons.delete),
                       tooltip: 'Eliminar',
                       onPressed: () async {
-                        print("object");
+                        ref
+                            .read(productsPurchaseProvider.notifier)
+                            .removeProduct(widget.product.idProducto);
                       },
+                      color: Colors.white, // color del ícono
+                      style: ButtonStyle(
+                        backgroundColor:
+                            WidgetStateProperty.all<Color>(Colors.red),
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                            const EdgeInsets.all(8)),
+                        shape: WidgetStateProperty.all(
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6)),
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       textAlign: TextAlign.center,
-                      product.nombreProducto,
+                      widget.product.nombreProducto,
                       style: styleFieldValue,
                     ),
-                    const SizedBox(width: 8),
                   ],
                 ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    const Text(
-                      textAlign: TextAlign.center,
-                      "Precio: ",
-                      style: styleField,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      textAlign: TextAlign.center,
-                      "${0}",
-                      style: styleFieldValue,
-                    ),
-                    const SizedBox(width: 8),
+                    _SizeSelector(
+                        idSelectedSize: widget.state.idTalla ?? 0,
+                        sizes: widget.productSizes,
+                        onSizeChanged: onSizeChanged)
                   ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: CustomFilledButton(
-                    onPressed: () {},
-                    text: "",
-                  ),
+                Align(
+                  alignment: Alignment.center,
+                  child: _ColorSelector(
+                      idSelectedColor: widget.state.idColor ?? 0,
+                      colors: widget.productColors,
+                      onColorChanged: onColorChanged),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    CustomIncrementProductField(
+                      isBottomField: true,
+                      isTopField: true,
+                      textEditingController: quantityController,
+                      onDecrement: onDecrement,
+                      onIncrement: onIncrement,
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    CustomProductField(
+                      isBottomField: true,
+                      isTopField: true,
+                      iconData: Icons.edit,
+                      textEditingController: priceController,
+                      onChanged: onChangePrice,
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Text(
+                      'Total: S/ $total',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SizeSelector extends StatelessWidget {
+  final int idSelectedSize;
+  final void Function(int selectedSize) onSizeChanged;
+
+  // final List<String> sizes = const ['XS', 'S', 'M', 'L', 'XL'];
+  final List<ProductSize> sizes;
+
+  const _SizeSelector(
+      {required this.idSelectedSize,
+      required this.onSizeChanged,
+      required this.sizes});
+
+  @override
+  Widget build(BuildContext context) {
+    return SegmentedButton(
+      multiSelectionEnabled: false,
+      showSelectedIcon: false,
+      style: const ButtonStyle(visualDensity: VisualDensity.compact),
+      segments: sizes.map((size) {
+        return ButtonSegment(
+            value: size.idTalla,
+            label: Text(size.nombreTalla,
+                style: const TextStyle(
+                    fontSize: 10, fontWeight: FontWeight.bold)));
+      }).toList(),
+      selected: {idSelectedSize},
+      onSelectionChanged: (newSelection) {
+        FocusScope.of(context).unfocus();
+        onSizeChanged(newSelection.first);
+      },
+    );
+  }
+}
+
+class _ColorSelector extends StatelessWidget {
+  final int idSelectedColor;
+  final void Function(int selectedColor) onColorChanged;
+
+  // final List<String> colors = const [
+  //   'negro',
+  //   "blanco",
+  //   'rosa',
+  //   'verde',
+  //   "azul",
+  //   "rojo",
+  //   "dd",
+  //   "dd"
+  // ];
+  final List<ProductColor> colors;
+
+  const _ColorSelector(
+      {required this.idSelectedColor,
+      required this.onColorChanged,
+      required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: IntrinsicWidth(
+          child: SegmentedButton(
+        multiSelectionEnabled: false,
+        showSelectedIcon: false,
+        style: const ButtonStyle(visualDensity: VisualDensity.compact),
+        segments: colors.map((color) {
+          return ButtonSegment(
+              value: color.idColor,
+              label: Text(color.nombreColor,
+                  style: const TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.bold)));
+        }).toList(),
+        selected: {idSelectedColor},
+        onSelectionChanged: (newSelection) {
+          FocusScope.of(context).unfocus();
+          onColorChanged(newSelection.first);
+        },
+      )),
     );
   }
 }
