@@ -53,7 +53,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
     void updateQuantity(int value) {
       print(value);
       ref.read(productsPurchaseProvider.notifier).updateProduct(
-            widget.product.idProducto,
+            widget.state.uuid,
             cantidad: value,
           );
     }
@@ -62,14 +62,14 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
       print(value);
       final price = double.tryParse(value) ?? 0;
       ref.read(productsPurchaseProvider.notifier).updateProduct(
-            widget.product.idProducto,
+            widget.state.uuid,
             precio: price,
           );
     }
 
     void onSizeChanged(int idSize) {
       ref.read(productsPurchaseProvider.notifier).updateProduct(
-            widget.product.idProducto,
+            widget.state.uuid,
             idTalla: idSize,
           );
       print(idSize);
@@ -77,7 +77,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
 
     void onColorChanged(int idColor) {
       ref.read(productsPurchaseProvider.notifier).updateProduct(
-            widget.product.idProducto,
+            widget.state.uuid,
             idColor: idColor,
           );
       print(idColor);
@@ -112,16 +112,17 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
     }
 
     const TextStyle styleField =
-        TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
-    const TextStyle styleFieldValue = TextStyle(fontSize: 16);
+        TextStyle(fontSize: 18, fontWeight: FontWeight.bold);
+    // const TextStyle styleFieldValue =
+    //     TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
 
     return Material(
       // color: Colors.amber,
       child: InkWell(
         // onTap: () => {},
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(15),
         child: Ink(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
           // margin: const EdgeInsets.all(10),
           decoration: BoxDecoration(
               color: const Color.fromARGB(244, 241, 241, 241),
@@ -146,7 +147,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
                       onPressed: () async {
                         ref
                             .read(productsPurchaseProvider.notifier)
-                            .removeProduct(widget.product.idProducto);
+                            .removeProduct(widget.state.uuid);
                       },
                       color: Colors.white, // color del ícono
                       style: ButtonStyle(
@@ -164,7 +165,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
                     Text(
                       textAlign: TextAlign.center,
                       widget.product.nombreProducto,
-                      style: styleFieldValue,
+                      style: styleField,
                     ),
                   ],
                 ),

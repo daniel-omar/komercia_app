@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
+import 'package:uuid/uuid.dart';
 
 final productsPurchaseProvider =
     StateNotifierProvider<ProductsNotifier, List<ProductPurchaseState>>((ref) {
@@ -10,21 +11,27 @@ class ProductsNotifier extends StateNotifier<List<ProductPurchaseState>> {
   ProductsNotifier() : super([]);
 
   void addProduct(Product producto) {
+    final String uid = const Uuid().v4();
+
     final productPurchaseState = ProductPurchaseState(
-        idProducto: producto.idProducto,
-        producto: producto,
-        idCategoria: producto.idCategoria,
-        precio: producto.precio,
-        cantidad: 1);
+      uuid: uid,
+      idProducto: producto.idProducto,
+      producto: producto,
+      idCategoria: producto.idCategoria,
+      precio: producto.precio ?? 0,
+      cantidad: 1,
+      idTalla: 0,
+      idColor: 0,
+    );
 
     state = [...state, productPurchaseState];
   }
 
-  void updateProduct(int idProducto,
+  void updateProduct(String uuid,
       {double? precio, int? cantidad, int? idTalla, int? idColor}) {
     state = [
       for (final item in state)
-        if (item.idProducto == idProducto)
+        if (item.uuid == uuid)
           item.copyWith(
               precio: precio ?? item.precio,
               cantidad: cantidad ?? item.cantidad,
@@ -35,8 +42,8 @@ class ProductsNotifier extends StateNotifier<List<ProductPurchaseState>> {
     ];
   }
 
-  void removeProduct(int idProducto) {
-    state = state.where((item) => item.idProducto != idProducto).toList();
+  void removeProduct(String uuid) {
+    state = state.where((item) => item.uuid != uuid).toList();
   }
 
   void clear() {
@@ -45,6 +52,7 @@ class ProductsNotifier extends StateNotifier<List<ProductPurchaseState>> {
 }
 
 class ProductPurchaseState {
+  final String uuid;
   final int idProducto;
   final Product? producto;
   final double? precio;
@@ -57,7 +65,8 @@ class ProductPurchaseState {
   final double? total;
 
   ProductPurchaseState(
-      {this.isLoading = true,
+      {this.uuid = "",
+      this.isLoading = true,
       this.isSaving = false,
       this.idProducto = 0,
       this.producto,
@@ -71,6 +80,7 @@ class ProductPurchaseState {
   ProductPurchaseState copyWith(
           {bool? isLoading,
           bool? isSaving,
+          String? uuid,
           int? idProducto,
           Product? producto,
           double? precio,
@@ -82,6 +92,7 @@ class ProductPurchaseState {
       ProductPurchaseState(
           isLoading: isLoading ?? this.isLoading,
           isSaving: isSaving ?? this.isSaving,
+          uuid: uuid ?? this.uuid,
           idProducto: idProducto ?? this.idProducto,
           producto: producto ?? this.producto,
           precio: precio ?? this.precio,
