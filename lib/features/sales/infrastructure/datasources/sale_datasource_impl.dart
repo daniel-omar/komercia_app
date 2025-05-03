@@ -55,14 +55,10 @@ class SaleDatasourceImpl extends SaleDatasource {
   }
 
   @override
-  Future<bool> sell(Map<String, dynamic> data) async {
+  Future<bool> createSale(Map<String, dynamic> data) async {
     try {
-      final formData = FormData.fromMap({
-        'data': jsonEncode(data),
-      });
-
       final response =
-          await dioClient.dio.post('/sales/sale/sell', data: formData);
+          await dioClient.dio.post('/sales/sale/create', data: data);
       ResponseMain responseMain =
           ResponseMainMapper.responseJsonToEntity(response.data);
     } on DioException catch (e) {

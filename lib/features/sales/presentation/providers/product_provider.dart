@@ -22,7 +22,8 @@ class ProductNotifier extends StateNotifier<ProductState> {
 
       Product product = await productRepository.getById(state.idProducto!);
 
-      state = state.copyWith(isLoading: false, producto: product);
+      state = state.copyWith(
+          isLoading: false, producto: product, idProducto: product.idProducto);
     } catch (e) {
       // 404 product not found
       print(e);
@@ -36,7 +37,8 @@ class ProductNotifier extends StateNotifier<ProductState> {
       Product product =
           await productRepository.find(codigoProducto: codigoProducto);
 
-      state = state.copyWith(isLoading: false, producto: product);
+      state = state.copyWith(
+          isLoading: false, producto: product, idProducto: product.idProducto);
 
       return product;
     } catch (e) {
@@ -53,7 +55,7 @@ class ProductNotifier extends StateNotifier<ProductState> {
 }
 
 class ProductState {
-  final int? idProducto;
+  final int idProducto;
   final Product? producto;
   final bool isLoading;
   final bool isSaving;

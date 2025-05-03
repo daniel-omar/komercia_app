@@ -3,13 +3,13 @@ import 'package:komercia_app/features/sales/domain/domain.dart';
 class Sale {
   int? idVenta;
   int idUsuarioRegistro;
-  List<SaleDetail>? ordersDetail;
+  List<SaleDetail>? saleDetail;
   double total;
 
   Sale(
       {this.idVenta,
       required this.idUsuarioRegistro,
-      this.ordersDetail,
+      this.saleDetail,
       required this.total});
 
   Map<String, dynamic> toJson() => {

@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
 import 'package:uuid/uuid.dart';
 
+final showProductPurchaseValidationErrorsProvider =
+    StateProvider<bool>((ref) => false);
+
 final productsPurchaseProvider =
     StateNotifierProvider<ProductsNotifier, List<ProductPurchaseState>>((ref) {
   return ProductsNotifier();
@@ -19,6 +22,7 @@ class ProductsNotifier extends StateNotifier<List<ProductPurchaseState>> {
       producto: producto,
       idCategoria: producto.idCategoria,
       precio: producto.precio ?? 0,
+      precioVenta: producto.precioVenta ?? 0,
       cantidad: 1,
       idTalla: 0,
       idColor: 0,
@@ -28,12 +32,13 @@ class ProductsNotifier extends StateNotifier<List<ProductPurchaseState>> {
   }
 
   void updateProduct(String uuid,
-      {double? precio, int? cantidad, int? idTalla, int? idColor}) {
+      {double? precioVenta, int? cantidad, int? idTalla, int? idColor}) {
     state = [
       for (final item in state)
         if (item.uuid == uuid)
           item.copyWith(
-              precio: precio ?? item.precio,
+              precio: precioVenta ?? item.precioVenta,
+              precioVenta: precioVenta ?? item.precioVenta,
               cantidad: cantidad ?? item.cantidad,
               idTalla: idTalla ?? item.idTalla,
               idColor: idColor ?? item.idColor)
@@ -56,13 +61,14 @@ class ProductPurchaseState {
   final int idProducto;
   final Product? producto;
   final double? precio;
+  final double? precioCompra;
+  final double? precioVenta;
   final int? idCategoria;
   final int? idTalla;
   final int? idColor;
   final int cantidad;
   final bool isLoading;
   final bool isSaving;
-  final double? total;
 
   ProductPurchaseState(
       {this.uuid = "",
@@ -71,11 +77,12 @@ class ProductPurchaseState {
       this.idProducto = 0,
       this.producto,
       this.precio = 0,
+      this.precioCompra = 0,
+      this.precioVenta = 0,
       this.idCategoria = 0,
       this.idTalla = 0,
       this.idColor = 0,
-      this.cantidad = 0,
-      this.total = 0});
+      this.cantidad = 0});
 
   ProductPurchaseState copyWith(
           {bool? isLoading,
@@ -84,6 +91,8 @@ class ProductPurchaseState {
           int? idProducto,
           Product? producto,
           double? precio,
+          double? precioCompra,
+          double? precioVenta,
           int? idCategoria,
           int? idTalla,
           int? idColor,
@@ -96,9 +105,12 @@ class ProductPurchaseState {
           idProducto: idProducto ?? this.idProducto,
           producto: producto ?? this.producto,
           precio: precio ?? this.precio,
+          precioCompra: precioCompra ?? this.precioCompra,
+          precioVenta: precioVenta ?? this.precioVenta,
           idCategoria: idCategoria ?? this.idCategoria,
           idTalla: idTalla ?? this.idTalla,
           idColor: idColor ?? this.idColor,
-          cantidad: cantidad ?? this.cantidad,
-          total: total ?? this.total);
+          cantidad: cantidad ?? this.cantidad);
+
+  double get total => (precioVenta ?? 0) * cantidad;
 }

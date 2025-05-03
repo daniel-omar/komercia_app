@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
+import 'package:komercia_app/features/sales/presentation/providers/product_colors_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/products_purchase_provider.dart';
 import 'package:komercia_app/features/shared/widgets/custom_increment_product_field.dart';
 import 'package:komercia_app/features/shared/widgets/custom_product_field.dart';
@@ -26,6 +27,7 @@ class ProductPurcharseCard extends ConsumerStatefulWidget {
 class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
   late final TextEditingController quantityController;
   late final TextEditingController priceController;
+  late List<ProductColor> availableProductColors = [];
 
   @override
   void initState() {
@@ -33,7 +35,9 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
     quantityController =
         TextEditingController(text: widget.state.cantidad.toString());
     priceController =
-        TextEditingController(text: widget.state.precio.toString());
+        TextEditingController(text: widget.state.precioVenta.toString());
+
+    availableProductColors = widget.productColors;
   }
 
   @override
@@ -47,8 +51,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
   Widget build(BuildContext context) {
     final textStyles = Theme.of(context).textTheme;
 
-    final total =
-        (widget.state.cantidad * (widget.state.precio ?? 0)).toStringAsFixed(2);
+    final total = widget.state.total.toStringAsFixed(2);
 
     void updateQuantity(int value) {
       print(value);
@@ -63,15 +66,23 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
       final price = double.tryParse(value) ?? 0;
       ref.read(productsPurchaseProvider.notifier).updateProduct(
             widget.state.uuid,
-            precio: price,
+            precioVenta: price,
           );
     }
 
-    void onSizeChanged(int idSize) {
+    void onSizeChanged(int idSize) async {
       ref.read(productsPurchaseProvider.notifier).updateProduct(
             widget.state.uuid,
             idTalla: idSize,
           );
+
+      final result = await ref.read(
+          productColorsBySizeProvider((widget.product.idProducto, idSize))
+              .future);
+      setState(() {
+        availableProductColors = result;
+      });
+
       print(idSize);
     }
 
@@ -116,6 +127,9 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
     // const TextStyle styleFieldValue =
     //     TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
 
+    final showErrors = ref.watch(showProductPurchaseValidationErrorsProvider);
+    final isInvalid = (widget.state.idTalla == 0 || widget.state.idColor == 0);
+
     return Material(
       // color: Colors.amber,
       child: InkWell(
@@ -125,15 +139,21 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
           padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
           // margin: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: const Color.fromARGB(244, 241, 241, 241),
-              borderRadius: BorderRadius.circular(20),
-              // border: Border.all(color: Colors.blueAccent),
-              boxShadow: const [
-                BoxShadow(
-                    color: Color(0x000005cc),
-                    blurRadius: 20,
-                    offset: Offset(10, 10))
-              ]),
+            color: const Color.fromARGB(244, 241, 241, 241),
+            borderRadius: BorderRadius.circular(20),
+            // border: Border.all(color: Colors.blueAccent),
+            boxShadow: const [
+              BoxShadow(
+                  color: Color(0x000005cc),
+                  blurRadius: 20,
+                  offset: Offset(10, 10))
+            ],
+            border: Border.all(
+              color:
+                  (showErrors && isInvalid) ? Colors.red : Colors.grey.shade300,
+              width: (showErrors && isInvalid) ? 2 : 1,
+            ),
+          ),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -152,7 +172,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
                       color: Colors.white, // color del ícono
                       style: ButtonStyle(
                         backgroundColor:
-                            WidgetStateProperty.all<Color>(Colors.red),
+                            WidgetStateProperty.all<Color>(Colors.black),
                         padding: WidgetStateProperty.all<EdgeInsets>(
                             const EdgeInsets.all(8)),
                         shape: WidgetStateProperty.all(
@@ -182,7 +202,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
                   alignment: Alignment.center,
                   child: _ColorSelector(
                       idSelectedColor: widget.state.idColor ?? 0,
-                      colors: widget.productColors,
+                      colors: availableProductColors,
                       onColorChanged: onColorChanged),
                 ),
                 Row(
@@ -267,16 +287,6 @@ class _ColorSelector extends StatelessWidget {
   final int idSelectedColor;
   final void Function(int selectedColor) onColorChanged;
 
-  // final List<String> colors = const [
-  //   'negro',
-  //   "blanco",
-  //   'rosa',
-  //   'verde',
-  //   "azul",
-  //   "rojo",
-  //   "dd",
-  //   "dd"
-  // ];
   final List<ProductColor> colors;
 
   const _ColorSelector(
@@ -292,13 +302,48 @@ class _ColorSelector extends StatelessWidget {
           child: SegmentedButton(
         multiSelectionEnabled: false,
         showSelectedIcon: false,
-        style: const ButtonStyle(visualDensity: VisualDensity.compact),
+        style: ButtonStyle(
+          visualDensity: VisualDensity.compact,
+          padding: WidgetStateProperty.all(
+            const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
+          ),
+          side: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const BorderSide(color: Colors.red, width: 4);
+            }
+            return const BorderSide(color: Colors.grey, width: 1);
+          }),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const Color.fromARGB(255, 79, 33, 243).withOpacity(0.12);
+            }
+            return Colors.transparent;
+          }),
+        ),
         segments: colors.map((color) {
           return ButtonSegment(
-              value: color.idColor,
-              label: Text(color.nombreColor,
-                  style: const TextStyle(
-                      fontSize: 10, fontWeight: FontWeight.bold)));
+            value: color.idColor,
+            label: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: color.color,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                color.nombreColor,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: color.color.computeLuminance() < 0.5
+                      ? Colors.white
+                      : Colors.black,
+                ),
+              ),
+            ),
+          );
         }).toList(),
         selected: {idSelectedColor},
         onSelectionChanged: (newSelection) {

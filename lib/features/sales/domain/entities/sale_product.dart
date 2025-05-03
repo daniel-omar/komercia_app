@@ -7,6 +7,7 @@ class SaleProduct {
   int cantidad;
   double precio;
   bool? esSeleccionado;
+  double? sub_total;
 
   SaleProduct(
       {required this.idProducto,
@@ -14,14 +15,16 @@ class SaleProduct {
       this.idTalla,
       required this.cantidad,
       required this.precio,
-      this.esSeleccionado = false});
+      this.esSeleccionado = false,
+      this.sub_total});
 
   Map<String, dynamic> toJson() => {
         "id_producto": idProducto,
         "id_color": idColor,
         "id_talla": idTalla,
         "cantidad": cantidad,
-        "precio": precio
+        "precio": precio,
+        "sub_total": sub_total
       };
 }
 

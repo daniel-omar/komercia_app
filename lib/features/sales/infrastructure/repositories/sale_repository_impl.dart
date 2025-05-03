@@ -21,7 +21,7 @@ class SaleRepositoryImpl extends SaleRepository {
   }
 
   @override
-  Future<bool> sell(Map<String, dynamic> data) {
-    return datasource.sell(data);
+  Future<bool> createSale(Map<String, dynamic> data) {
+    return datasource.createSale(data);
   }
 }

@@ -16,6 +16,11 @@ class ProductSizeRepositoryImpl extends ProductSizeRepository {
   }
 
   @override
+  Future<List<ProductSize>> getByProduct(int idProducto) {
+    return datasource.getByProduct(idProducto);
+  }
+
+  @override
   Future<List<ProductSize>> getList(Map<String, dynamic> body) {
     return datasource.getList(body);
   }

@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
+import 'package:komercia_app/features/sales/presentation/providers/discount_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/payment_types_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_colors_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_sizes_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/products_purchase_provider.dart';
-import 'package:komercia_app/features/sales/presentation/widgets/payment_type_card.dart';
+import 'package:komercia_app/features/sales/presentation/providers/providers.dart';
+import 'package:komercia_app/features/sales/presentation/widgets/payment_type_bottom_sheet.dart';
 import 'package:komercia_app/features/sales/presentation/widgets/product_purchase_card.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
@@ -35,12 +37,18 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
   @override
   void initState() {
     super.initState();
+    Future.microtask(() {
+      ref.read(showProductPurchaseValidationErrorsProvider.notifier).state =
+          false;
+    });
   }
 
   @override
   void dispose() {
     super.dispose();
   }
+
+  double total = 0;
 
   Future<String?> readScanner() async {
     String? res = await SimpleBarcodeScanner.scanBarcode(
@@ -59,19 +67,48 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
     return res;
   }
 
-  Future<void> findProduct(String codigoProducto) async {
+  Future<void> findProduct(String codigoProducto, BuildContext context) async {
     final product =
         await ref.read(productProvider.notifier).findProduct(codigoProducto);
 
-    if (product != null) {
-      final productoState = ref.read(productProvider);
-
-      ref
-          .read(productsPurchaseProvider.notifier)
-          .addProduct(productoState.producto!);
-    } else {
-      // mostrar error
+    if (product == null) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Producto no se encuentra en inventario.')),
+      );
+      return;
     }
+
+    final productoState = ref.read(productProvider);
+
+    await ref
+        .read(productSizesProvider.notifier)
+        .loadSizesByProduct(productoState.idProducto);
+    final productSizesState = ref.watch(productSizesProvider);
+    if (productSizesState.productSizes!.isEmpty) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No cuenta con tallas disponibles.')),
+      );
+      return;
+    }
+
+    await ref
+        .read(productColorsProvider.notifier)
+        .loadColorsByProduct(productoState.idProducto);
+    final productColorsState = ref.read(productColorsProvider);
+    if (productColorsState.productColors!.isEmpty) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No cuenta con colores disponibles.')),
+      );
+      return;
+    }
+
+    ref
+        .read(productsPurchaseProvider.notifier)
+        .addProduct(productoState.producto!);
   }
 
   void _showPaymentOptionsSheet(BuildContext context) {
@@ -84,118 +121,7 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
       ),
-      builder: (_) {
-        // Usamos un Consumer para poder acceder a `ref.watch` dentro del BottomSheet
-        return Consumer(
-          builder: (context, ref, child) {
-            final state = ref.watch(paymentTypesProvider);
-            final selectedIndex = ref.watch(selectedPaymentTypeIndexProvider);
-
-            if (state.isLoading || state.paymentTypes == null) {
-              return const SizedBox(
-                height: 200,
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            return FractionallySizedBox(
-              widthFactor: 1.0,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 5, vertical: 15),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Spacer(),
-                        const Text(
-                          'Selecciona el método de pago',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const Spacer(),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      itemCount: state.paymentTypes!.length,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 1.8,
-                      ),
-                      itemBuilder: (context, index) {
-                        final paymentType = state.paymentTypes![index];
-                        final isSelected = selectedIndex == index;
-
-                        return PaymentTypeCard(
-                          label: paymentType.nombreTipoPago,
-                          icon: paymentType.iconData,
-                          onTap: () {
-                            ref
-                                .read(selectedPaymentTypeIndexProvider.notifier)
-                                .state = index;
-                            ref
-                                .read(selectedPaymentTypeProvider.notifier)
-                                .state = paymentType;
-                          },
-                          isSelected: isSelected,
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _handlePayment(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black87,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: const Text(
-                          'CREAR VENTA',
-                          style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _handlePayment(BuildContext context) {
-    final selectedPaymentType = ref.watch(selectedPaymentTypeProvider);
-    if (selectedPaymentType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Debe seleccioanr un método de pago')),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(
-              'Método seleccionado: ${selectedPaymentType.nombreTipoPago} ')),
+      builder: (_) => const PaymentTypeBottomSheet(),
     );
   }
 
@@ -217,10 +143,10 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
                 alignment: Alignment.center,
                 child: IconButton(
                   icon: const Icon(Icons.qr_code_scanner),
-                  tooltip: 'Increase volume by 10',
+                  tooltip: 'Escanear QR',
                   onPressed: () async {
                     String? codigoProducto = await readScanner();
-                    await findProduct(codigoProducto!);
+                    await findProduct(codigoProducto!, context);
                   },
                 ),
               ),
@@ -230,10 +156,12 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
         body: const _ProductsPurcharseView(),
         bottomNavigationBar: Consumer(
           builder: (context, ref, _) {
-            final total = ref.watch(productsPurchaseProvider.select(
-              (items) => items.fold(
-                  0.0, (sum, item) => sum + (item.precio ?? 0) * item.cantidad),
+            total = ref.watch(productsPurchaseProvider.select(
+              (items) => items.fold(0.0,
+                  (sum, item) => sum + (item.precioVenta ?? 0) * item.cantidad),
             ));
+            final discount = ref.watch(discountProvider);
+            final totalFinal = discount.apply(total);
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -241,31 +169,112 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
                 color: Colors.white,
                 border: Border(top: BorderSide(color: Colors.black12)),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Total: S/ ${total.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total:',
+                        style: TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "S/ ${total.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      _showPaymentOptionsSheet(context);
-                    },
-                    icon: const Icon(
-                      Icons.payment,
-                      color: Colors.white,
+                  if (discount.hasDiscount) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Descuento:",
+                            style: TextStyle(
+                                color: Colors.teal,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold)),
+                        Text(
+                          'S/ ${(total - totalFinal).toStringAsFixed(2)}',
+                          style: const TextStyle(
+                              color: Colors.teal,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
-                    label: const Text(
-                      'Pagar',
-                      style: TextStyle(color: Colors.white),
+                    const SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Total final:',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18)),
+                        Text(
+                          'S/ ${totalFinal.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Colors.black87),
+                        ),
+                      ],
                     ),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      backgroundColor: Colors.blue.shade900,
-                    ),
+                  ],
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        width: 250,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            _showPaymentOptionsSheet(context);
+                          },
+                          icon: const Icon(
+                            Icons.payment,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            'Pagar',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            backgroundColor: Colors.blue.shade900,
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(6), // menor radio aquí
+                            ),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (_) =>
+                                const _DiscountSelectorBottomSheet(),
+                          );
+                        },
+                        icon: const Icon(Icons.percent),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 12),
+                          backgroundColor: Colors.orange.shade700,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(6), // menor radio aquí
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -315,9 +324,6 @@ class __ProductsPurcharseState extends ConsumerState {
       child: ListView.builder(
         controller: scrollController,
         physics: const BouncingScrollPhysics(),
-        // crossAxisCount: 1,
-        // mainAxisSpacing: 20,
-        // crossAxisSpacing: 35,
         itemCount: productsPurchaseState.length,
         itemBuilder: (context, index) {
           final productPurchaseState = productsPurchaseState[index];
@@ -337,6 +343,133 @@ class __ProductsPurcharseState extends ConsumerState {
                 : [],
           );
         },
+      ),
+    );
+  }
+}
+
+class _DiscountSelectorBottomSheet extends ConsumerStatefulWidget {
+  const _DiscountSelectorBottomSheet();
+
+  @override
+  ConsumerState<_DiscountSelectorBottomSheet> createState() =>
+      _DiscountSelectorBottomSheetState();
+}
+
+class _DiscountSelectorBottomSheetState
+    extends ConsumerState<_DiscountSelectorBottomSheet> {
+  final TextEditingController _discountController = TextEditingController();
+  DiscountType _selectedType = DiscountType.none;
+
+  @override
+  void initState() {
+    super.initState();
+    final discount = ref.read(discountProvider);
+    _selectedType = discount.type;
+
+    final initialValue = discount.monto;
+    _discountController.text =
+        initialValue > 0 ? initialValue.toStringAsFixed(2) : '';
+  }
+
+  @override
+  void dispose() {
+    _discountController.dispose();
+    super.dispose();
+  }
+
+  void _applyDiscount() {
+    final value = double.tryParse(_discountController.text);
+    if (value == null || value <= 0) return;
+
+    ref.read(discountProvider.notifier).state = DiscountState(
+      monto: value,
+      type: _selectedType,
+    );
+    Navigator.pop(context);
+  }
+
+  void _clearDiscount() {
+    ref.read(discountProvider.notifier).state = DiscountState.none();
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: MediaQuery.of(context).viewInsets,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Aplicar descuento',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SegmentedButton<DiscountType>(
+                  segments: const [
+                    ButtonSegment(
+                        value: DiscountType.fixed, label: Text('Monto fijo')),
+                    ButtonSegment(
+                        value: DiscountType.percent, label: Text('Porcentaje')),
+                  ],
+                  selected: {_selectedType},
+                  onSelectionChanged: (newSelection) {
+                    setState(() {
+                      _selectedType = newSelection.first;
+                    });
+                  },
+                  multiSelectionEnabled: false,
+                  showSelectedIcon: false,
+                  style:
+                      const ButtonStyle(visualDensity: VisualDensity.compact),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _discountController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: _selectedType == DiscountType.fixed
+                    ? 'Monto fijo (S/)'
+                    : 'Porcentaje (%)',
+                suffixIcon: IconButton(
+                  icon: const Icon(
+                    Icons.check,
+                    color: Colors.white,
+                  ),
+                  onPressed: _applyDiscount,
+                  style: ElevatedButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(25), // menor radio aquí
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton.icon(
+                  onPressed: _clearDiscount,
+                  icon: const Icon(Icons.delete_forever, color: Colors.red),
+                  label: const Text('Quitar descuento',
+                      style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

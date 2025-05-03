@@ -7,6 +7,10 @@ class ProductMapper {
       nombreProducto: json["nombre_producto"],
       descripcionProducto: json["descripcion_producto"],
       precio: double.parse(json["precio"].toString()),
+      precioVenta: double.parse(json["precio_venta"].toString()),
+      precioCompra: json["precio_compra"] == null
+          ? null
+          : double.parse(json["precio_compra"].toString()),
       idCategoria: json["id_categoria_producto"],
       idMarca: json["id_marca"]);
 

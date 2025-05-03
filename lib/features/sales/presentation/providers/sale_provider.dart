@@ -43,36 +43,10 @@ class SaleNotifier extends StateNotifier<SaleState> {
     }
   }
 
-  addSaleMaterials(List<SaleProduct> saleProducts) {
-    state = state.copyWith(isLoading: true);
-
-    state = state.copyWith(isLoading: false, saleProducts: saleProducts);
-  }
-
   updateSale(Sale sale) {
     state = state.copyWith(sale: sale);
   }
-
-  Future<void> sell() async {
-    try {
-      state = state.copyWith(isLoading: true, isSaving: false);
-
-      final saleLiquidated = {
-        'id_usuario': 0,
-        'materiales_orden': state.saleProducts!.map((e) => e.toJson()).toList()
-      };
-
-      final sale = await saleRepository.sell(saleLiquidated);
-      // print(sale.toJson());
-      state = state.copyWith(isLoading: false, isSaving: true);
-    } catch (e) {
-      // 404 product not found
-      state = state.copyWith(isLoading: false, isSaving: false);
-
-      print(e);
-    }
-  }
-
+  
   clearData() {
     state = state.copyWith(
         isLoading: false, isSaving: false, sale: null, saleProducts: []);

@@ -16,7 +16,12 @@ class ProductColorRepositoryImpl extends ProductColorRepository {
   }
 
   @override
-  Future<List<ProductColor>> getList(Map<String, dynamic> body) {
-    return datasource.getList(body);
+  Future<List<ProductColor>> getByProduct(int idProducto) {
+    return datasource.getByProduct(idProducto);
+  }
+
+  @override
+  Future<List<ProductColor>> getList({int? idProducto, int? idTalla}) {
+    return datasource.getList(idProducto: idProducto, idTalla: idTalla);
   }
 }

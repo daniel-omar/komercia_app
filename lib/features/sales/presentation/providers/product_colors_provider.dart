@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_color_repository_provider.dart';
 
-final productColorsProvider = StateNotifierProvider.autoDispose<
+final productColorsProvider = StateNotifierProvider<
     ProductColorsNotifier,
     ProductColorsState
     //int
@@ -22,10 +22,10 @@ class ProductColorsNotifier extends StateNotifier<ProductColorsState> {
     required this.productColorRepository,
     //required int? idProductColor,
   }) : super(ProductColorsState()) {
-    loadProductColors();
+    // loadColors();
   }
 
-  Future<void> loadProductColors() async {
+  Future<void> loadColors() async {
     try {
       state = state.copyWith(isLoading: true);
 
@@ -33,6 +33,34 @@ class ProductColorsNotifier extends StateNotifier<ProductColorsState> {
       // body["es_seriado"] = true;
 
       final productColors = await productColorRepository.getAll();
+
+      state = state.copyWith(isLoading: false, productColors: productColors);
+    } catch (e) {
+      // 404 product not found
+      print(e);
+    }
+  }
+
+  Future<void> loadColorsByProduct(int idProducto) async {
+    try {
+      state = state.copyWith(isLoading: true);
+
+      final productColors =
+          await productColorRepository.getByProduct(idProducto);
+
+      state = state.copyWith(isLoading: false, productColors: productColors);
+    } catch (e) {
+      // 404 product not found
+      print(e);
+    }
+  }
+
+  Future<void> loadColorsByFilters(int idProducto, int idTalla) async {
+    try {
+      state = state.copyWith(isLoading: true);
+
+      final productColors = await productColorRepository.getList(
+          idProducto: idProducto, idTalla: idTalla);
 
       state = state.copyWith(isLoading: false, productColors: productColors);
     } catch (e) {
@@ -64,3 +92,12 @@ class ProductColorsState {
         productColors: productColors ?? this.productColors,
       );
 }
+
+final productColorsBySizeProvider =
+    FutureProvider.family<List<ProductColor>, (int idProducto, int idTalla)>(
+        (ref, tuple) async {
+  final repository = ref.watch(productColorRepositoryProvider);
+  final (idProducto, idTalla) = tuple;
+
+  return await repository.getList(idProducto: idProducto, idTalla: idTalla);
+});

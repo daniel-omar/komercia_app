@@ -48,6 +48,24 @@ class ProductSizeDatasourceImpl extends ProductSizeDatasource {
   }
 
   @override
+  Future<List<ProductSize>> getByProduct(int idProducto) async {
+    final response = await dioClient.dio
+        .get('/general/size/get_by_product?id_producto=$idProducto');
+    ResponseMain responseMain =
+        ResponseMainMapper.responseJsonToEntity(response.data);
+
+    final List<ProductSize> productSizes = [];
+
+    // ignore: no_leading_underscores_for_local_identifiers
+    for (final _productCategory in responseMain.data ?? []) {
+      productSizes
+          .add(ProductSizeMapper.productSizeJsonToEntity(_productCategory));
+    }
+
+    return productSizes;
+  }
+
+  @override
   Future<List<ProductSize>> getList(Map<String, dynamic> body) async {
     final response =
         await dioClient.dio.get('/general/size/get_list', data: body);

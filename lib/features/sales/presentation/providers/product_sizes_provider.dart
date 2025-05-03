@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_size_repository_provider.dart';
 
-final productSizesProvider = StateNotifierProvider.autoDispose<
+final productSizesProvider = StateNotifierProvider<
     ProductSizesNotifier,
     ProductSizesState
     //int
@@ -22,10 +22,10 @@ class ProductSizesNotifier extends StateNotifier<ProductSizesState> {
     required this.productSizeRepository,
     //required int? idProductSize,
   }) : super(ProductSizesState()) {
-    loadProductSizes();
+    // loadSizes();
   }
 
-  Future<void> loadProductSizes() async {
+  Future<void> loadSizes() async {
     try {
       state = state.copyWith(isLoading: true);
 
@@ -33,6 +33,19 @@ class ProductSizesNotifier extends StateNotifier<ProductSizesState> {
       // body["es_seriado"] = true;
 
       final productSizes = await productSizeRepository.getAll();
+
+      state = state.copyWith(isLoading: false, productSizes: productSizes);
+    } catch (e) {
+      // 404 product not found
+      print(e);
+    }
+  }
+
+  Future<void> loadSizesByProduct(int idProducto) async {
+    try {
+      state = state.copyWith(isLoading: true);
+
+      final productSizes = await productSizeRepository.getByProduct(idProducto);
 
       state = state.copyWith(isLoading: false, productSizes: productSizes);
     } catch (e) {

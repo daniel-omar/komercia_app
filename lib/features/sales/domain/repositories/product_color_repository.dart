@@ -2,6 +2,7 @@ import 'package:komercia_app/features/sales/domain/entities/product_color.dart';
 
 abstract class ProductColorRepository {
   Future<List<ProductColor>> getAll();
-  Future<List<ProductColor>> getList(Map<String, dynamic> body);
+  Future<List<ProductColor>> getByProduct(int idProducto);
+  Future<List<ProductColor>> getList({int? idProducto, int? idTalla});
   Future<ProductColor> getById(int idColor);
 }

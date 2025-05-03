@@ -46,7 +46,7 @@ class MenuDatasourceImpl extends MenuDatasource {
           nombreMenu: "Inventario",
           descripcionMenu: "Inventario",
           rutaMenu: "/products",
-          icono: Icons.image_search_rounded)
+          icono: Icons.inventory)
     ]);
 
     return menus;

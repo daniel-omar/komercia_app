@@ -1,7 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:komercia_app/features/shared/infrastructure/maps/general.map.dart';
+
 class ProductColor {
   int idColor;
   String nombreColor;
   String? descripcionColor;
+  Color get color => colorMap[nombreColor] ?? Colors.grey;
 
   ProductColor({
     required this.idColor,
