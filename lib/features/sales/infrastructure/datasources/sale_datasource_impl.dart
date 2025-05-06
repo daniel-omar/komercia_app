@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:komercia_app/features/home/infrastructure/errors/menu_errors.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
 import 'package:komercia_app/features/sales/infrastructure/infrastructure.dart';
 import 'package:komercia_app/features/shared/infrastructure/entities/response_main.dart';
@@ -69,5 +70,53 @@ class SaleDatasourceImpl extends SaleDatasource {
     }
 
     return true;
+  }
+
+  @override
+  Future<List<Sale>> getSalesByFilter(
+      {int? idTipoPago,
+      bool? tieneDescuento,
+      String? fechaInicio,
+      String? fechaFin}) async {
+    List<Map<String, dynamic>> paramsList = [];
+
+    try {
+      if (idTipoPago != null) {
+        paramsList.add({'key': 'id_tipo_pago', 'value': idTipoPago});
+      }
+      if (tieneDescuento != null) {
+        paramsList.add({'key': 'tiene_descuento', 'value': tieneDescuento});
+      }
+      if (fechaInicio != null) {
+        paramsList.add({'key': 'fecha_inicio', 'value': fechaInicio});
+      }
+      if (fechaFin != null) {
+        paramsList.add({'key': 'fecha_fin', 'value': fechaFin});
+      }
+
+      String queryString = paramsList
+          .map((param) =>
+              '${Uri.encodeComponent(param['key']!)}=${Uri.encodeComponent(param['value']!)}')
+          .join('&');
+
+      final response =
+          await dioClient.dio.get('/sales/sale/get_by_filter?$queryString');
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+
+      final List<Sale> sales = [];
+
+      // ignore: no_leading_underscores_for_local_identifiers
+      for (final _order in responseMain.data ?? []) {
+        sales.add(SaleMapper.saleJsonToEntity(_order));
+      }
+
+      return sales;
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw ProductNotFound();
+      throw Exception(e);
+    } catch (e) {
+      throw Exception(e);
+    }
   }
 }

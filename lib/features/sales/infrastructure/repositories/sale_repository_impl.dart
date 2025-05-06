@@ -24,4 +24,17 @@ class SaleRepositoryImpl extends SaleRepository {
   Future<bool> createSale(Map<String, dynamic> data) {
     return datasource.createSale(data);
   }
+
+  @override
+  Future<List<Sale>> getSalesByFilter(
+      {int? idTipoPago,
+      bool? tieneDescuento,
+      String? fechaInicio,
+      String? fechaFin}) {
+    return datasource.getSalesByFilter(
+        idTipoPago: idTipoPago,
+        tieneDescuento: tieneDescuento,
+        fechaFin: fechaFin,
+        fechaInicio: fechaInicio);
+  }
 }

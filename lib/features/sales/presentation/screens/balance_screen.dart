@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:komercia_app/features/sales/domain/entities/sale.dart';
 import 'package:komercia_app/features/sales/presentation/providers/date_provider.dart';
+import 'package:komercia_app/features/sales/presentation/providers/sales_provider.dart';
 
 class BalanceScreen extends ConsumerStatefulWidget {
   const BalanceScreen({super.key});
@@ -28,6 +30,8 @@ class _BalanceScreenState extends ConsumerState<BalanceScreen> {
   @override
   Widget build(BuildContext context) {
     final dateFilter = ref.watch(dateFilterProvider);
+    final sales = ref.watch(salesProvider);
+
     if (dateFilter.isLoading) {
       // Mostrar un loader mientras se obtienen los datos
       return const Center(child: CircularProgressIndicator());
@@ -54,9 +58,11 @@ class _BalanceScreenState extends ConsumerState<BalanceScreen> {
       body: Column(
         children: [
           _DateSelector(),
-          const _BalanceCard(),
+          _BalanceCard(),
           const SizedBox(height: 10),
-          const _SalesList(),
+          _SalesList(
+            sales: sales.sales,
+          ),
         ],
       ),
       bottomNavigationBar: const _BottomActions(),
@@ -121,6 +127,8 @@ class _DateSelectorState extends ConsumerState<_DateSelector> {
             onSelected: (_) {
               // actualizar estado
               ref.read(dateFilterProvider.notifier).setPeriod(date);
+              ref.read(salesProvider.notifier).getSalesByFilter(
+                  fechaInicio: date.fechaInicio, fechaFin: date.fechaFin);
             },
             selectedColor: Colors.yellow.shade700,
           );
@@ -131,8 +139,6 @@ class _DateSelectorState extends ConsumerState<_DateSelector> {
 }
 
 class _BalanceCard extends ConsumerWidget {
-  const _BalanceCard();
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
@@ -166,12 +172,14 @@ class _BalanceCard extends ConsumerWidget {
   }
 }
 
-class _SalesList extends StatelessWidget {
-  const _SalesList();
+// ignore: must_be_immutable
+class _SalesList extends ConsumerWidget {
+  List<Sale> sales = [];
+  _SalesList({required this.sales});
 
   @override
-  Widget build(BuildContext context) {
-    final sales = <String>[]; // aquí irían tus ventas
+  Widget build(BuildContext context, WidgetRef ref) {
+    // aquí irían tus ventas
 
     if (sales.isEmpty) {
       return const Expanded(
@@ -191,10 +199,31 @@ class _SalesList extends StatelessWidget {
     return Expanded(
       child: ListView.builder(
         itemCount: sales.length,
-        itemBuilder: (_, i) => ListTile(
-          title: Text('Venta $i'),
-          subtitle: Text('Detalle de la venta'),
-        ),
+        itemBuilder: (_, i) {
+          final sale = sales[i];
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            child: ListTile(
+              leading: const Icon(Icons.card_giftcard, color: Colors.green),
+              title: Text('${(i + 1).toString()} Item'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      '${sale.tipoPago!.nombreTipoPago} • ${sale.fechaRegistro} • ${sale.horaRegistro}'),
+                  Text(
+                      'Vendedor: ${sale.usuarioRegistro.nombre} ${sale.usuarioRegistro.apellidoPaterno}'),
+                ],
+              ),
+              trailing: Text(
+                'S/ ${sale.totalFinal}',
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+              onTap: () => {},
+            ),
+          );
+        },
       ),
     );
   }

@@ -14,6 +14,7 @@ export 'entities/product_color.dart';
 export 'entities/product_size.dart';
 export 'entities/payment_type.dart';
 export 'entities/period.dart';
+export 'entities/user.dart';
 
 export 'repositories/sale_repository.dart';
 export 'repositories/product_category_repository.dart';

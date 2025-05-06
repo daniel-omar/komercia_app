@@ -3,7 +3,8 @@ import 'package:komercia_app/features/sales/domain/entities/sale.dart';
 import 'package:komercia_app/features/sales/domain/repositories/sale_repository.dart';
 import 'package:komercia_app/features/sales/presentation/providers/sale_repository_provider.dart';
 
-final salesProvider = StateNotifierProvider<SalesNotifier, SalesState>((ref) {
+final salesProvider =
+    StateNotifierProvider.autoDispose<SalesNotifier, SalesState>((ref) {
   final salesRepository = ref.watch(saleRepositoryProvider);
 
   return SalesNotifier(salesRepository: salesRepository);
@@ -33,6 +34,31 @@ class SalesNotifier extends StateNotifier<SalesState> {
         isLoading: false,
         offset: state.offset + 10,
         sales: sales);
+  }
+
+  Future getSalesByFilter(
+      {int? idTipoPago,
+      bool? tieneDescuento,
+      String? fechaInicio,
+      String? fechaFin}) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final sales = await salesRepository.getSalesByFilter(
+          idTipoPago: idTipoPago,
+          tieneDescuento: tieneDescuento,
+          fechaFin: fechaFin,
+          fechaInicio: fechaInicio);
+
+      // if (sales.isEmpty) {
+      //   state = state.copyWith(isLoading: false, isLastPage: true);
+      //   return;
+      // }
+
+      state = state.copyWith(isLastPage: false, isLoading: false, sales: sales);
+    } catch (e) {
+      state = state.copyWith(isLastPage: false, isLoading: false);
+    }
   }
 }
 
