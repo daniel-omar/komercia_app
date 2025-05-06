@@ -32,27 +32,16 @@ class SideMenuState extends ConsumerState<SideMenu> {
 
     return NavigationDrawer(
         elevation: 1,
-        selectedIndex: menuState.menu == null ? 0 : menuState.menu!.idMenu,
+        selectedIndex: menuState.indexMenu,
         onDestinationSelected: (value) {
           setState(() {
             navDrawerIndex = value;
           });
 
-          if (navDrawerIndex == 0) {
-            ref.read(menusProvider.notifier).setMenu(Menu(
-                idMenu: 0,
-                codigoMenu: "",
-                nombreMenu: "",
-                descripcionMenu: "",
-                icono: Icons.home,
-                rutaMenu: "/"));
-            context.push("/");
-          } else {
-            final menuItem = menuState.menus[navDrawerIndex - 1];
-            ref.read(menusProvider.notifier).setMenu(menuItem);
-            context.push(menuItem.rutaMenu);
-          }
+          ref.read(menusProvider.notifier).updateIndex(navDrawerIndex);
+
           widget.scaffoldKey.currentState?.closeDrawer();
+          Navigator.pop(context);
         },
         children: [
           Padding(
@@ -64,18 +53,11 @@ class SideMenuState extends ConsumerState<SideMenu> {
             child: Text(goRouterNotifier.user.nombre,
                 style: textStyles.titleSmall),
           ),
-          const NavigationDrawerDestination(
-            icon: Icon(Icons.home_mini_rounded),
-            label: Text('Home'),
-          ),
-          const NavigationDrawerDestination(
-            icon: Icon(Icons.image_search_rounded),
-            label: Text('Productos'),
-          ),
-          const NavigationDrawerDestination(
-            icon: Icon(Icons.warehouse_rounded),
-            label: Text('Ordenes'),
-          ),
+          for (var menuSideBar in menuState.menusSideBar)
+            NavigationDrawerDestination(
+              icon: Icon(menuSideBar.icono),
+              label: Text(menuSideBar.nombreMenu),
+            ),
           const Padding(
             padding: EdgeInsets.fromLTRB(28, 16, 28, 10),
             child: Divider(),

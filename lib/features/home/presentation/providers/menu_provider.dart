@@ -1,8 +1,6 @@
 import 'package:komercia_app/config/router/app_router_notifier.dart';
 import 'package:komercia_app/features/auth/domain/domain.dart';
-import 'package:komercia_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:komercia_app/features/home/domain/domain.dart';
-import 'package:komercia_app/features/home/domain/repositories/menu_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'menu_repository_provider.dart';
@@ -46,30 +44,13 @@ class MenusNotifier extends StateNotifier<MenusState> {
         menusSideBar: [...state.menusSideBar, ...menusSideBar]);
   }
 
-  Future getMenus() async {
-    if (state.isLoading) return;
-
-    state = state.copyWith(isLoading: true);
-
-    final menus = await menuRepository.getMenusByUser(1);
-    final menusTabBar = await menuRepository.getMenusTabBarByUser(user);
-    final menusSideBar = await menuRepository.getMenusSideBarByUser(user);
-    
-    if (menus.isEmpty) {
-      state = state.copyWith(isLoading: false);
-      return;
-    }
-
-    state = state.copyWith(
-        isLoading: false,
-        menus: [...state.menus, ...menus],
-        menusTabBar: [...state.menusTabBar, ...menusTabBar],
-        menusSideBar: [...state.menusSideBar, ...menusSideBar]);
-  }
-
   Future setMenu(Menu menu) async {
     state =
         state.copyWith(isLoading: false, menus: [...state.menus], menu: menu);
+  }
+
+  void updateIndex(int newIndex) {
+    state = state.copyWith(indexMenu: newIndex);
   }
 }
 
@@ -79,25 +60,29 @@ class MenusState {
   final List<Menu> menusSideBar;
   final List<Menu> menusTabBar;
   final Menu? menu;
+  final int indexMenu;
 
   MenusState(
       {this.isLoading = false,
       this.menus = const [],
       this.menusSideBar = const [],
       this.menusTabBar = const [],
-      this.menu});
+      this.menu,
+      this.indexMenu=0});
 
   MenusState copyWith(
           {bool? isLoading,
           List<Menu>? menus,
           List<Menu>? menusSideBar,
           List<Menu>? menusTabBar,
-          Menu? menu}) =>
+          Menu? menu,
+          int? indexMenu}) =>
       MenusState(
         isLoading: isLoading ?? this.isLoading,
         menus: menus ?? this.menus,
         menusSideBar: menusSideBar ?? this.menusSideBar,
         menusTabBar: menusTabBar ?? this.menusTabBar,
         menu: menu ?? this.menu,
+        indexMenu: indexMenu ?? this.indexMenu,
       );
 }

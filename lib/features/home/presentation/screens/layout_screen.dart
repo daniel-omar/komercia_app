@@ -4,6 +4,7 @@ import 'package:komercia_app/features/home/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:komercia_app/features/sales/presentation/screens/balance_screen.dart';
 
 import 'package:komercia_app/features/shared/shared.dart';
 
@@ -71,24 +72,27 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
             appBar: AppBar(
               title: const Text(''),
             ),
-            body: TabBarView(
-              controller: _tabController,
+            body: IndexedStack(
+              index: menuState.indexMenu,
               children: menuState.menusTabBar.map((item) {
                 if (item.nombreMenu == 'Inicio') {
                   return const HomeScreen();
                 } else if (item.nombreMenu == 'Inventario') {
                   return const Center(child: Text('Inventario'));
+                } else if (item.nombreMenu == 'Balance') {
+                  return const BalanceScreen();
                 } else {
                   return Center(child: Text(item.nombreMenu)); // fallback
                 }
               }).toList(),
             ),
             bottomNavigationBar: BottomNavigationBar(
-              currentIndex: _currentIndex,
+              currentIndex: menuState.indexMenu,
               onTap: (currentIndex) {
                 setState(() {
                   _currentIndex = currentIndex;
                 });
+                ref.read(menusProvider.notifier).updateIndex(currentIndex);
                 _tabController.animateTo(_currentIndex);
               },
               items: menuState.menusTabBar.map((item) {

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:komercia_app/features/auth/auth.dart';
 import 'package:komercia_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:komercia_app/features/home/presentation/screens/layout_screen.dart';
+import 'package:komercia_app/features/sales/presentation/screens/balance_screen.dart';
 import 'package:komercia_app/features/sales/presentation/screens/new_sale_screen.dart';
 
 import 'app_router_notifier.dart';
@@ -31,6 +32,11 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/new_sale',
         builder: (context, state) => const NewSaleScreen(),
+      ),
+
+      GoRoute(
+        path: '/balance',
+        builder: (context, state) => const BalanceScreen(),
       ),
 
       ///* Product Routes
