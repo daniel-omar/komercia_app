@@ -17,7 +17,7 @@ class SaleDatasourceImpl extends SaleDatasource {
   Future<Sale> getSaleById(int idOrden) async {
     try {
       final response =
-          await dioClient.dio.get('/sales/sale/get_sale_by_id/$idOrden');
+          await dioClient.dio.get('/sales/sale/get_by_id/$idOrden');
 
       ResponseMain responseMain =
           ResponseMainMapper.responseJsonToEntity(response.data);
@@ -62,14 +62,14 @@ class SaleDatasourceImpl extends SaleDatasource {
           await dioClient.dio.post('/sales/sale/create', data: data);
       ResponseMain responseMain =
           ResponseMainMapper.responseJsonToEntity(response.data);
+
+      return true;
     } on DioException catch (e) {
       if (e.response!.statusCode == 404) throw SaleNotFound();
       throw Exception();
     } catch (e) {
       throw Exception();
     }
-
-    return true;
   }
 
   @override
@@ -117,6 +117,45 @@ class SaleDatasourceImpl extends SaleDatasource {
       throw Exception(e);
     } catch (e) {
       throw Exception(e);
+    }
+  }
+
+  @override
+  Future<List<SaleDetail>> getSaleDetails(int idVenta) async {
+    try {
+      final response =
+          await dioClient.dio.get('/sales/sale/get_details/$idVenta');
+
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+
+      List<SaleDetail> saleDetails = [];
+      // ignore: no_leading_underscores_for_local_identifiers
+      for (final _saleDetail in responseMain.data ?? []) {
+        saleDetails.add(SaleDetailMapper.saleDetailJsonToEntity(_saleDetail));
+      }
+      return saleDetails;
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw SaleNotFound();
+      throw Exception();
+    } catch (e) {
+      throw Exception();
+    }
+  }
+
+  @override
+  Future<bool> updateActive(Map<String, dynamic> data) async {
+    try {
+      final response =
+          await dioClient.dio.put('/sales/sale/update_active', data: data);
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+      return true;
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw SaleNotFound();
+      throw Exception();
+    } catch (e) {
+      throw Exception();
     }
   }
 }

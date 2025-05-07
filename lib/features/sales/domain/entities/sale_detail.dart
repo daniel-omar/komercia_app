@@ -1,24 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:komercia_app/features/sales/domain/domain.dart';
 
 class SaleDetail {
   int? idVentaDetalle;
-  int? idVenta;
+  int idVenta;
   int idProducto;
-  int cantidad;
+  Product producto;
   double? precio;
-  int? idProductoVariable;
+  int cantidad;
+  // int? idProductoVariable;
   int? idTalla;
+  ProductSize? talla;
   int? idColor;
+  ProductColor? color;
+  double? subTotalSugerido;
+  double? subTotal;
 
-  SaleDetail(
-      {required this.idVentaDetalle,
-      required this.idVenta,
-      required this.idProducto,
-      required this.cantidad,
-      this.precio,
-      this.idProductoVariable,
-      this.idTalla,
-      this.idColor});
+  SaleDetail({
+    this.idVentaDetalle,
+    required this.idVenta,
+    required this.idProducto,
+    required this.producto,
+    this.precio,
+    required this.cantidad,
+    // this.idProductoVariable,
+    this.idTalla,
+    this.talla,
+    this.idColor,
+    this.color,
+    this.subTotalSugerido,
+    this.subTotal,
+  });
 
   Map<String, dynamic> toJson() => {
         "id_venta_detalle": idVentaDetalle,

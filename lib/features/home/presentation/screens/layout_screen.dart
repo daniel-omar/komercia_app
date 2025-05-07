@@ -36,6 +36,7 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
   late TabController _tabController;
 
   bool _isInit = false;
+  String _title = "";
 
   @override
   void initState() {
@@ -70,7 +71,9 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
         ? Scaffold(
             drawer: SideMenu(scaffoldKey: widget.scaffoldKey),
             appBar: AppBar(
-              title: const Text(''),
+              title: Text(_title),
+              backgroundColor: Colors.yellow[700],
+              foregroundColor: Colors.black,
             ),
             body: IndexedStack(
               index: menuState.indexMenu,
@@ -91,6 +94,7 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
               onTap: (currentIndex) {
                 setState(() {
                   _currentIndex = currentIndex;
+                  _title = menuState.menusTabBar[currentIndex].nombreMenu;
                 });
                 ref.read(menusProvider.notifier).updateIndex(currentIndex);
                 _tabController.animateTo(_currentIndex);

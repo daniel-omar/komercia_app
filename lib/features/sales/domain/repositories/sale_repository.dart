@@ -1,4 +1,4 @@
-import 'package:image_picker/image_picker.dart';
+import 'package:komercia_app/features/sales/domain/entities/sale_detail.dart';
 
 import '../entities/sale.dart';
 
@@ -12,4 +12,6 @@ abstract class SaleRepository {
       bool? tieneDescuento,
       String? fechaInicio,
       String? fechaFin});
+  Future<List<SaleDetail>> getSaleDetails(int idVenta);
+  Future<bool> updateActive(Map<String, dynamic> data);
 }

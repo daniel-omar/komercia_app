@@ -6,8 +6,10 @@ class ProductMapper {
       codigoProducto: json["codigo_producto"],
       nombreProducto: json["nombre_producto"],
       descripcionProducto: json["descripcion_producto"],
-      precio: double.parse(json["precio"].toString()),
-      precioVenta: double.parse(json["precio_venta"].toString()),
+      precio: json["precio"] == null ? null : double.parse(json["precio"]),
+      precioVenta: json["precio_venta"] == null
+          ? null
+          : double.parse(json["precio_venta"]),
       precioCompra: json["precio_compra"] == null
           ? null
           : double.parse(json["precio_compra"].toString()),

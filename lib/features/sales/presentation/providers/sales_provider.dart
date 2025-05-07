@@ -50,11 +50,6 @@ class SalesNotifier extends StateNotifier<SalesState> {
           fechaFin: fechaFin,
           fechaInicio: fechaInicio);
 
-      // if (sales.isEmpty) {
-      //   state = state.copyWith(isLoading: false, isLastPage: true);
-      //   return;
-      // }
-
       state = state.copyWith(isLastPage: false, isLoading: false, sales: sales);
     } catch (e) {
       state = state.copyWith(isLastPage: false, isLoading: false);
@@ -90,4 +85,8 @@ class SalesState {
         isLoading: isLoading ?? this.isLoading,
         sales: sales ?? this.sales,
       );
+
+  double get sumTotalSales {
+    return sales.fold(0.0, (sum, sale) => sum + (sale.totalFinal));
+  }
 }

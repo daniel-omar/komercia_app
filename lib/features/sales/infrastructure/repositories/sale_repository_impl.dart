@@ -37,4 +37,14 @@ class SaleRepositoryImpl extends SaleRepository {
         fechaFin: fechaFin,
         fechaInicio: fechaInicio);
   }
+
+  @override
+  Future<List<SaleDetail>> getSaleDetails(int idVenta) {
+    return datasource.getSaleDetails(idVenta);
+  }
+
+  @override
+  Future<bool> updateActive(Map<String, dynamic> data) {
+    return datasource.updateActive(data);
+  }
 }

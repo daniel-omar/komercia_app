@@ -1,9 +1,6 @@
-import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:komercia_app/features/sales/domain/entities/sale.dart';
+import 'package:komercia_app/features/sales/domain/domain.dart';
 import 'package:komercia_app/features/sales/domain/entities/sale_product.dart';
-import 'package:komercia_app/features/sales/domain/repositories/sale_repository.dart';
 
 import 'sale_repository_provider.dart';
 
@@ -17,27 +14,28 @@ final saleProvider =
 class SaleNotifier extends StateNotifier<SaleState> {
   final SaleRepository saleRepository;
   final int idSale;
-
+  
   SaleNotifier({required this.saleRepository, required this.idSale})
       : super(SaleState(isLoading: true)) {
-    loadSale(idSale);
+    loadSaleDetails(idSale);
   }
-
-  Future<void> loadSale(int idSale) async {
+  
+  Future<void> loadSaleDetails(int idSale) async {
     try {
-      if (state.idSale == 0) {
-        state = state.copyWith(
-          isLoading: false,
-          sale: null,
-        );
-        return;
-      }
+      state = state.copyWith(
+        isLoading: true,
+        sale: null,
+      );
       //print("carga inciial");
-      final sale = await saleRepository.getSaleById(idSale!);
+      final saleDetails = await saleRepository.getSaleDetails(idSale);
       // print(sale.toJson());
-      state =
-          state.copyWith(isLoading: false, sale: sale, idSale: sale.idVenta);
+      state = state.copyWith(
+          isLoading: false, idSale: idSale, saleDetails: saleDetails);
     } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        sale: null,
+      );
       // 404 product not found
       print(e);
     }
@@ -46,7 +44,7 @@ class SaleNotifier extends StateNotifier<SaleState> {
   updateSale(Sale sale) {
     state = state.copyWith(sale: sale);
   }
-  
+
   clearData() {
     state = state.copyWith(
         isLoading: false, isSaving: false, sale: null, saleProducts: []);
@@ -58,6 +56,7 @@ class SaleState {
   final Sale? sale;
   final bool isLoading;
   final bool isSaving;
+  final List<SaleDetail>? saleDetails;
   final List<SaleProduct>? saleProducts;
 
   SaleState(
@@ -65,6 +64,7 @@ class SaleState {
       this.sale,
       this.isLoading = true,
       this.isSaving = false,
+      this.saleDetails = const [],
       this.saleProducts = const []});
 
   SaleState copyWith(
@@ -72,11 +72,13 @@ class SaleState {
           Sale? sale,
           bool? isLoading,
           bool? isSaving,
+          List<SaleDetail>? saleDetails,
           List<SaleProduct>? saleProducts}) =>
       SaleState(
           idSale: idSale ?? this.idSale,
           sale: sale ?? this.sale,
           isLoading: isLoading ?? this.isLoading,
           isSaving: isSaving ?? this.isSaving,
-          saleProducts: saleProducts ?? this.saleProducts);
+          saleProducts: saleProducts ?? this.saleProducts,
+          saleDetails: saleDetails ?? this.saleDetails);
 }

@@ -1,9 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
+import 'package:komercia_app/features/sales/presentation/providers/discount_provider.dart';
 import 'package:uuid/uuid.dart';
 
 final showProductPurchaseValidationErrorsProvider =
     StateProvider<bool>((ref) => false);
+
+final totalSaleComputedProvider = Provider<double>((ref) {
+  final items = ref.watch(productsPurchaseProvider);
+  return items.fold(
+    0.0,
+    (sum, item) => sum + (item.precioVenta ?? 0) * item.cantidad,
+  );
+});
+
+final totalFinalComputedProvider = Provider<double>((ref) {
+  final total = ref.watch(totalSaleComputedProvider);
+  final discount = ref.watch(discountProvider);
+  return discount.apply(total); // asumiendo que Discount tiene .apply()
+});
 
 final productsPurchaseProvider =
     StateNotifierProvider<ProductsNotifier, List<ProductPurchaseState>>((ref) {

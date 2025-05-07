@@ -112,6 +112,17 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
   }
 
   void _showPaymentOptionsSheet(BuildContext context) {
+    final productsPurchaseState = ref.read(productsPurchaseProvider);
+    final hasInvalid =
+        productsPurchaseState.any((p) => (p.idTalla == 0 || p.idColor == 0));
+    if (hasInvalid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Todos los productos deben tener talla y color.')),
+      );
+      return;
+    }
+
     FocusScope.of(context).unfocus();
     ref.read(selectedPaymentTypeIndexProvider.notifier).state = -1;
     ref.read(selectedPaymentTypeProvider.notifier).state = null;
@@ -134,6 +145,8 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Nueva Venta'),
+          backgroundColor: Colors.yellow[700],
+          foregroundColor: Colors.black,
           actions: [
             SizedBox(
               width: 80,
@@ -156,12 +169,10 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
         body: const _ProductsPurcharseView(),
         bottomNavigationBar: Consumer(
           builder: (context, ref, _) {
-            total = ref.watch(productsPurchaseProvider.select(
-              (items) => items.fold(0.0,
-                  (sum, item) => sum + (item.precioVenta ?? 0) * item.cantidad),
-            ));
             final discount = ref.watch(discountProvider);
-            final totalFinal = discount.apply(total);
+
+            final total = ref.watch(totalSaleComputedProvider);
+            final totalFinal = ref.watch(totalFinalComputedProvider);
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

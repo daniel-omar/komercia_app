@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:komercia_app/features/sales/domain/entities/sale.dart';
 import 'package:komercia_app/features/sales/presentation/providers/date_provider.dart';
+import 'package:komercia_app/features/sales/presentation/providers/sale_provider.dart';
+import 'package:komercia_app/features/sales/presentation/providers/sale_submission_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/sales_provider.dart';
 
 class BalanceScreen extends ConsumerStatefulWidget {
@@ -38,31 +40,33 @@ class _BalanceScreenState extends ConsumerState<BalanceScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Balance'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_alt),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (_) => const _FilterOptions(),
-              );
-            },
-          ),
-        ],
-      ),
       body: Column(
         children: [
-          _DateSelector(),
-          _BalanceCard(),
-          const SizedBox(height: 10),
-          _SalesList(
-            sales: sales.sales,
+          Row(
+            children: [
+              Expanded(
+                child: _DateSelector(), // Ocupa todo el espacio disponible
+              ),
+              IconButton(
+                icon: const Icon(Icons.filter_alt),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (_) => const _FilterOptions(),
+                  );
+                },
+              ),
+            ],
           ),
+          _BalanceCard(
+            totalIncome: sales.sumTotalSales,
+          ),
+          const SizedBox(height: 10),
+          _SalesList(sales: sales.sales),
         ],
       ),
       bottomNavigationBar: const _BottomActions(),
@@ -102,15 +106,28 @@ class _DateSelectorState extends ConsumerState<_DateSelector> {
   Widget build(BuildContext context) {
     final dateFilter = ref.watch(dateFilterProvider);
 
-    if (dateFilter.periodSelect != null) {
-      // Desplazar al final cuando cambia el periodo seleccionado
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToEnd();
-      });
-    }
+    ref.listen<DateFilterState>(dateFilterProvider, (previous, next) {
+      if (next.periodSelect!.etiqueta != previous?.periodSelect!.etiqueta) {
+        ref.read(salesProvider.notifier).getSalesByFilter(
+            fechaInicio: next.periodSelect!.fechaInicio,
+            fechaFin: next.periodSelect!.fechaFin);
+      } else if (next.tipoFiltro != previous?.tipoFiltro) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToEnd();
+        });
+      }
+    });
+
+    ref.listen<SaleSubmissionState>(saleSubmissionProvider, (previous, next) {
+      if (!next.isSaving && next.success) {
+        ref.read(salesProvider.notifier).getSalesByFilter(
+            fechaInicio: dateFilter.periodSelect!.fechaInicio,
+            fechaFin: dateFilter.periodSelect!.fechaFin);
+      }
+    });
 
     return SizedBox(
-      height: 48,
+      height: 45,
       child: ListView.separated(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
@@ -127,8 +144,6 @@ class _DateSelectorState extends ConsumerState<_DateSelector> {
             onSelected: (_) {
               // actualizar estado
               ref.read(dateFilterProvider.notifier).setPeriod(date);
-              ref.read(salesProvider.notifier).getSalesByFilter(
-                  fechaInicio: date.fechaInicio, fechaFin: date.fechaFin);
             },
             selectedColor: Colors.yellow.shade700,
           );
@@ -139,6 +154,9 @@ class _DateSelectorState extends ConsumerState<_DateSelector> {
 }
 
 class _BalanceCard extends ConsumerWidget {
+  final double totalIncome;
+  const _BalanceCard({required this.totalIncome});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
@@ -149,11 +167,17 @@ class _BalanceCard extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Ingresos', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('\$0'),
+                const Text('Ingresos',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                Text('S/ $totalIncome',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                        color: Colors.blueGrey)),
               ],
             ),
             const Divider(),
@@ -205,7 +229,7 @@ class _SalesList extends ConsumerWidget {
             margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
             child: ListTile(
               leading: const Icon(Icons.card_giftcard, color: Colors.green),
-              title: Text('${(i + 1).toString()} Item'),
+              title: Text(sale.concepto),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -220,7 +244,11 @@ class _SalesList extends ConsumerWidget {
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
-              onTap: () => {},
+              onTap: () {
+                ref.read(saleProvider(sale.idVenta));
+                ref.read(saleProvider(sale.idVenta).notifier).updateSale(sale);
+                context.push("/sale_detail/${sale.idVenta}");
+              },
             ),
           );
         },
@@ -309,6 +337,7 @@ class _FilterOptions extends ConsumerWidget {
                   ref
                       .read(dateFilterProvider.notifier)
                       .setDateFilterType(option.type);
+
                   Navigator.pop(context);
                 },
               )),

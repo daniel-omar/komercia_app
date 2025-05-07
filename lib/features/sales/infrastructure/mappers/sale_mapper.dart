@@ -6,6 +6,7 @@ import 'package:komercia_app/features/sales/infrastructure/mappers/user_mapper.d
 class SaleMapper {
   static Sale saleJsonToEntity(Map<String, dynamic> json) => Sale(
       idVenta: json["id_venta"],
+      concepto: json["concepto"] ?? "",
       idTipoPago: json["id_tipo_pago"],
       tipoPago: json["tipo_pago"] == null
           ? null
@@ -30,4 +31,28 @@ class SaleMapper {
       fechaRegistro: json["fecha_registro"],
       horaActualizacion: json["hora_actualizacion"],
       fechaActualizacion: json["fecha_actualizacion"]);
+}
+
+class SaleDetailMapper {
+  static SaleDetail saleDetailJsonToEntity(Map<String, dynamic> json) =>
+      SaleDetail(
+        idVenta: int.parse(json["id_venta"]),
+        idProducto: json["id_producto"],
+        producto: ProductMapper.productJsonToEntity(json["producto"]),
+        precio: json["precio"] == null ? null : double.parse(json["precio"]),
+        cantidad: json["cantidad"],
+        idTalla: json["id_talla"],
+        talla: json["talla"] == null
+            ? null
+            : ProductSizeMapper.productSizeJsonToEntity(json["talla"]),
+        idColor: json["id_color"],
+        color: json["color"] == null
+            ? null
+            : ProductColorMapper.productColorJsonToEntity(json["color"]),
+        subTotal:
+            json["sub_total"] == null ? null : double.parse(json["sub_total"]),
+        subTotalSugerido: json["sub_total_sugerido"] == null
+            ? null
+            : double.parse(json["sub_total_sugerido"]),
+      );
 }

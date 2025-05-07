@@ -6,6 +6,7 @@ import 'package:komercia_app/features/auth/presentation/providers/auth_provider.
 import 'package:komercia_app/features/home/presentation/screens/layout_screen.dart';
 import 'package:komercia_app/features/sales/presentation/screens/balance_screen.dart';
 import 'package:komercia_app/features/sales/presentation/screens/new_sale_screen.dart';
+import 'package:komercia_app/features/sales/presentation/screens/sale_detail_screen.dart';
 
 import 'app_router_notifier.dart';
 
@@ -37,6 +38,12 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/balance',
         builder: (context, state) => const BalanceScreen(),
+      ),
+
+      GoRoute(
+        path: '/sale_detail/:id_sale',
+        builder: (context, state) => SaleDetailScreen(
+            idSale: int.parse(state.pathParameters['id_sale']!)),
       ),
 
       ///* Product Routes

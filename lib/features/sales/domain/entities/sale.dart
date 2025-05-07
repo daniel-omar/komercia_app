@@ -3,6 +3,7 @@ import 'package:komercia_app/features/sales/domain/entities/discount_type.dart';
 
 class Sale {
   int idVenta;
+  String concepto;
   int idTipoPago;
   PaymentType? tipoPago;
   bool tieneDescuento;
@@ -24,6 +25,7 @@ class Sale {
 
   Sale(
       {required this.idVenta,
+      required this.concepto,
       required this.idTipoPago,
       this.tipoPago,
       required this.tieneDescuento,
@@ -45,6 +47,7 @@ class Sale {
 
   Map<String, dynamic> toJson() => {
         "id_venta": idVenta,
+        "concepto": concepto,
         "id_tipo_pago": idTipoPago,
         "tiene_descuento": tieneDescuento,
         "id_tipo_descuento": idTipoDescuento,

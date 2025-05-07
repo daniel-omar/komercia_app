@@ -20,18 +20,38 @@ class SaleSubmissionNotifier extends StateNotifier<SaleSubmissionState> {
       : super(const SaleSubmissionState());
 
   Future<void> submitSale(List<SaleProduct> saleProducts, int idTipoPago,
-      String? tipoDescuento, double? montoDescuento) async {
+      String? tipoDescuento, double? montoDescuento, String? concepto) async {
     try {
-      state =
-          state.copyWith(isSaving: true, hasError: false, errorMessage: null);
+      state = state.copyWith(
+          isSaving: true, hasError: false, errorMessage: null, success: false);
 
       final sale = {
         'id_tipo_pago': idTipoPago,
         'tipo_descuento': tipoDescuento,
         'monto_descuento': montoDescuento,
+        'concepto': concepto,
         'productos': saleProducts.map((e) => e.toJson()).toList()
       };
       await saleRepository.createSale(sale);
+      state = state.copyWith(isSaving: false, success: true);
+    } catch (e) {
+      state = state.copyWith(
+        isSaving: false,
+        hasError: true,
+        errorMessage: e.toString(),
+        success: false,
+      );
+    }
+  }
+
+  Future<void> updateActive(int idVenta, bool esActivo) async {
+    try {
+      state = state.copyWith(
+          isSaving: true, hasError: false, errorMessage: null, success: false);
+
+      final sale = {'id_venta': idVenta, 'es_activo': esActivo};
+      await saleRepository.updateActive(sale);
+
       state = state.copyWith(isSaving: false, success: true);
     } catch (e) {
       state = state.copyWith(
