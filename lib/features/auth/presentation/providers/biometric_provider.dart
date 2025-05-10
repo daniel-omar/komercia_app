@@ -5,11 +5,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class BiometricState {
   final bool isFingerprintEnabled;
-  BiometricState({required this.isFingerprintEnabled});
+  final bool hasFingerprintRegistered;
+  BiometricState({
+    this.isFingerprintEnabled = false,
+    this.hasFingerprintRegistered = false,
+  });
+
+  BiometricState copyWith({
+    bool? isFingerprintEnabled,
+    bool? hasFingerprintRegistered,
+  }) =>
+      BiometricState(
+        isFingerprintEnabled: isFingerprintEnabled ?? this.isFingerprintEnabled,
+        hasFingerprintRegistered:
+            hasFingerprintRegistered ?? this.hasFingerprintRegistered,
+      );
 }
 
 class BiometricNotifier extends StateNotifier<BiometricState> {
-  BiometricNotifier() : super(BiometricState(isFingerprintEnabled: false));
+  BiometricNotifier() : super(BiometricState());
 
   // Método para verificar si la huella está habilitada
   Future<void> checkFingerprint() async {
@@ -17,9 +31,11 @@ class BiometricNotifier extends StateNotifier<BiometricState> {
     final huellaHabilitada = prefs.getBool('auth_biometria_activada') ?? false;
 
     if (huellaHabilitada) {
-      state = BiometricState(isFingerprintEnabled: true);
+      state = state.copyWith(
+          isFingerprintEnabled: true, hasFingerprintRegistered: true);
     } else {
-      state = BiometricState(isFingerprintEnabled: false);
+      state = state.copyWith(
+          isFingerprintEnabled: false, hasFingerprintRegistered: false);
     }
   }
 
@@ -58,10 +74,14 @@ class BiometricNotifier extends StateNotifier<BiometricState> {
     await prefs.setBool('auth_biometria_activada', false);
     return true;
   }
+
+  Future<void> changeIsFingerprintEnabled(bool enable) async {
+    state = state.copyWith(isFingerprintEnabled: enable);
+  }
 }
 
 // Provider para manejar el estado de la huella
 final biometricProvider =
-    StateNotifierProvider<BiometricNotifier, BiometricState>((ref) {
+    StateNotifierProvider.autoDispose<BiometricNotifier, BiometricState>((ref) {
   return BiometricNotifier();
 });

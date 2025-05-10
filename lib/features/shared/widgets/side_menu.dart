@@ -123,7 +123,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
           ref.read(menusProvider.notifier).updateIndex(navDrawerIndex);
 
           widget.scaffoldKey.currentState?.closeDrawer();
-          Navigator.pop(context);
+          // Navigator.pop(context);
         },
         children: [
           Padding(

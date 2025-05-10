@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:komercia_app/features/auth/presentation/providers/biometric_provider.dart';
 import 'package:komercia_app/features/shared/infrastructure/providers/no_space_formatter.dart';
 import 'package:flutter/material.dart';
@@ -8,14 +9,28 @@ import 'package:komercia_app/features/auth/presentation/providers/providers.dart
 import 'package:komercia_app/features/shared/shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginScreen extends ConsumerWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Solo se llama una vez al construir el widget por primera vez
+    Future.microtask(() {
+      ref.read(biometricProvider.notifier).checkFingerprint();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final scaffoldBackgroundColor = Theme.of(context).scaffoldBackgroundColor;
-    final biometricState = ref.read(biometricProvider);
+    final biometricState = ref.watch(biometricProvider);
 
     ref.listen(biometricProvider, (previous, next) {
       if (next.isFingerprintEnabled) {
@@ -32,22 +47,26 @@ class LoginScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 80),
-            // Icon Banner
-            const Icon(
-              Icons.account_box,
-              color: Colors.white,
-              size: 100,
-            ),
-            const SizedBox(height: 80),
-
+            if (!biometricState.isFingerprintEnabled) ...[
+              const SizedBox(height: 80),
+              // Icon Banner
+              const Icon(
+                Icons.account_box,
+                color: Colors.white,
+                size: 100,
+              ),
+              const SizedBox(height: 200),
+            ],
             Container(
-              height: size.height - 260, // 80 los dos sizebox y 100 el ícono
+              height: biometricState.isFingerprintEnabled
+                  ? size.height
+                  : (size.height - 260), // 80 los dos sizebox y 100 el ícono
               width: double.infinity,
               decoration: BoxDecoration(
                 color: scaffoldBackgroundColor,
-                borderRadius:
-                    const BorderRadius.only(topLeft: Radius.circular(100)),
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(
+                        biometricState.isFingerprintEnabled ? 0 : 100)),
               ),
               child: biometricState.isFingerprintEnabled
                   ? const _Biometric()
@@ -56,6 +75,43 @@ class LoginScreen extends ConsumerWidget {
           ],
         ),
       ))),
+    );
+  }
+}
+
+Future<void> verificarHuella(BuildContext context, WidgetRef ref) async {
+  final biometricState = ref.read(biometricProvider);
+
+  // Si la huella está habilitada, proceder con la autenticación
+  if (biometricState.hasFingerprintRegistered) {
+    final exito = await ref
+        .read(biometricProvider.notifier)
+        .authenticateWithFingerprint();
+    if (!exito) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Autenticación fallida')),
+      ); // Lógica para continuar al home
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final correo = prefs.getString('correo');
+    final clave = prefs.getString('clave');
+
+    if (correo == null && clave == null) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('No se encontraron credenciales guardadas')),
+      );
+      return;
+    }
+
+    ref.read(authProvider.notifier).loginUser(correo!, clave!);
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Por favor ingrese sus credenciales')),
     );
   }
 }
@@ -71,13 +127,12 @@ class _LoginForm extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.read(biometricProvider.notifier).checkFingerprint();
-
     final loginForm = ref.watch(loginFormProvider);
     ref.listen(authProvider, (previous, next) {
       if (next.errorMessage.isEmpty) return;
       showSnackbar(context, next.errorMessage);
     });
+    final biometricState = ref.watch(biometricProvider);
 
     final textStyles = Theme.of(context).textTheme;
 
@@ -115,14 +170,31 @@ class _LoginForm extends ConsumerWidget {
           ),
           const SizedBox(height: 30),
           SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: CustomFilledButton(
-                  text: 'Ingresar',
-                  buttonColor: Colors.black,
-                  onPressed: loginForm.isPosting
-                      ? null
-                      : ref.read(loginFormProvider.notifier).onFormSubmit)),
+            width: double.infinity,
+            height: 60,
+            child: CustomFilledButton(
+                text: 'Ingresar',
+                buttonColor: Colors.black,
+                onPressed: loginForm.isPosting
+                    ? null
+                    : ref.read(loginFormProvider.notifier).onFormSubmit),
+          ),
+          if (biometricState.hasFingerprintRegistered) ...[
+            const SizedBox(height: 20),
+            IconButton(
+              icon: const Icon(Icons.fingerprint),
+              onPressed: () => verificarHuella(context, ref),
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                iconSize: 40,
+              ),
+            ),
+          ],
           const Spacer(flex: 2),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -143,43 +215,6 @@ class _LoginForm extends ConsumerWidget {
 class _Biometric extends ConsumerWidget {
   const _Biometric();
 
-  Future<void> verificarHuella(BuildContext context, WidgetRef ref) async {
-    final biometricState = ref.read(biometricProvider);
-
-    // Si la huella está habilitada, proceder con la autenticación
-    if (biometricState.isFingerprintEnabled) {
-      final exito = await ref
-          .read(biometricProvider.notifier)
-          .authenticateWithFingerprint();
-      if (!exito) {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Autenticación fallida')),
-        ); // Lógica para continuar al home
-        return;
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      final correo = prefs.getString('correo');
-      final clave = prefs.getString('clave');
-
-      if (correo == null && clave == null) {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('No se encontraron credenciales guardadas')),
-        );
-        return;
-      }
-
-      ref.read(authProvider.notifier).loginUser(correo!, clave!);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingrese sus credenciales')),
-      );
-    }
-  }
-
   void showSnackbar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context)
@@ -188,7 +223,6 @@ class _Biometric extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.read(biometricProvider.notifier).checkFingerprint();
     ref.listen(authProvider, (previous, next) {
       if (next.errorMessage.isEmpty) return;
       showSnackbar(context, next.errorMessage);
@@ -211,16 +245,39 @@ class _Biometric extends ConsumerWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
-              iconSize: 50,
+              iconSize: 75,
             ),
           ),
           const SizedBox(height: 30),
           SizedBox(
-            width: double.infinity,
+            width: 180,
             height: 60,
             child: CustomFilledButton(
-                text: 'Ingresar', buttonColor: Colors.black, onPressed: () {}),
+              text: 'Usar credenciales',
+              buttonColor: Colors.black,
+              onPressed: () {
+                ref
+                    .read(biometricProvider.notifier)
+                    .changeIsFingerprintEnabled(false);
+              },
+              radius: Radius.circular(30),
+            ),
           ),
+          // SizedBox(
+          //   width: 180,
+          //   height: 60,
+          //   child: RichText(
+          //     textAlign: TextAlign.center,
+          //     text: TextSpan(
+          //       text: 'Usar credenciales',
+          //       style: const TextStyle(color: Colors.blue, fontSize: 16),
+          //       recognizer: TapGestureRecognizer()
+          //         ..onTap = () {
+          //           print("faa");
+          //         },
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
