@@ -1,14 +1,12 @@
 import 'package:komercia_app/config/router/app_router_notifier.dart';
 import 'package:komercia_app/features/auth/domain/domain.dart';
-import 'package:komercia_app/features/auth/infrastructure/mappers/user_mapper.dart';
-import 'package:komercia_app/features/home/domain/domain.dart';
+import 'package:komercia_app/features/auth/presentation/providers/biometric_provider.dart';
 import 'package:komercia_app/features/home/presentation/providers/menu_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/auth/presentation/providers/auth_provider.dart';
 // import 'package:go_router/go_router.dart';
 import 'package:komercia_app/features/shared/shared.dart';
-import 'package:go_router/go_router.dart';
 
 class SideMenu extends ConsumerStatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -20,8 +18,91 @@ class SideMenu extends ConsumerStatefulWidget {
 
 class SideMenuState extends ConsumerState<SideMenu> {
   int navDrawerIndex = 0;
-
   late User userData;
+
+  Future<void> activarHuella(BuildContext context, WidgetRef ref) async {
+    final disponible =
+        await ref.read(biometricProvider.notifier).canCheckFingerprint();
+
+    if (!disponible) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El dispositivo no soporta huella')),
+      );
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+      return;
+    }
+
+    try {
+      final exito = await ref
+          .read(biometricProvider.notifier)
+          .authenticateWithFingerprint();
+
+      if (exito) {
+        // Guardar que la huella está habilitada
+        await ref.read(biometricProvider.notifier).saveFingerprint();
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Autenticación dactilar satisfactoria.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3), // Duración del SnackBar
+              behavior: SnackBarBehavior.floating),
+        );
+      } else {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Autenticación fallida')),
+        );
+      }
+    } catch (e) {
+      // print('Error al activar huella: $e');
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Hubo un error al activar la huella')),
+      );
+    }
+    // ignore: use_build_context_synchronously
+    Navigator.pop(context);
+  }
+
+  Future<void> desactivarHuella(BuildContext context, WidgetRef ref) async {
+    try {
+      final exito =
+          await ref.read(biometricProvider.notifier).clearFingerprint();
+
+      if (exito) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Desactivación dactilar satisfactoria.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3), // Duración del SnackBar
+              behavior: SnackBarBehavior.floating),
+        );
+      } else {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Desactivación dactilar fallida')),
+        );
+      }
+    } catch (e) {
+      // print('Error al activar huella: $e');
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Hubo un error al desactivar la huella')),
+      );
+    }
+    // ignore: use_build_context_synchronously
+    Navigator.pop(context);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    ref.read(biometricProvider.notifier).checkFingerprint();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +110,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
     final textStyles = Theme.of(context).textTheme;
     final goRouterNotifier = ref.read(goRouterNotifierProvider);
     final menuState = ref.watch(menusProvider);
+    final biometricState = ref.watch(biometricProvider);
 
     return NavigationDrawer(
         elevation: 1,
@@ -69,10 +151,27 @@ class SideMenuState extends ConsumerState<SideMenu> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: CustomFilledButton(
-                onPressed: () {
+                onPressed: () async {
+                  // await ref.read(biometricProvider.notifier).clearFingerprint();
                   ref.read(authProvider.notifier).logout();
                 },
                 text: 'Cerrar sesión'),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 50),
+            child: CustomFilledButton(
+              onPressed: () async {
+                biometricState.isFingerprintEnabled
+                    ? desactivarHuella(context, ref)
+                    : activarHuella(context, ref);
+              },
+              text: biometricState.isFingerprintEnabled
+                  ? 'Desactivar huella'
+                  : 'Activar huella',
+              buttonColor: biometricState.isFingerprintEnabled
+                  ? Colors.red
+                  : Colors.green,
+            ),
           ),
         ]);
   }

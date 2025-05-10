@@ -5,6 +5,7 @@ import 'package:komercia_app/features/auth/domain/domain.dart';
 import 'package:komercia_app/features/auth/infrastructure/infrastructure.dart';
 import 'package:komercia_app/features/shared/infrastructure/services/key_value_storage_service.dart';
 import 'package:komercia_app/features/shared/infrastructure/services/key_value_storage_service_impl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authRepository = AuthRepositoryImpl();
@@ -31,6 +32,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     try {
       final user = await authRepository.login(email, password);
+      _setPreferencesLoginUser(email, password);
       _setLoggedUser(user);
     } on CustomError catch (e) {
       logout(e.message);
@@ -66,6 +68,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
       authStatus: AuthStatus.authenticated,
       errorMessage: '',
     );
+  }
+
+  void _setPreferencesLoginUser(String correo, String clave) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('correo', correo);
+    await prefs.setString('clave', clave);
+  }
+
+  void _clearPreferencesLoginUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('correo', '');
+    await prefs.setString('clave', '');
   }
 
   Future<void> logout([String? errorMessage]) async {

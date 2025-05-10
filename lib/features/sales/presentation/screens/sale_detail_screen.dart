@@ -69,7 +69,11 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
         Navigator.pop(context); // bottomsheet
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Venta eliminada con éxito')),
+          const SnackBar(
+              content: Text('Venta eliminada con éxito'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3), // Duración del SnackBar
+              behavior: SnackBarBehavior.floating),
         );
       } else if (next.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(

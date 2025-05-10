@@ -35,7 +35,6 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <uses-feature android:name="android.hardware.fingerprint" android:required="false"/>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

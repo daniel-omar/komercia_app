@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
 import 'package:komercia_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:komercia_app/features/shared/shared.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 //! 3 - StateNotifierProvider - consume afuera
 final loginFormProvider =
@@ -60,6 +62,30 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
     state = state.copyWith(
       isObscurePassword: !state.isObscurePassword,
     );
+  }
+
+  Future<bool> authWithFingerprint() async {
+    final auth = LocalAuthentication();
+
+    // Verifica si el dispositivo soporta huella
+    final disponible = await auth.canCheckBiometrics;
+    if (!disponible) {
+      return false;
+    }
+
+    try {
+      final autenticado = await auth.authenticate(
+        localizedReason: 'Escanea tu huella para continuar',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+      return autenticado;
+    } catch (e) {
+      print('Error en biometría: $e');
+      return false;
+    }
   }
 }
 

@@ -63,12 +63,16 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
     super.dispose();
   }
 
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
+
   @override
   Widget build(BuildContext context) {
     final menuState = ref.watch(menusProvider);
 
     return !menuState.isLoading
         ? Scaffold(
+            key: widget.scaffoldKey,
             drawer: SideMenu(scaffoldKey: widget.scaffoldKey),
             appBar: AppBar(
               title: Text(_title),

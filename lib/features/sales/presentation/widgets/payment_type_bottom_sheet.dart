@@ -211,7 +211,11 @@ class ConceptBottomSheet extends ConsumerWidget {
         Navigator.pop(context); // volver a la pantalla de venta
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Venta registrada con éxito')),
+          const SnackBar(
+              content: Text('Venta registrada con éxito'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3), // Duración del SnackBar
+              behavior: SnackBarBehavior.floating),
         );
       } else if (next.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
