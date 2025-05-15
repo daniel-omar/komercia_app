@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'menu_repository_provider.dart';
 
-final menusProvider = StateNotifierProvider<MenusNotifier, MenusState>((ref) {
+final menusProvider =
+    StateNotifierProvider.autoDispose<MenusNotifier, MenusState>((ref) {
   final menuRepository = ref.watch(menuRepositoryProvider);
   final goRouterNotifier = ref.read(goRouterNotifierProvider);
 
@@ -28,6 +29,8 @@ class MenusNotifier extends StateNotifier<MenusState> {
     if (state.isLoading) return;
 
     state = state.copyWith(isLoading: true);
+
+    final permisos = await menuRepository.permissions();
 
     final menus = await menuRepository.getMenusByUser(user.idUsuario!);
     final menusTabBar = await menuRepository.getMenusTabBarByUser(user);
@@ -68,7 +71,7 @@ class MenusState {
       this.menusSideBar = const [],
       this.menusTabBar = const [],
       this.menu,
-      this.indexMenu=0});
+      this.indexMenu = 0});
 
   MenusState copyWith(
           {bool? isLoading,

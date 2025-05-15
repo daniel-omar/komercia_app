@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:komercia_app/features/sales/domain/domain.dart';
 import 'package:komercia_app/features/sales/presentation/providers/discount_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/payment_types_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_colors_provider.dart';
@@ -12,7 +11,7 @@ import 'package:komercia_app/features/sales/presentation/providers/products_purc
 import 'package:komercia_app/features/sales/presentation/providers/providers.dart';
 import 'package:komercia_app/features/sales/presentation/widgets/payment_type_bottom_sheet.dart';
 import 'package:komercia_app/features/sales/presentation/widgets/product_purchase_card.dart';
-import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+import 'package:komercia_app/features/shared/widgets/barcode_scanner.dart';
 
 class NewSaleScreen extends ConsumerStatefulWidget {
   const NewSaleScreen({super.key});
@@ -50,30 +49,49 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
 
   double total = 0;
 
-  Future<String?> readScanner() async {
-    String? res = await SimpleBarcodeScanner.scanBarcode(
-      context,
-      barcodeAppBar: const BarcodeAppBar(
-        appBarTitle: 'Test',
-        centerTitle: false,
-        enableBackButton: true,
-        backButtonIcon: Icon(Icons.arrow_back_ios),
-      ),
-      isShowFlashIcon: true,
-      delayMillis: 100,
-      cameraFace: CameraFace.back,
-      scanFormat: ScanFormat.ONLY_BARCODE,
-    );
-    return res;
+  // Future<String?> readScanner(BuildContext context_) async {
+  //   String? res = await SimpleBarcodeScanner.scanBarcode(
+  //     context_,
+  //     barcodeAppBar: const BarcodeAppBar(
+  //       appBarTitle: 'Test',
+  //       centerTitle: false,
+  //       enableBackButton: true,
+  //       backButtonIcon: Icon(Icons.arrow_back_ios),
+  //     ),
+  //     isShowFlashIcon: true,
+  //     delayMillis: 100,
+  //     cameraFace: CameraFace.back,
+  //     scanFormat: ScanFormat.ONLY_BARCODE,
+  //   );
+  //   return res;
+  // }
+
+  void onScanner() async {
+    String? codigoProducto = await readScanner(context);
+
+    if (!mounted || codigoProducto == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await findProduct(codigoProducto, context);
+    });
   }
 
-  Future<void> findProduct(String codigoProducto, BuildContext context) async {
+  Future<String?> readScanner(BuildContext context_) async {
+    final navigator = Navigator.of(context_, rootNavigator: true);
+    final result = await navigator.push(
+      MaterialPageRoute(builder: (_) => const BarcodeScannerScreen()),
+    );
+    return result;
+  }
+
+  Future<void> findProduct(String codigoProducto, BuildContext _context) async {
     final product =
         await ref.read(productProvider.notifier).findProduct(codigoProducto);
-
+    if (!mounted) return;
     if (product == null) {
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(_context).showSnackBar(
         const SnackBar(
             content: Text('Producto no se encuentra en inventario.')),
       );
@@ -85,10 +103,11 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
     await ref
         .read(productSizesProvider.notifier)
         .loadSizesByProduct(productoState.idProducto);
+    if (!mounted) return;
     final productSizesState = ref.watch(productSizesProvider);
     if (productSizesState.productSizes!.isEmpty) {
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(_context).showSnackBar(
         const SnackBar(content: Text('No cuenta con tallas disponibles.')),
       );
       return;
@@ -97,10 +116,11 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
     await ref
         .read(productColorsProvider.notifier)
         .loadColorsByProduct(productoState.idProducto);
+    if (!mounted) return;
     final productColorsState = ref.read(productColorsProvider);
     if (productColorsState.productColors!.isEmpty) {
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(_context).showSnackBar(
         const SnackBar(content: Text('No cuenta con colores disponibles.')),
       );
       return;
@@ -111,24 +131,24 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
         .addProduct(productoState.producto!);
   }
 
-  void _showPaymentOptionsSheet(BuildContext context) {
+  void _showPaymentOptionsSheet(BuildContext _context) {
     final productsPurchaseState = ref.read(productsPurchaseProvider);
     final hasInvalid =
         productsPurchaseState.any((p) => (p.idTalla == 0 || p.idColor == 0));
     if (hasInvalid) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(_context).showSnackBar(
         const SnackBar(
             content: Text('Todos los productos deben tener talla y color.')),
       );
       return;
     }
 
-    FocusScope.of(context).unfocus();
+    FocusScope.of(_context).unfocus();
     ref.read(selectedPaymentTypeIndexProvider.notifier).state = -1;
     ref.read(selectedPaymentTypeProvider.notifier).state = null;
 
     showModalBottomSheet(
-      context: context,
+      context: _context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
       ),
@@ -157,10 +177,7 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
                 child: IconButton(
                   icon: const Icon(Icons.qr_code_scanner),
                   tooltip: 'Escanear QR',
-                  onPressed: () async {
-                    String? codigoProducto = await readScanner();
-                    await findProduct(codigoProducto!, context);
-                  },
+                  onPressed: onScanner,
                 ),
               ),
             ),

@@ -1,3 +1,4 @@
+import 'package:komercia_app/features/auth/domain/entities/permission.dart';
 import 'package:komercia_app/features/auth/domain/entities/user.dart';
 import 'package:komercia_app/features/home/domain/domain.dart';
 
@@ -24,5 +25,10 @@ class MenuRepositoryImpl extends MenuRepository {
   @override
   Future<List<Menu>> getMenusByUser(int idUsuario) {
     return datasource.getMenusByUser(idUsuario);
+  }
+
+  @override
+  Future<List<Permission>> permissions() {
+    return datasource.permissions();
   }
 }

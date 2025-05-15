@@ -32,7 +32,7 @@ class ProductNotifier extends StateNotifier<ProductState> {
 
   Future<Product?> findProduct(String codigoProducto) async {
     try {
-      state = state.copyWith(isLoading: true);
+      state = ProductState(isLoading: true);
 
       Product product =
           await productRepository.find(codigoProducto: codigoProducto);
@@ -43,6 +43,7 @@ class ProductNotifier extends StateNotifier<ProductState> {
       return product;
     } catch (e) {
       // 404 product not found
+      state = state.copyWith(isLoading: false);
       print(e);
       return null;
     }

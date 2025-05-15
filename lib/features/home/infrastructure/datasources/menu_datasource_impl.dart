@@ -1,7 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:komercia_app/config/config.dart';
+import 'package:komercia_app/features/auth/domain/entities/permission.dart';
 import 'package:komercia_app/features/auth/domain/entities/user.dart';
 import 'package:komercia_app/features/home/domain/domain.dart';
+import 'package:komercia_app/features/home/infrastructure/mappers/permission_mapper.dart';
+import 'package:komercia_app/features/shared/infrastructure/entities/response_main.dart';
+import 'package:komercia_app/features/shared/infrastructure/mappers/response_main_mapper.dart';
 import 'package:komercia_app/features/shared/infrastructure/providers/dio_client.dart';
 import 'package:flutter/material.dart';
 
@@ -113,5 +117,23 @@ class MenuDatasourceImpl extends MenuDatasource {
           icono: Icons.image_search_rounded)
     ]);
     return menus;
+  }
+
+  @override
+  Future<List<Permission>> permissions() async {
+    int idApplication = 1;
+    final response =
+        await dioClient.dio.get('/auth/get_permissions/$idApplication');
+    ResponseMain responseMain =
+        ResponseMainMapper.responseJsonToEntity(response.data);
+
+    final List<Permission> permissions = [];
+
+    // ignore: no_leading_underscores_for_local_identifiers
+    for (final _permission in responseMain.data ?? []) {
+      permissions.add(PermissionMapper.jsonToEntity(_permission));
+    }
+
+    return permissions;
   }
 }
