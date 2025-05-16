@@ -35,25 +35,17 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
   final ScrollController scrollController = ScrollController();
   late TabController _tabController;
 
-  bool _isInit = false;
   String _title = "";
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(vsync: this, length: 0);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isInit) {
-      final menuState = ref.read(menusProvider);
-      _tabController = TabController(
-        vsync: this,
-        length: 3,
-      );
-      _isInit = true;
-    }
   }
 
   @override
@@ -70,6 +62,15 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
   Widget build(BuildContext context) {
     final menuState = ref.watch(menusProvider);
 
+    // ref.listen<MenusState>(menusProvider, (previous, next) {
+    //   if (!next.isLoading && previous!.menus.isEmpty) {
+    //     _tabController = TabController(
+    //       vsync: this,
+    //       length: next.menusTabBar.length,
+    //     );
+    //   }
+    // });
+
     return !menuState.isLoading
         ? Scaffold(
             key: widget.scaffoldKey,
@@ -82,11 +83,11 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
             body: IndexedStack(
               index: menuState.indexMenu,
               children: menuState.menusTabBar.map((item) {
-                if (item.nombreMenu == 'Inicio') {
+                if (item.rutaMenu == '/home') {
                   return const HomeScreen();
-                } else if (item.nombreMenu == 'Inventario') {
+                } else if (item.rutaMenu == '/products') {
                   return const Center(child: Text('Inventario'));
-                } else if (item.nombreMenu == 'Balance') {
+                } else if (item.rutaMenu == '/balance') {
                   return const BalanceScreen();
                 } else {
                   return Center(child: Text(item.nombreMenu)); // fallback
@@ -105,7 +106,7 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
               },
               items: menuState.menusTabBar.map((item) {
                 return BottomNavigationBarItem(
-                  icon: Icon(item.icono),
+                  icon: Icon(item.iconData),
                   label: item.nombreMenu,
                 );
               }).toList(),

@@ -9,7 +9,7 @@ class PermissionMapper {
         nombreMenu: json["nombre_menu"],
         descripcionMenu: json["descripcion_menu"],
         rutaMenu: json["ruta_menu"],
-        icono: json["icono"],
+        icono: json["icono_menu"],
         acciones: List<String>.from(json['acciones'] ?? []),
       );
 }

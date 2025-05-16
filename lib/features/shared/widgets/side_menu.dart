@@ -137,7 +137,7 @@ class SideMenuState extends ConsumerState<SideMenu> {
           ),
           for (var menuSideBar in menuState.menusSideBar)
             NavigationDrawerDestination(
-              icon: Icon(menuSideBar.icono),
+              icon: Icon(menuSideBar.iconData),
               label: Text(menuSideBar.nombreMenu),
             ),
           const Padding(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:komercia_app/features/home/presentation/providers/menu_provider.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
 import 'package:komercia_app/features/sales/presentation/providers/sale_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/sale_submission_provider.dart';
@@ -296,18 +297,22 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
                 //     const Text('Editar'),
                 //   ],
                 // ),
-                Column(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        _inactive(context);
-                      },
-                      icon:
-                          const Icon(Icons.delete, size: 40, color: Colors.red),
-                    ),
-                    // const Text('Eliminar', style: TextStyle(color: Colors.red)),
-                  ],
-                ),
+
+                if (ref
+                    .read(menusProvider.notifier)
+                    .tienePermisoEdicion("/sale_detail", "Eliminar"))
+                  Column(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          _inactive(context);
+                        },
+                        icon: const Icon(Icons.delete,
+                            size: 40, color: Colors.red),
+                      ),
+                      // const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
               ],
             ),
           ],

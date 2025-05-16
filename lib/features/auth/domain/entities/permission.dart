@@ -9,15 +9,18 @@ class Permission {
   String? icono;
   IconData get iconData => iconMap[icono] ?? Icons.help_outline;
   List<String> acciones;
+  int? idPadre;
+  List<Permission>? hijos;
 
-  Permission({
-    required this.idMenu,
-    required this.nombreMenu,
-    this.descripcionMenu,
-    this.icono,
-    required this.rutaMenu,
-    required this.acciones,
-  });
+  Permission(
+      {required this.idMenu,
+      required this.nombreMenu,
+      this.descripcionMenu,
+      this.icono,
+      required this.rutaMenu,
+      required this.acciones,
+      this.idPadre,
+      this.hijos});
 
   factory Permission.fromJson(Map<String, dynamic> json) => Permission(
         idMenu: json["id_menu"],

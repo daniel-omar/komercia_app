@@ -5,6 +5,10 @@ final iconMap = {
   'credit_card': Icons.credit_card,
   'account_balance': Icons.account_balance,
   'more_horiz': Icons.more_horiz,
+  'home': Icons.home,
+  'balance': Icons.balance,
+  'analytics_rounded': Icons.analytics_rounded,
+  'image_search_rounded': Icons.image_search_rounded,
 };
 
 final colorMap = {
@@ -28,4 +32,11 @@ final colorMap = {
   "Turquesa": Colors.cyan,
   "Vino": const Color(0xFF800000),
   "Coral": const Color(0xFFFF7F50),
+};
+
+final menuActionsMap = {
+  'Leer': 'Leer',
+  'Registrar': 'Registrar',
+  'Modificar': 'Modificar',
+  'Eliminar': 'Eliminar'
 };

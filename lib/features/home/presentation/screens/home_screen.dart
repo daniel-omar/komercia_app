@@ -56,10 +56,10 @@ class _MenuHomeState extends ConsumerState<_MenuHome>
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 15),
-        itemCount: menuState.menus.length,
+        itemCount: menuState.menusHome.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          final menu = menuState.menus[index];
+          final menu = menuState.menusHome[index];
           return SizedBox(
             width: 140, // ancho fijo del card
             child: GestureDetector(

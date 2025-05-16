@@ -24,7 +24,7 @@ class MenuCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(menu.icono, size: 40, color: theme.primaryColor),
+              Icon(menu.iconData, size: 40, color: theme.primaryColor),
               const SizedBox(height: 10),
               Text(
                 menu.nombreMenu,

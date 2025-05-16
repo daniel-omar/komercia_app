@@ -87,6 +87,15 @@ class _DateSelectorState extends ConsumerState<_DateSelector> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToEnd();
+
+      final dateFilter = ref.read(dateFilterProvider);
+
+      if (dateFilter.periodSelect != null) {
+        ref.read(salesProvider.notifier).getSalesByFilter(
+              fechaInicio: dateFilter.periodSelect!.fechaInicio,
+              fechaFin: dateFilter.periodSelect!.fechaFin,
+            );
+      }
     });
   }
 

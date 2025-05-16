@@ -43,14 +43,14 @@ class MenuDatasourceImpl extends MenuDatasource {
           nombreMenu: "Registrar venta",
           descripcionMenu: "Registrar venta",
           rutaMenu: "/new_sale",
-          icono: Icons.analytics_rounded),
+          icono: "analytics_rounded"),
       Menu(
           idMenu: 3,
           codigoMenu: "0003",
           nombreMenu: "Inventario",
           descripcionMenu: "Inventario",
           rutaMenu: "/products",
-          icono: Icons.inventory)
+          icono: "inventory")
     ]);
 
     return menus;
@@ -68,21 +68,21 @@ class MenuDatasourceImpl extends MenuDatasource {
           nombreMenu: "Inicio",
           descripcionMenu: "Inicio",
           rutaMenu: "/",
-          icono: Icons.home),
+          icono: "home"),
       Menu(
           idMenu: 4,
           codigoMenu: "0004",
           nombreMenu: "Balance",
           descripcionMenu: "Balance",
           rutaMenu: "/balance",
-          icono: Icons.balance),
+          icono: "balance"),
       Menu(
           idMenu: 3,
           codigoMenu: "0003",
           nombreMenu: "Inventario",
           descripcionMenu: "Inventario",
           rutaMenu: "/products",
-          icono: Icons.image_search_rounded)
+          icono: "image_search_rounded")
     ]);
 
     return menus;
@@ -100,21 +100,21 @@ class MenuDatasourceImpl extends MenuDatasource {
           nombreMenu: "Inicio",
           descripcionMenu: "Inicio",
           rutaMenu: "/",
-          icono: Icons.home),
+          icono: "home"),
       Menu(
           idMenu: 4,
           codigoMenu: "0004",
           nombreMenu: "Balance",
           descripcionMenu: "Balance",
           rutaMenu: "/balance",
-          icono: Icons.balance),
+          icono: "balance"),
       Menu(
           idMenu: 3,
           codigoMenu: "0003",
           nombreMenu: "Inventario",
           descripcionMenu: "Inventario",
           rutaMenu: "/products",
-          icono: Icons.image_search_rounded)
+          icono: "image_search_rounded")
     ]);
     return menus;
   }
@@ -133,6 +133,13 @@ class MenuDatasourceImpl extends MenuDatasource {
     for (final _permission in responseMain.data ?? []) {
       permissions.add(PermissionMapper.jsonToEntity(_permission));
     }
+    permissions.add(Permission(
+        idMenu: 0,
+        nombreMenu: "Inicio",
+        descripcionMenu: "Inicio",
+        rutaMenu: "/home",
+        icono: "home",
+        acciones: []));
 
     return permissions;
   }

@@ -1,7 +1,9 @@
 import 'package:komercia_app/config/router/app_router_notifier.dart';
 import 'package:komercia_app/features/auth/domain/domain.dart';
+import 'package:komercia_app/features/auth/domain/entities/permission.dart';
 import 'package:komercia_app/features/home/domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:komercia_app/features/shared/infrastructure/maps/general.map.dart';
 
 import 'menu_repository_provider.dart';
 
@@ -32,19 +34,26 @@ class MenusNotifier extends StateNotifier<MenusState> {
 
     final permisos = await menuRepository.permissions();
 
-    final menus = await menuRepository.getMenusByUser(user.idUsuario!);
-    final menusTabBar = await menuRepository.getMenusTabBarByUser(user);
-    final menusSideBar = await menuRepository.getMenusSideBarByUser(user);
-
-    if (menus.isEmpty) {
+    if (permisos.isEmpty) {
       state = state.copyWith(isLoading: false);
       return;
     }
+
+    final menus = toMenus(permisos);
+    final menusHome_ = menus
+        .where((menu) =>
+            !["/balance", "/sale_detail", "/home"].contains(menu.rutaMenu))
+        .toList();
+    final menusTab_ = menus
+        .where((menu) => !["/new_sale", "/sale_detail"].contains(menu.rutaMenu))
+        .toList();
+
     state = state.copyWith(
         isLoading: false,
         menus: [...state.menus, ...menus],
-        menusTabBar: [...state.menusTabBar, ...menusTabBar],
-        menusSideBar: [...state.menusSideBar, ...menusSideBar]);
+        menusHome: [...state.menus, ...menusHome_],
+        menusTabBar: [...state.menusTabBar, ...menusTab_],
+        menusSideBar: [...state.menusSideBar, ...menusTab_]);
   }
 
   Future setMenu(Menu menu) async {
@@ -55,11 +64,34 @@ class MenusNotifier extends StateNotifier<MenusState> {
   void updateIndex(int newIndex) {
     state = state.copyWith(indexMenu: newIndex);
   }
+
+  List<Menu> toMenus(List<Permission> permisos) {
+    List<Menu> menus = [];
+    for (var i = 0; i < permisos.length; i++) {
+      final permiso = permisos[i];
+      menus.add(Menu(
+          idMenu: permiso.idMenu,
+          nombreMenu: permiso.nombreMenu,
+          descripcionMenu: permiso.descripcionMenu ?? "",
+          rutaMenu: permiso.rutaMenu,
+          icono: permiso.icono,
+          acciones: permiso.acciones));
+    }
+    return menus.reversed.toList();
+  }
+
+  bool tienePermisoEdicion(String rutaMenu, String accion) {
+    final permiso = state.menus.firstWhere((p) => p.rutaMenu == rutaMenu);
+    final tieneAccion = permiso.acciones!.contains(menuActionsMap[accion]);
+
+    return tieneAccion;
+  }
 }
 
 class MenusState {
   final bool isLoading;
   final List<Menu> menus;
+  final List<Menu> menusHome;
   final List<Menu> menusSideBar;
   final List<Menu> menusTabBar;
   final Menu? menu;
@@ -67,6 +99,7 @@ class MenusState {
 
   MenusState(
       {this.isLoading = false,
+      this.menusHome = const [],
       this.menus = const [],
       this.menusSideBar = const [],
       this.menusTabBar = const [],
@@ -75,6 +108,7 @@ class MenusState {
 
   MenusState copyWith(
           {bool? isLoading,
+          List<Menu>? menusHome,
           List<Menu>? menus,
           List<Menu>? menusSideBar,
           List<Menu>? menusTabBar,
@@ -82,6 +116,7 @@ class MenusState {
           int? indexMenu}) =>
       MenusState(
         isLoading: isLoading ?? this.isLoading,
+        menusHome: menusHome ?? this.menusHome,
         menus: menus ?? this.menus,
         menusSideBar: menusSideBar ?? this.menusSideBar,
         menusTabBar: menusTabBar ?? this.menusTabBar,
