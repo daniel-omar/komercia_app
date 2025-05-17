@@ -4,6 +4,7 @@ import 'package:komercia_app/features/home/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:komercia_app/features/products/presentation/screens/inventory_screen.dart';
 import 'package:komercia_app/features/sales/presentation/screens/balance_screen.dart';
 
 import 'package:komercia_app/features/shared/shared.dart';
@@ -86,7 +87,7 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
                 if (item.rutaMenu == '/home') {
                   return const HomeScreen();
                 } else if (item.rutaMenu == '/products') {
-                  return const Center(child: Text('Inventario'));
+                  return const InventoryScreen();
                 } else if (item.rutaMenu == '/balance') {
                   return const BalanceScreen();
                 } else {
