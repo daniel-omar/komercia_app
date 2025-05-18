@@ -32,6 +32,9 @@ class ProductCategorysNotifier extends StateNotifier<ProductCategorysState> {
       state = state.copyWith(isLoading: true);
 
       final productCategories = await productCategoryRepository.getAll();
+      productCategories.insert(
+          0, ProductCategory(idCategoria: 0, nombreCategoria: "Todos"));
+
       state = state.copyWith(
           isLoading: false,
           productCategories: productCategories,
@@ -43,7 +46,7 @@ class ProductCategorysNotifier extends StateNotifier<ProductCategorysState> {
     }
   }
 
-  void setPeriod(ProductCategory productCategory) {
+  void setCategorySelected(ProductCategory productCategory) {
     state = state.copyWith(productCategorySelect: productCategory);
   }
 }

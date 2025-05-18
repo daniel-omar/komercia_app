@@ -236,6 +236,9 @@ class _SalesList extends ConsumerWidget {
           final sale = sales[i];
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Colors.blueGrey, width: 1)),
             child: ListTile(
               leading: const Icon(Icons.card_giftcard, color: Colors.green),
               title: Text(sale.concepto),

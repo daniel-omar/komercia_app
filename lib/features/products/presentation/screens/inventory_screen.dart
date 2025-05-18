@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_categories_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_provider.dart';
 import 'package:komercia_app/features/shared/widgets/full_screen_loader.dart';
@@ -23,11 +24,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     final productCategoriesState = ref.watch(productCategoriesProvider);
-
-    final products = [
-      {'name': 'Ff', 'price': 15.0, 'stock': -37},
-      {'name': 'Gf', 'price': 444.0, 'stock': 1},
-    ];
+    final selectedCategory = productCategoriesState.productCategorySelect;
+    if (selectedCategory == null) {
+      return const FullScreenLoader(); // o un Container si prefieres algo vacío
+    }
+    final selectedId = selectedCategory.idCategoria;
+    final productsState = ref.watch(productsProvider(selectedId));
+    final products = productsState.products ?? [];
 
     return !productCategoriesState.isLoading
         ? Scaffold(
@@ -36,11 +39,18 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 10),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _SummaryCard(title: 'Total de referencias', value: '2'),
-                      // _SummaryCard(title: 'Costo total', value: 'S/ 5'),
+                      if (!productsState.isLoading) ...[
+                        _SummaryCard(
+                            title: 'Total de referencias',
+                            value: (productsState.products!.length.toString())),
+                        _SummaryCard(
+                            title: 'Costo total',
+                            value:
+                                'S/ ${productsState.purcharsePriceTotal!.toString()}'),
+                      ]
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -53,20 +63,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(10),
-                      itemCount: products.length,
-                      itemBuilder: (context, index) {
-                        final product = products[index];
-                        return _ProductCard(
-                          name: product['name'] as String,
-                          price: product['price'] as double,
-                          stock: product['stock'] as int,
-                        );
-                      },
-                    ),
-                  ),
+                  if (!productsState.isLoading)
+                    _ProductList(products: products),
                 ],
               ),
             ),
@@ -88,16 +86,16 @@ class _ProductCategorySelectorState
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToEnd();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _scrollToEnd();
+    // });
   }
 
-  void _scrollToEnd() {
-    if (_scrollController.hasClients) {
-      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-    }
-  }
+  // void _scrollToEnd() {
+  //   if (_scrollController.hasClients) {
+  //     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -136,6 +134,9 @@ class _ProductCategorySelectorState
             selected: isSelected,
             onSelected: (_) {
               // actualizar estado
+              ref
+                  .read(productCategoriesProvider.notifier)
+                  .setCategorySelected(productCategory);
               ref.watch(productsProvider(productCategory.idCategoria));
             },
             selectedColor: Colors.yellow.shade700,
@@ -156,19 +157,26 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 160,
-      height: 80,
+      height: 105,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.black26,
+          width: 1,
+        ),
         boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 6)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: const TextStyle(fontSize: 14, color: Colors.black54)),
-          const SizedBox(height: 6),
+              style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.bold)),
+          const Spacer(),
           Text(value,
               style:
                   const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -178,22 +186,41 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _CategoryChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-
-  const _CategoryChip({required this.label, this.selected = false});
+class _ProductList extends ConsumerWidget {
+  List<Product> products = [];
+  _ProductList({required this.products});
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Chip(
-        label: Text(label),
-        backgroundColor: selected ? Colors.yellow[700] : Colors.grey[200],
-        labelStyle: TextStyle(
-          color: selected ? Colors.white : Colors.black,
+  Widget build(BuildContext context, WidgetRef ref) {
+    // aquí irían tus ventas
+
+    if (products.isEmpty) {
+      return const Expanded(
+        child: Column(
+          children: [
+            Icon(
+              Icons.image_search_rounded,
+              size: 100,
+            ),
+            SizedBox(height: 12),
+            Text('No tienes registros creados en esta fecha.')
+          ],
         ),
+      );
+    }
+
+    return Expanded(
+      child: ListView.builder(
+        itemCount: products.length,
+        itemBuilder: (_, i) {
+          final product = products[i];
+          return _ProductCard(
+            name: product.nombreProducto,
+            salePrice: product.precioVenta ?? 0,
+            purcharsePrice: product.precioCompra ?? 0,
+            stock: product.cantidadDisponible ?? 0,
+          );
+        },
       ),
     );
   }
@@ -201,17 +228,23 @@ class _CategoryChip extends StatelessWidget {
 
 class _ProductCard extends StatelessWidget {
   final String name;
-  final double price;
+  final double salePrice;
+  final double purcharsePrice;
   final int stock;
 
   const _ProductCard(
-      {required this.name, required this.price, required this.stock});
+      {required this.name,
+      required this.salePrice,
+      required this.purcharsePrice,
+      required this.stock});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Colors.blueGrey, width: 1)),
       child: ListTile(
         leading: Container(
           width: 48,
@@ -223,14 +256,48 @@ class _ProductCard extends StatelessWidget {
           child: const Icon(Icons.toll, color: Colors.purple),
         ),
         title: Text(name),
-        subtitle: Text('S/ $price'),
-        trailing: Text(
-          '$stock disponibles',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: stock < 0 ? Colors.red : Colors.black,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text('Compra: '),
+                Text('S/$purcharsePrice',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            Row(
+              children: [
+                const Text('Venta: '),
+                Text(
+                  'S/$salePrice',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
         ),
+        trailing: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '$stock',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: stock < 0 ? Colors.red : Colors.black,
+                  fontSize: 12),
+            ),
+            Text(
+              'Disponibles',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: stock < 0 ? Colors.red : Colors.black,
+                  fontSize: 12),
+            )
+          ],
+        ),
+        onTap: () {},
       ),
     );
   }

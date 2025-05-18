@@ -37,7 +37,7 @@ class ProductDatasourceImpl extends ProductDatasource {
     //   body["ids_categoria"] = idsCategoriaProducto;
     // }
     List<Map<String, dynamic>> paramsList = [];
-    if (idsCategoriaProducto != null) {
+    if (idsCategoriaProducto != null && idsCategoriaProducto.isNotEmpty) {
       paramsList.add(
           {'key': 'ids_categoria', 'value': idsCategoriaProducto.join(',')});
     }
@@ -47,7 +47,7 @@ class ProductDatasourceImpl extends ProductDatasource {
         .join('&');
     final response =
         await dioClient.dio.get('/products/product/get_by_filter?$queryString');
-        
+
     ResponseMain responseMain =
         ResponseMainMapper.responseJsonToEntity(response.data);
 

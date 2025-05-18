@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:komercia_app/features/auth/auth.dart';
 import 'package:komercia_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:komercia_app/features/home/presentation/screens/layout_screen.dart';
+import 'package:komercia_app/features/products/presentation/screens/inventory_screen.dart';
 import 'package:komercia_app/features/sales/presentation/screens/balance_screen.dart';
 import 'package:komercia_app/features/sales/presentation/screens/new_sale_screen.dart';
 import 'package:komercia_app/features/sales/presentation/screens/sale_detail_screen.dart';
@@ -50,7 +51,12 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) => const LayoutScreen(),
-      )
+      ),
+
+      GoRoute(
+        path: '/products',
+        builder: (context, state) => const InventoryScreen(),
+      ),
     ],
     redirect: (context, state) {
       final isGoingTo = state.matchedLocation;
