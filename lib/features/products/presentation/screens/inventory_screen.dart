@@ -34,6 +34,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final selectedId = selectedCategory.idCategoria;
     final productsState = ref.watch(productsProvider(selectedId));
     final products = productsState.products ?? [];
+    final purcharsePriceTotal = productsState.purcharsePriceTotal ?? 0;
 
     return !productCategoriesState.isLoading
         ? Scaffold(
@@ -45,15 +46,12 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      if (!productsState.isLoading) ...[
-                        _SummaryCard(
-                            title: 'Total de referencias',
-                            value: (productsState.products!.length.toString())),
-                        _SummaryCard(
-                            title: 'Costo total',
-                            value:
-                                'S/ ${productsState.purcharsePriceTotal!.toString()}'),
-                      ]
+                      _SummaryCard(
+                          title: 'Total de referencias',
+                          value: (products.length.toString())),
+                      _SummaryCard(
+                          title: 'Costo total',
+                          value: 'S/ ${purcharsePriceTotal.toString()}'),
                     ],
                   ),
                   const SizedBox(height: 20),

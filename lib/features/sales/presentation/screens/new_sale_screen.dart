@@ -133,6 +133,14 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
 
   void _showPaymentOptionsSheet(BuildContext _context) {
     final productsPurchaseState = ref.read(productsPurchaseProvider);
+    if (productsPurchaseState.isEmpty) {
+      ScaffoldMessenger.of(_context).showSnackBar(
+        const SnackBar(
+            content: Text('Debe escanear productos.')),
+      );
+      return;
+    }
+
     final hasInvalid =
         productsPurchaseState.any((p) => (p.idTalla == 0 || p.idColor == 0));
     if (hasInvalid) {

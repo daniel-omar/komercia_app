@@ -24,9 +24,9 @@ class ProductSizeDatasourceImpl extends ProductSizeDatasource {
       return productSize;
     } on DioException catch (e) {
       if (e.response!.statusCode == 404) throw ProductNotFound();
-      throw Exception();
+      throw Exception(e);
     } catch (e) {
-      throw Exception();
+      throw Exception(e);
     }
   }
 

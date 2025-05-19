@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:komercia_app/features/home/presentation/providers/menu_provider.dart';
 import 'package:komercia_app/features/products/domain/entities/product.dart';
+import 'package:komercia_app/features/products/presentation/providers/product_form_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_categories_provider.dart';
+import 'package:komercia_app/features/shared/widgets/custom_filled_button.dart';
+import 'package:komercia_app/features/shared/widgets/custom_text_area.dart';
+import 'package:komercia_app/features/shared/widgets/custom_text_form_field.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {
   final int idProduct;
@@ -15,130 +21,163 @@ class ProductScreen extends ConsumerStatefulWidget {
 
 class _ProductScreenState extends ConsumerState<ProductScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nombreController;
-  late TextEditingController _descripcionController;
-  late TextEditingController _precioCompraController;
-  late TextEditingController _precioVentaController;
 
   int? selectedCategoriaId;
-  bool _inicializado = false;
 
   @override
   void dispose() {
-    _nombreController.dispose();
-    _descripcionController.dispose();
-    _precioCompraController.dispose();
-    _precioVentaController.dispose();
     super.dispose();
+  }
+
+  void showSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final productState = ref.watch(productProvider(widget.idProduct));
+    final productFormState = ref.watch(productFormProvider(widget.idProduct));
     final categoriasState = ref.watch(productCategoriesProvider);
 
-    final producto = productState.producto;
-
-    if (productState.isLoading ||
-        categoriasState.isLoading ||
-        producto == null) {
+    if (productFormState.isLoading || categoriasState.isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    // Inicializa controllers solo una vez
-    if (!_inicializado) {
-      _nombreController = TextEditingController(text: producto.nombreProducto);
-      _descripcionController =
-          TextEditingController(text: producto.descripcionProducto ?? '');
-      _precioCompraController =
-          TextEditingController(text: producto.precioCompra?.toString() ?? '');
-      _precioVentaController =
-          TextEditingController(text: producto.precioVenta?.toString() ?? '');
-      selectedCategoriaId = producto.idCategoria;
-      _inicializado = true;
+    if (productFormState.idProduct == 0) {
+      // Asegúrate de que esto se ejecute fuera del build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          Navigator.of(context).pop(); // o context.pop() si usas GoRouter
+          showSnackbar(context, 'Producto no encontrado');
+        }
+      });
     }
 
+    ref.listen<ProductState>(productProvider(widget.idProduct), (prev, next) {
+      if (!next.isLoading) {
+        if (next.errorMessage.isNotEmpty) {
+          showSnackbar(context, next.errorMessage);
+        } else {
+          Navigator.of(context).pop();
+          // Navegar o hacer otra acción
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Producto actualizado con éxito'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 3), // Duración del SnackBar
+                behavior: SnackBarBehavior.floating),
+          );
+        }
+      }
+    });
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar Producto')),
+      appBar: AppBar(
+        title: const Text('Editar Producto'),
+        backgroundColor: Colors.yellow[700],
+        foregroundColor: Colors.black,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
-              TextFormField(
-                controller: _nombreController,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo requerido' : null,
+              CustomTextFormField(
+                isTopField: true,
+                label: 'Nombre',
+                initialValue: productFormState.name.value,
+                onChanged: ref
+                    .read(productFormProvider(widget.idProduct).notifier)
+                    .onNameChange,
+                errorMessage: productFormState.name.errorMessage,
               ),
               const SizedBox(height: 10),
-              TextFormField(
-                controller: _descripcionController,
-                decoration: const InputDecoration(labelText: 'Descripción'),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _precioCompraController,
+              CustomTextFormField(
+                isTopField: true,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Precio Compra'),
+                label: 'Precio compra',
+                initialValue: productFormState.pursharsePrice.value.toString(),
+                onChanged: ref
+                    .read(productFormProvider(widget.idProduct).notifier)
+                    .onPurcharsePriceChanged,
+                errorMessage: productFormState.pursharsePrice.errorMessage,
               ),
               const SizedBox(height: 10),
-              TextFormField(
-                controller: _precioVentaController,
+              CustomTextFormField(
+                isTopField: true,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Precio Venta'),
+                label: 'Precio venta',
+                initialValue: productFormState.salePrice.value.toString(),
+                onChanged: ref
+                    .read(productFormProvider(widget.idProduct).notifier)
+                    .onSalePriceChanged,
+                errorMessage: productFormState.salePrice.errorMessage,
               ),
               const SizedBox(height: 20),
               DropdownButtonFormField<int>(
-                value: selectedCategoriaId,
+                value: productFormState.idCategory,
                 decoration: const InputDecoration(labelText: 'Categoría'),
                 items: categoriasState.productCategories!
                     .map((cat) => DropdownMenuItem<int>(
                           value: cat.idCategoria,
-                          child: Text(cat.nombreCategoria),
+                          child: Text(
+                            cat.nombreCategoria,
+                            style: const TextStyle(fontSize: 15),
+                          ),
                         ))
                     .toList(),
-                onChanged: (value) {
-                  setState(() => selectedCategoriaId = value);
-                },
+                onChanged: ref
+                    .read(productFormProvider(widget.idProduct).notifier)
+                    .onCategoryChanged,
               ),
-              const SizedBox(height: 30),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    final updatedProduct = Product(
-                      idProducto: widget.idProduct,
-                      codigoProducto: "",
-                      nombreProducto: _nombreController.text,
-                      descripcionProducto: _descripcionController.text,
-                      precioCompra:
-                          double.tryParse(_precioCompraController.text),
-                      precioVenta: double.tryParse(_precioVentaController.text),
-                      idCategoria: selectedCategoriaId,
-                    );
-
-                    await ref
-                        .read(productProvider(widget.idProduct).notifier)
-                        .updateProduct(updatedProduct);
-
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Producto actualizado')),
-                      );
-                    }
-                  }
-                },
-                icon: const Icon(Icons.save),
-                label: const Text('Guardar Cambios'),
-              )
+              const SizedBox(height: 20),
+              const Text(
+                'Descripción',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              CustomTextArea(
+                isTopField: true,
+                label: '',
+                minLine: 3,
+                maxLine: null,
+                initialValue: productFormState.description.value,
+                onChanged: ref
+                    .read(productFormProvider(widget.idProduct).notifier)
+                    .onDescriptionChanged,
+                // errorMessage: productFormState.description.errorMessage,
+              ),
             ],
           ),
         ),
       ),
+      bottomNavigationBar: ref
+              .read(menusProvider.notifier)
+              .tienePermisoEdicion("/products", "Modificar")
+          ? Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 60,
+                child: CustomFilledButton(
+                    text: productFormState.isPosting
+                        ? 'Guardando...'
+                        : 'Modificar',
+                    buttonColor: Colors.black,
+                    onPressed: productFormState.isPosting
+                        ? null
+                        : ref
+                            .read(
+                                productFormProvider(widget.idProduct).notifier)
+                            .onFormUpdateSubmit),
+              ),
+            )
+          : null,
     );
   }
 }

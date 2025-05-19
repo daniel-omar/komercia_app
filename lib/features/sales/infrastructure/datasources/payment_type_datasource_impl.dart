@@ -32,18 +32,23 @@ class PaymentTypeDatasourceImpl extends PaymentTypeDatasource {
 
   @override
   Future<List<PaymentType>> getAll() async {
-    final response = await dioClient.dio.get('/general/payment_type/get_all');
-    ResponseMain responseMain =
-        ResponseMainMapper.responseJsonToEntity(response.data);
+    try {
+      final response = await dioClient.dio.get('/general/payment_type/get_all');
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
 
-    final List<PaymentType> paymentTypes = [];
+      final List<PaymentType> paymentTypes = [];
 
-    // ignore: no_leading_underscores_for_local_identifiers
-    for (final _paymentType in responseMain.data ?? []) {
-      paymentTypes.add(PaymentTypeMapper.paymentTypeJsonToEntity(_paymentType));
+      // ignore: no_leading_underscores_for_local_identifiers
+      for (final _paymentType in responseMain.data ?? []) {
+        paymentTypes
+            .add(PaymentTypeMapper.paymentTypeJsonToEntity(_paymentType));
+      }
+
+      return paymentTypes;
+    } catch (e) {
+      throw Exception(e);
     }
-
-    return paymentTypes;
   }
 
   @override

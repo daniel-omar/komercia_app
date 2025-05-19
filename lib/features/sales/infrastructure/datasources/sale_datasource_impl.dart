@@ -26,9 +26,9 @@ class SaleDatasourceImpl extends SaleDatasource {
       return order;
     } on DioException catch (e) {
       if (e.response!.statusCode == 404) throw SaleNotFound();
-      throw Exception();
+      throw Exception(e);
     } catch (e) {
-      throw Exception();
+      throw Exception(e);
     }
   }
 
@@ -66,9 +66,9 @@ class SaleDatasourceImpl extends SaleDatasource {
       return true;
     } on DioException catch (e) {
       if (e.response!.statusCode == 404) throw SaleNotFound();
-      throw Exception();
+      throw Exception(e);
     } catch (e) {
-      throw Exception();
+      throw Exception(e);
     }
   }
 
@@ -137,9 +137,9 @@ class SaleDatasourceImpl extends SaleDatasource {
       return saleDetails;
     } on DioException catch (e) {
       if (e.response!.statusCode == 404) throw SaleNotFound();
-      throw Exception();
+      throw Exception(e);
     } catch (e) {
-      throw Exception();
+      throw Exception(e);
     }
   }
 
@@ -153,9 +153,9 @@ class SaleDatasourceImpl extends SaleDatasource {
       return true;
     } on DioException catch (e) {
       if (e.response!.statusCode == 404) throw SaleNotFound();
-      throw Exception();
+      throw Exception(e);
     } catch (e) {
-      throw Exception();
+      throw Exception(e);
     }
   }
 }

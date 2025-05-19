@@ -26,9 +26,9 @@ class ProductDatasourceImpl extends ProductDatasource {
       return product;
     } on DioException catch (e) {
       if (e.response!.statusCode == 404) throw ProductNotFound();
-      throw Exception();
+      throw Exception(e);
     } catch (e) {
-      throw Exception();
+      throw Exception(e);
     }
   }
 
@@ -112,5 +112,19 @@ class ProductDatasourceImpl extends ProductDatasource {
     }
 
     return productsVariantSize;
+  }
+
+  @override
+  Future<bool> update(Map<String, dynamic> data) async {
+    try {
+      final response =
+          await dioClient.dio.put('/products/product/update', data: data);
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+
+      return true;
+    } catch (e) {
+      throw Exception(e);
+    }
   }
 }

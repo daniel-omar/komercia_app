@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_repository_provider.dart';
 
-final productsProvider =
-    StateNotifierProvider.family<ProductsNotifier, ProductsState, int>(
+final productsProvider = StateNotifierProvider.family
+    .autoDispose<ProductsNotifier, ProductsState, int>(
         (ref, idProductCategory) {
   final productRepository = ref.watch(productRepositoryProvider);
 
@@ -32,11 +32,13 @@ class ProductsNotifier extends StateNotifier<ProductsState> {
 
       double purcharsePriceTotal = products.fold<double>(
         0,
-        (sum, item) => sum + (item.precioCompra ?? 0),
+        (sum, item) =>
+            sum + (item.precioCompra ?? 0) * (item.cantidadDisponible ?? 0),
       );
       double salePriceTotal = products.fold<double>(
         0,
-        (sum, item) => sum + (item.precioCompra ?? 0),
+        (sum, item) =>
+            sum + (item.precioVenta ?? 0) * (item.cantidadDisponible ?? 0),
       );
 
       state = state.copyWith(

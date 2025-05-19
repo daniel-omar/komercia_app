@@ -34,7 +34,7 @@ class Product {
         "precio": precio,
         "precio_venta": precioVenta,
         "precio_compra": precioCompra,
-        "id_categoria": idCategoria,
+        "id_categoria_producto": idCategoria,
         "id_marca": idMarca
       };
 }

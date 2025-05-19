@@ -154,25 +154,25 @@ class ConceptBottomSheet extends ConsumerWidget {
   void _handlePayment(BuildContext context, WidgetRef ref) async {
     print(_controller.text.trim());
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar registro'),
-        content: const Text('¿Está seguro de registrar la venta?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
-    );
+    // final confirmed = await showDialog<bool>(
+    //   context: context,
+    //   builder: (context) => AlertDialog(
+    //     title: const Text('Confirmar registro'),
+    //     content: const Text('¿Está seguro de registrar la venta?'),
+    //     actions: [
+    //       TextButton(
+    //         onPressed: () => Navigator.pop(context, false),
+    //         child: const Text('Cancelar'),
+    //       ),
+    //       ElevatedButton(
+    //         onPressed: () => Navigator.pop(context, true),
+    //         child: const Text('Confirmar'),
+    //       ),
+    //     ],
+    //   ),
+    // );
 
-    if (confirmed == false) return;
+    // if (confirmed == false) return;
 
     final productsPurchaseState = ref.read(productsPurchaseProvider);
     final saleSubmissionNotifier = ref.read(saleSubmissionProvider.notifier);

@@ -26,4 +26,9 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<List<ProductVariantSize>> getVariants(int idProducto) {
     return datasource.getVariants(idProducto);
   }
+
+  @override
+  Future<bool> update(Map<String, dynamic> data) {
+    return datasource.update(data);
+  }
 }

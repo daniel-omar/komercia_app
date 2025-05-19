@@ -2,9 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_repository_provider.dart';
 
-final productProvider =
-    StateNotifierProvider.family<ProductNotifier, ProductState, int>(
-        (ref, idProduct) {
+final productProvider = StateNotifierProvider.family
+    .autoDispose<ProductNotifier, ProductState, int>((ref, idProduct) {
   final productRepository = ref.watch(productRepositoryProvider);
 
   return ProductNotifier(
@@ -39,18 +38,24 @@ class ProductNotifier extends StateNotifier<ProductState> {
 
   Future<void> updateProduct(Product updatedProduct) async {
     try {
-      state = state.copyWith(isSaving: true);
+      state = state.copyWith(isSaving: true, isLoading: true, errorMessage: '');
 
-      // await productRepository.update(updatedProduct);
+      final productJson = updatedProduct.toJson();
+      await productRepository.update(productJson);
 
       // Actualizar el producto local
       state = state.copyWith(
-        isSaving: false,
+        isSaving: true,
+        isLoading: false,
         producto: updatedProduct,
       );
     } catch (e) {
       print("Error al actualizar producto: $e");
-      state = state.copyWith(isSaving: false);
+      // throw Exception(e);
+      state = state.copyWith(
+          isSaving: false,
+          isLoading: false,
+          errorMessage: "Error al modificar, comunicarse con el administrador");
     }
   }
 }
@@ -60,23 +65,25 @@ class ProductState {
   final Product? producto;
   final bool isLoading;
   final bool isSaving;
+  final String errorMessage;
 
   ProductState(
       {this.idProducto = 0,
       this.producto,
       this.isLoading = true,
-      this.isSaving = false});
+      this.isSaving = false,
+      this.errorMessage = ''});
 
-  ProductState copyWith({
-    int? idProducto,
-    Product? producto,
-    bool? isLoading,
-    bool? isSaving,
-  }) =>
+  ProductState copyWith(
+          {int? idProducto,
+          Product? producto,
+          bool? isLoading,
+          bool? isSaving,
+          String? errorMessage}) =>
       ProductState(
-        idProducto: idProducto ?? this.idProducto,
-        producto: producto ?? this.producto,
-        isLoading: isLoading ?? this.isLoading,
-        isSaving: isSaving ?? this.isSaving,
-      );
+          idProducto: idProducto ?? this.idProducto,
+          producto: producto ?? this.producto,
+          isLoading: isLoading ?? this.isLoading,
+          isSaving: isSaving ?? this.isSaving,
+          errorMessage: errorMessage ?? this.errorMessage);
 }
