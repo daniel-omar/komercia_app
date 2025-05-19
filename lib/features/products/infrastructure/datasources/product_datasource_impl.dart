@@ -68,7 +68,7 @@ class ProductDatasourceImpl extends ProductDatasource {
     try {
       List<Map<String, dynamic>> paramsList = [];
       if (idProducto != null) {
-        paramsList.add({'key': 'id_producto', 'value': idProducto});
+        paramsList.add({'key': 'id_producto', 'value': idProducto.toString()});
       }
       if (codigoProducto != null) {
         paramsList.add({'key': 'codigo_producto', 'value': codigoProducto});

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
+import 'package:komercia_app/features/home/presentation/providers/menu_provider.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_categories_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_provider.dart';
@@ -228,7 +230,7 @@ class _ProductList extends ConsumerWidget {
   }
 }
 
-class _ProductCard extends StatelessWidget {
+class _ProductCard extends ConsumerWidget {
   final int idProduct;
   final String name;
   final double salePrice;
@@ -243,71 +245,93 @@ class _ProductCard extends StatelessWidget {
       required this.idProduct});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Colors.blueGrey, width: 1)),
-      child: ListTile(
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.purple[100],
-            borderRadius: BorderRadius.circular(8),
+      child: Slidable(
+        key: ValueKey(idProduct), // Clave única por item
+        endActionPane: ref
+                .read(menusProvider.notifier)
+                .tienePermisoEdicion("/products", "Modificar")
+            ? ActionPane(
+                motion: const ScrollMotion(),
+                children: [
+                  SlidableAction(
+                    onPressed: (context) {
+                      context.push("/product/$idProduct");
+                    },
+                    backgroundColor: Colors.amber,
+                    foregroundColor: Colors.white,
+                    icon: Icons.edit,
+                    label: 'Editar',
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ],
+              )
+            : null,
+        child: ListTile(
+          leading: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.purple[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.toll, color: Colors.purple),
           ),
-          child: const Icon(Icons.toll, color: Colors.purple),
+          title: Text(name),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text('Compra: '),
+                  Text('S/$purcharsePrice',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              Row(
+                children: [
+                  const Text('Venta: '),
+                  Text(
+                    'S/$salePrice',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          trailing: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '$stock',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: stock < 0 ? Colors.red : Colors.black,
+                    fontSize: 12),
+              ),
+              Text(
+                'Disponibles',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: stock < 0 ? Colors.red : Colors.black,
+                    fontSize: 12),
+              )
+            ],
+          ),
+          onTap: () {
+            context.pushNamed(
+              'productoVariantes',
+              pathParameters: {'id_product': idProduct.toString()},
+              extra: {'name': name},
+            );
+          },
         ),
-        title: Text(name),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Text('Compra: '),
-                Text('S/$purcharsePrice',
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
-            Row(
-              children: [
-                const Text('Venta: '),
-                Text(
-                  'S/$salePrice',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ],
-        ),
-        trailing: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '$stock',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: stock < 0 ? Colors.red : Colors.black,
-                  fontSize: 12),
-            ),
-            Text(
-              'Disponibles',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: stock < 0 ? Colors.red : Colors.black,
-                  fontSize: 12),
-            )
-          ],
-        ),
-        onTap: () {
-          context.pushNamed(
-            'productoVariantes',
-            pathParameters: {'id_product': idProduct.toString()},
-            extra: {'name': name},
-          );
-        },
       ),
     );
   }
