@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
+import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
 import 'package:komercia_app/features/products/infrastructure/errors/product_errors.dart';
 import 'package:komercia_app/features/products/infrastructure/infrastructure.dart';
+import 'package:komercia_app/features/products/infrastructure/mappers/product_variant_mapper.dart';
 import 'package:komercia_app/features/shared/infrastructure/entities/response_main.dart';
 import 'package:komercia_app/features/shared/infrastructure/mappers/response_main_mapper.dart';
 import 'package:komercia_app/features/shared/infrastructure/providers/dio_client.dart';
@@ -91,5 +93,24 @@ class ProductDatasourceImpl extends ProductDatasource {
     } catch (e) {
       throw Exception(e);
     }
+  }
+
+  @override
+  Future<List<ProductVariantSize>> getVariants(int idProducto) async {
+    final response =
+        await dioClient.dio.get('/products/product/get_variants/$idProducto');
+
+    ResponseMain responseMain =
+        ResponseMainMapper.responseJsonToEntity(response.data);
+
+    final List<ProductVariantSize> productsVariantSize = [];
+
+    // ignore: no_leading_underscores_for_local_identifiers
+    for (final _material in responseMain.data ?? []) {
+      productsVariantSize
+          .add(ProductVariantSizeMapper.productVariantJsonToEntity(_material));
+    }
+
+    return productsVariantSize;
   }
 }

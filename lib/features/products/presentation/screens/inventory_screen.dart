@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_categories_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_provider.dart';
@@ -215,6 +216,7 @@ class _ProductList extends ConsumerWidget {
         itemBuilder: (_, i) {
           final product = products[i];
           return _ProductCard(
+            idProduct: product.idProducto,
             name: product.nombreProducto,
             salePrice: product.precioVenta ?? 0,
             purcharsePrice: product.precioCompra ?? 0,
@@ -227,6 +229,7 @@ class _ProductList extends ConsumerWidget {
 }
 
 class _ProductCard extends StatelessWidget {
+  final int idProduct;
   final String name;
   final double salePrice;
   final double purcharsePrice;
@@ -236,7 +239,8 @@ class _ProductCard extends StatelessWidget {
       {required this.name,
       required this.salePrice,
       required this.purcharsePrice,
-      required this.stock});
+      required this.stock,
+      required this.idProduct});
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +301,13 @@ class _ProductCard extends StatelessWidget {
             )
           ],
         ),
-        onTap: () {},
+        onTap: () {
+          context.pushNamed(
+            'productoVariantes',
+            pathParameters: {'id_product': idProduct.toString()},
+            extra: {'name': name},
+          );
+        },
       ),
     );
   }

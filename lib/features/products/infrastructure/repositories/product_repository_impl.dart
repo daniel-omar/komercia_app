@@ -1,4 +1,5 @@
 import 'package:komercia_app/features/products/domain/domain.dart';
+import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
 
 class ProductRepositoryImpl extends ProductRepository {
   final ProductDatasource datasource;
@@ -19,5 +20,10 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<Product> find({int? idProducto, String? codigoProducto}) {
     return datasource.find(
         idProducto: idProducto, codigoProducto: codigoProducto);
+  }
+
+  @override
+  Future<List<ProductVariantSize>> getVariants(int idProducto) {
+    return datasource.getVariants(idProducto);
   }
 }
