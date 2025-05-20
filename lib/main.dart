@@ -23,21 +23,19 @@ class MainApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen<ConnectivityState>(connectionProvider, (previous, next) {
-      if (next == ConnectivityState.disconnected) {
-        // Navigate to the No Internet page
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const NoInternetScreen()),
-        );
-      } else if (previous == ConnectivityState.disconnected &&
-          next == ConnectivityState.connected) {
-        // Navigate back only if previously disconnected
-        Navigator.of(context).pop();
-      }
-    });
-
     final appRouter = ref.watch(goRouterProvider);
-
+    // ref.listen<ConnectivityState>(connectionProvider, (previous, next) {
+    //   if (next == ConnectivityState.disconnected) {
+    //     // Navigate to the No Internet page
+    //     Navigator.of(context).push(
+    //       MaterialPageRoute(builder: (context) => const NoInternetScreen()),
+    //     );
+    //   } else if (previous == ConnectivityState.disconnected &&
+    //       next == ConnectivityState.connected) {
+    //     // Navigate back only if previously disconnected
+    //     Navigator.of(context).pop();
+    //   }
+    // });
     return MaterialApp.router(
       routerConfig: appRouter,
       theme: AppTheme().getTheme(),
