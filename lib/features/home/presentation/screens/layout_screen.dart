@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:komercia_app/features/home/presentation/providers/providers.dart';
 import 'package:komercia_app/features/home/presentation/screens/home_screen.dart';
 import 'package:komercia_app/features/home/presentation/widgets/widgets.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:komercia_app/features/products/presentation/screens/inventory_screen.dart';
 import 'package:komercia_app/features/sales/presentation/screens/balance_screen.dart';
+import 'package:komercia_app/features/sales/presentation/widgets/filter_options.dart';
 
 import 'package:komercia_app/features/shared/shared.dart';
 
@@ -62,6 +64,9 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
   @override
   Widget build(BuildContext context) {
     final menuState = ref.watch(menusProvider);
+    _title = menuState.menusTabBar.isNotEmpty
+        ? menuState.menusTabBar[0].nombreMenu
+        : "";
 
     // ref.listen<MenusState>(menusProvider, (previous, next) {
     //   if (!next.isLoading && previous!.menus.isEmpty) {
@@ -80,6 +85,23 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
               title: Text(_title),
               backgroundColor: Colors.yellow[700],
               foregroundColor: Colors.black,
+              actions: [
+                if (menuState.menu?.rutaMenu == "/balance") ...[
+                  IconButton(
+                    icon: const Icon(
+                      Icons.filter_list,
+                      color: Colors.black87,
+                      size: 30,
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => FilterOptions()),
+                      );
+                    },
+                  ),
+                ]
+              ],
             ),
             body: IndexedStack(
               index: menuState.indexMenu,
@@ -103,6 +125,9 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
                   _title = menuState.menusTabBar[currentIndex].nombreMenu;
                 });
                 ref.read(menusProvider.notifier).updateIndex(currentIndex);
+                ref
+                    .read(menusProvider.notifier)
+                    .setMenu(menuState.menusTabBar[currentIndex]);
                 _tabController.animateTo(_currentIndex);
               },
               items: menuState.menusTabBar.map((item) {

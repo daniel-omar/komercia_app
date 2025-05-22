@@ -5,5 +5,6 @@ class UserMapper {
       idUsuario: json["id_usuario"],
       nombre: json["nombre"],
       apellidoPaterno: json["apellido_paterno"],
-      apellidoMaterno: json["apellido_materno"]);
+      apellidoMaterno: json["apellido_materno"],
+      correo: json["correo"]);
 }

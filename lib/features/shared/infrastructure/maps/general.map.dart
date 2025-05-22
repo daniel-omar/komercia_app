@@ -5,10 +5,11 @@ final iconMap = {
   'credit_card': Icons.credit_card,
   'account_balance': Icons.account_balance,
   'more_horiz': Icons.more_horiz,
+  'image_search_rounded': Icons.image_search_rounded,
   'home': Icons.home,
   'balance': Icons.balance,
   'analytics_rounded': Icons.analytics_rounded,
-  'image_search_rounded': Icons.image_search_rounded,
+  'wallet_giftcard': Icons.wallet_giftcard,
 };
 
 final colorMap = {
@@ -40,3 +41,5 @@ final menuActionsMap = {
   'Modificar': 'Modificar',
   'Eliminar': 'Eliminar'
 };
+
+final perfilesMap = {'Vendedor': 1, 'Supervisor': 2, 'Administrador': 3};

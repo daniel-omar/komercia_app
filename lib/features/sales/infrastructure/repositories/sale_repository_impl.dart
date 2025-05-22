@@ -27,12 +27,14 @@ class SaleRepositoryImpl extends SaleRepository {
 
   @override
   Future<List<Sale>> getSalesByFilter(
-      {int? idTipoPago,
+      {List<int>? idsTipoPago,
+      List<int>? idsUsuarioRegistro,
       bool? tieneDescuento,
       String? fechaInicio,
       String? fechaFin}) {
     return datasource.getSalesByFilter(
-        idTipoPago: idTipoPago,
+        idsTipoPago: idsTipoPago,
+        idsUsuarioRegistro: idsUsuarioRegistro,
         tieneDescuento: tieneDescuento,
         fechaFin: fechaFin,
         fechaInicio: fechaInicio);

@@ -7,7 +7,8 @@ abstract class SaleDatasource {
   Future<Sale> getSaleById(int idVenta);
   Future<bool> createSale(Map<String, dynamic> data);
   Future<List<Sale>> getSalesByFilter(
-      {int? idTipoPago,
+      {List<int>? idsTipoPago,
+      List<int>? idsUsuarioRegistro,
       bool? tieneDescuento,
       String? fechaInicio,
       String? fechaFin});

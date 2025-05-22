@@ -3,12 +3,14 @@ class User {
   String nombre;
   String apellidoPaterno;
   String apellidoMaterno;
+  String? correo;
 
   User(
       {required this.idUsuario,
       required this.nombre,
       required this.apellidoPaterno,
-      required this.apellidoMaterno});
+      required this.apellidoMaterno,
+      this.correo});
 
   Map<String, dynamic> toJson() => {
         "id_usuario": idUsuario,

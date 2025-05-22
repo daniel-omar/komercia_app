@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:komercia_app/features/sales/domain/entities/sale.dart';
 import 'package:komercia_app/features/sales/presentation/providers/date_provider.dart';
+import 'package:komercia_app/features/sales/presentation/providers/filter_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/sale_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/sale_submission_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/sales_provider.dart';
@@ -56,7 +57,7 @@ class _BalanceScreenState extends ConsumerState<BalanceScreen> {
                       borderRadius:
                           BorderRadius.vertical(top: Radius.circular(20)),
                     ),
-                    builder: (_) => const _FilterOptions(),
+                    builder: (_) => const _DateFilterOptions(),
                   );
                 },
               ),
@@ -64,6 +65,7 @@ class _BalanceScreenState extends ConsumerState<BalanceScreen> {
           ),
           _BalanceCard(
             totalIncome: sales.sumTotalSales,
+            sales: sales.sales,
           ),
           const SizedBox(height: 10),
           _SalesList(sales: sales.sales),
@@ -114,12 +116,16 @@ class _DateSelectorState extends ConsumerState<_DateSelector> {
   @override
   Widget build(BuildContext context) {
     final dateFilter = ref.watch(dateFilterProvider);
+    final filtros = ref.watch(filterProvider);
 
     ref.listen<DateFilterState>(dateFilterProvider, (previous, next) {
       if (next.periodSelect!.etiqueta != previous?.periodSelect!.etiqueta) {
         ref.read(salesProvider.notifier).getSalesByFilter(
-            fechaInicio: next.periodSelect!.fechaInicio,
-            fechaFin: next.periodSelect!.fechaFin);
+              fechaInicio: next.periodSelect!.fechaInicio,
+              fechaFin: next.periodSelect!.fechaFin,
+              idsTipoPago: filtros.tiposPagoSeleccionados,
+              idsUsuarioRegistro: filtros.empleadosSeleccionados,
+            );
       } else if (next.tipoFiltro != previous?.tipoFiltro) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _scrollToEnd();
@@ -164,16 +170,31 @@ class _DateSelectorState extends ConsumerState<_DateSelector> {
 
 class _BalanceCard extends ConsumerWidget {
   final double totalIncome;
-  const _BalanceCard({required this.totalIncome});
+  final List<Sale> sales;
+
+  Map<String, double> getTotalesPorTipoPago(List<Sale> sales) {
+    final Map<String, double> resumen = {};
+
+    for (var sale in sales) {
+      final tipo = sale.tipoPago?.nombreTipoPago ?? 'Desconocido';
+      resumen[tipo] = (resumen[tipo] ?? 0) + sale.totalFinal;
+    }
+
+    return resumen;
+  }
+
+  const _BalanceCard({required this.totalIncome, required this.sales});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final totales = getTotalesPorTipoPago(sales);
+
     return Card(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 3,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
         child: Column(
           children: [
             Row(
@@ -189,6 +210,22 @@ class _BalanceCard extends ConsumerWidget {
                         color: Colors.blueGrey)),
               ],
             ),
+            if (totales.isNotEmpty) ...[
+              const Divider(),
+              // Mostrar totales por tipo de pago
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: totales.entries.map((e) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(e.key),
+                      Text('S/ ${e.value.toStringAsFixed(2)}'),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ],
             const Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -309,8 +346,8 @@ class _BottomActions extends StatelessWidget {
   }
 }
 
-class _FilterOptions extends ConsumerWidget {
-  const _FilterOptions();
+class _DateFilterOptions extends ConsumerWidget {
+  const _DateFilterOptions();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

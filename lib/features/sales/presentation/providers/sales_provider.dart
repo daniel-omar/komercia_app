@@ -37,7 +37,8 @@ class SalesNotifier extends StateNotifier<SalesState> {
   }
 
   Future getSalesByFilter(
-      {int? idTipoPago,
+      {List<int>? idsTipoPago,
+      List<int>? idsUsuarioRegistro,
       bool? tieneDescuento,
       String? fechaInicio,
       String? fechaFin}) async {
@@ -45,7 +46,8 @@ class SalesNotifier extends StateNotifier<SalesState> {
 
     try {
       final sales = await salesRepository.getSalesByFilter(
-          idTipoPago: idTipoPago,
+          idsTipoPago: idsTipoPago,
+          idsUsuarioRegistro: idsUsuarioRegistro,
           tieneDescuento: tieneDescuento,
           fechaFin: fechaFin,
           fechaInicio: fechaInicio);

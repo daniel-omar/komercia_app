@@ -74,15 +74,23 @@ class SaleDatasourceImpl extends SaleDatasource {
 
   @override
   Future<List<Sale>> getSalesByFilter(
-      {int? idTipoPago,
+      {List<int>? idsTipoPago,
+      List<int>? idsUsuarioRegistro,
       bool? tieneDescuento,
       String? fechaInicio,
       String? fechaFin}) async {
     List<Map<String, dynamic>> paramsList = [];
 
     try {
-      if (idTipoPago != null) {
-        paramsList.add({'key': 'id_tipo_pago', 'value': idTipoPago});
+      if (idsTipoPago != null && idsTipoPago.isNotEmpty) {
+        paramsList
+            .add({'key': 'ids_tipo_pago', 'value': idsTipoPago.join(',')});
+      }
+      if (idsUsuarioRegistro != null && idsUsuarioRegistro.isNotEmpty) {
+        paramsList.add({
+          'key': 'ids_usuario_registro',
+          'value': idsUsuarioRegistro.join(',')
+        });
       }
       if (tieneDescuento != null) {
         paramsList.add({'key': 'tiene_descuento', 'value': tieneDescuento});

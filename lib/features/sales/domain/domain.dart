@@ -5,6 +5,7 @@ export 'datasources/product_color_datasource.dart';
 export 'datasources/product_size_datasource.dart';
 export 'datasources/payment_type_datasource.dart';
 export 'datasources/period_datasource.dart';
+export 'datasources/user_datasource.dart';
 
 export 'entities/sale.dart';
 export 'entities/sale_detail.dart';
@@ -23,3 +24,4 @@ export 'repositories/product_color_repository.dart';
 export 'repositories/product_size_repository.dart';
 export 'repositories/payment_type_repository.dart';
 export 'repositories/period_repository.dart';
+export 'repositories/user_repository.dart';
