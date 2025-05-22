@@ -48,6 +48,7 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
   }
 
   double total = 0;
+  bool isLoading = false;
 
   // Future<String?> readScanner(BuildContext context_) async {
   //   String? res = await SimpleBarcodeScanner.scanBarcode(
@@ -77,6 +78,11 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
     });
   }
 
+  void onClear() async {
+    ref.read(productsPurchaseProvider.notifier).clear();
+    ref.read(discountProvider.notifier).state = DiscountState.none();
+  }
+
   Future<String?> readScanner(BuildContext context_) async {
     final navigator = Navigator.of(context_, rootNavigator: true);
     final result = await navigator.push(
@@ -85,58 +91,91 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
     return result;
   }
 
-  Future<void> findProduct(String codigoProducto, BuildContext _context) async {
-    final product =
-        await ref.read(productProvider.notifier).findProduct(codigoProducto);
-    if (!mounted) return;
-    if (product == null) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(_context).showSnackBar(
-        const SnackBar(
-            content: Text('Producto no se encuentra en inventario.')),
-      );
-      return;
+  Future<void> findProduct(String codigoProducto, BuildContext context) async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final product =
+          await ref.read(productProvider.notifier).findProduct(codigoProducto);
+      if (!mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+      if (product == null) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Producto no se encuentra en inventario.')),
+        );
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      final productoState = ref.read(productProvider);
+
+      await ref
+          .read(productSizesProvider.notifier)
+          .loadSizesByProduct(productoState.idProducto);
+      if (!mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+      final productSizesState = ref.watch(productSizesProvider);
+      if (productSizesState.productSizes!.isEmpty) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No cuenta con tallas disponibles.')),
+        );
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      await ref
+          .read(productColorsProvider.notifier)
+          .loadColorsByProduct(productoState.idProducto);
+      if (!mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+      final productColorsState = ref.read(productColorsProvider);
+      if (productColorsState.productColors!.isEmpty) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No cuenta con colores disponibles.')),
+        );
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      ref
+          .read(productsPurchaseProvider.notifier)
+          .addProduct(productoState.producto!);
+    } catch (e) {
+      print(e);
     }
-
-    final productoState = ref.read(productProvider);
-
-    await ref
-        .read(productSizesProvider.notifier)
-        .loadSizesByProduct(productoState.idProducto);
-    if (!mounted) return;
-    final productSizesState = ref.watch(productSizesProvider);
-    if (productSizesState.productSizes!.isEmpty) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(_context).showSnackBar(
-        const SnackBar(content: Text('No cuenta con tallas disponibles.')),
-      );
-      return;
-    }
-
-    await ref
-        .read(productColorsProvider.notifier)
-        .loadColorsByProduct(productoState.idProducto);
-    if (!mounted) return;
-    final productColorsState = ref.read(productColorsProvider);
-    if (productColorsState.productColors!.isEmpty) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(_context).showSnackBar(
-        const SnackBar(content: Text('No cuenta con colores disponibles.')),
-      );
-      return;
-    }
-
-    ref
-        .read(productsPurchaseProvider.notifier)
-        .addProduct(productoState.producto!);
+    setState(() {
+      isLoading = false;
+    });
   }
 
   void _showPaymentOptionsSheet(BuildContext _context) {
     final productsPurchaseState = ref.read(productsPurchaseProvider);
     if (productsPurchaseState.isEmpty) {
       ScaffoldMessenger.of(_context).showSnackBar(
-        const SnackBar(
-            content: Text('Debe escanear productos.')),
+        const SnackBar(content: Text('Debe escanear productos.')),
       );
       return;
     }
@@ -177,7 +216,18 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
           foregroundColor: Colors.black,
           actions: [
             SizedBox(
-              width: 80,
+              child: Container(
+                margin: const EdgeInsets.all(0.0),
+                padding: const EdgeInsets.all(0.0),
+                alignment: Alignment.center,
+                child: IconButton(
+                  icon: const Icon(Icons.restore_from_trash_rounded),
+                  tooltip: 'Limpiar',
+                  onPressed: onClear,
+                ),
+              ),
+            ),
+            SizedBox(
               child: Container(
                 margin: const EdgeInsets.all(0.0),
                 padding: const EdgeInsets.all(0.0),
@@ -191,7 +241,18 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
             ),
           ],
         ),
-        body: const _ProductsPurcharseView(),
+        body: Stack(
+          children: [
+            const _ProductsPurcharseView(),
+            if (isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.3), // fondo semitransparente
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+          ],
+        ),
         bottomNavigationBar: Consumer(
           builder: (context, ref, _) {
             final discount = ref.watch(discountProvider);
@@ -355,8 +416,9 @@ class __ProductsPurcharseState extends ConsumerState {
     final hasSizes = productSizesState.productSizes != null &&
         productSizesState.productSizes!.isNotEmpty;
 
-    return Padding(
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
+      margin: const EdgeInsets.symmetric(vertical: 5),
       child: ListView.builder(
         controller: scrollController,
         physics: const BouncingScrollPhysics(),
@@ -395,7 +457,7 @@ class _DiscountSelectorBottomSheet extends ConsumerStatefulWidget {
 class _DiscountSelectorBottomSheetState
     extends ConsumerState<_DiscountSelectorBottomSheet> {
   final TextEditingController _discountController = TextEditingController();
-  DiscountType _selectedType = DiscountType.none;
+  DiscountType _selectedType = DiscountType.fixed;
 
   @override
   void initState() {

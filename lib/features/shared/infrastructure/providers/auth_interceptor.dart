@@ -21,7 +21,10 @@ class AuthInterceptor implements Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.statusCode == 401) {
+    final isUnauthorized = err.response?.statusCode == 401;
+    final isRefreshing = err.requestOptions.extra["retry"] == true;
+
+    if (isUnauthorized && !isRefreshing) {
       // navigate to the authentication screen
       return handler.reject(
         DioException(

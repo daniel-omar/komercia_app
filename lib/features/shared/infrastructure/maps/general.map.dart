@@ -43,3 +43,29 @@ final menuActionsMap = {
 };
 
 final perfilesMap = {'Vendedor': 1, 'Supervisor': 2, 'Administrador': 3};
+
+final sizesMap = {'NA': 1, 'S': 2, 'M': 3, 'L': 3, 'XL': 3, 'XLL': 3};
+
+final colorsMap = {
+  "NA": 1,
+  "Negro": 2,
+  "Gris": 3,
+  "Rojo": 4,
+  "Rosado": 5,
+  "Fucsia": 6,
+  "Naranja": 7,
+  "Amarillo": 8,
+  "Verde": 9,
+  "Azul": 10,
+  "Celeste": 11,
+  "Morado": 12,
+  "Lila": 13,
+  "Marrón": 14,
+  "Beige": 15,
+  "Crema": 16,
+  "Mostaza": 17,
+  "Turquesa": 18,
+  "Vino": 19,
+  "Coral": 20,
+  "Blanco": 21
+};

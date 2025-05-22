@@ -1,8 +1,10 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_colors_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/products_purchase_provider.dart';
+import 'package:komercia_app/features/shared/infrastructure/maps/general.map.dart';
 import 'package:komercia_app/features/shared/widgets/custom_increment_product_field.dart';
 import 'package:komercia_app/features/shared/widgets/custom_product_field.dart';
 
@@ -37,7 +39,28 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
     priceController =
         TextEditingController(text: widget.state.precioVenta.toString());
 
-    availableProductColors = widget.productColors;
+    final sizeNA = widget.productSizes
+        .firstWhereOrNull((x) => x.idTalla == sizesMap["NA"]);
+
+    Future.microtask(() async {
+      if (sizeNA != null) {
+        ref.read(productsPurchaseProvider.notifier).updateProduct(
+              widget.state.uuid,
+              idTalla: sizesMap["NA"],
+            );
+
+        final result = await ref.read(productColorsBySizeProvider(
+            (widget.product.idProducto, sizesMap["NA"]!)).future);
+
+        setState(() {
+          availableProductColors = result;
+        });
+      } else {
+        setState(() {
+          availableProductColors = widget.productColors;
+        });
+      }
+    });
   }
 
   @override
@@ -79,11 +102,17 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
       final result = await ref.read(
           productColorsBySizeProvider((widget.product.idProducto, idSize))
               .future);
+
       setState(() {
         availableProductColors = result;
       });
 
-      print(idSize);
+      if (idSize == colorsMap["NA"]) {
+        ref.read(productsPurchaseProvider.notifier).updateProduct(
+              widget.state.uuid,
+              idColor: colorsMap["NA"],
+            );
+      }
     }
 
     void onColorChanged(int idColor) {
@@ -130,117 +159,121 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
     final showErrors = ref.watch(showProductPurchaseValidationErrorsProvider);
     final isInvalid = (widget.state.idTalla == 0 || widget.state.idColor == 0);
 
-    return Material(
-      // color: Colors.amber,
-      child: InkWell(
-        // onTap: () => {},
-        borderRadius: BorderRadius.circular(15),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-          // margin: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: const Color.fromARGB(244, 241, 241, 241),
-            borderRadius: BorderRadius.circular(20),
-            // border: Border.all(color: Colors.blueAccent),
-            boxShadow: const [
-              BoxShadow(
-                  color: Color(0x000005cc),
-                  blurRadius: 20,
-                  offset: Offset(10, 10))
-            ],
-            border: Border.all(
-              color:
-                  (showErrors && isInvalid) ? Colors.red : Colors.grey.shade300,
-              width: (showErrors && isInvalid) ? 2 : 1,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      child: Material(
+        // color: Colors.amber,
+        child: InkWell(
+          // onTap: () => {},
+          borderRadius: BorderRadius.circular(15),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+            // margin: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(244, 241, 241, 241),
+              borderRadius: BorderRadius.circular(20),
+              // border: Border.all(color: Colors.blueAccent),
+              boxShadow: const [
+                BoxShadow(
+                    color: Color(0x000005cc),
+                    blurRadius: 20,
+                    offset: Offset(10, 10))
+              ],
+              border: Border.all(
+                color: (showErrors && isInvalid)
+                    ? Colors.red
+                    : Colors.grey.shade300,
+                width: (showErrors && isInvalid) ? 2 : 1,
+              ),
             ),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      tooltip: 'Eliminar',
-                      onPressed: () async {
-                        ref
-                            .read(productsPurchaseProvider.notifier)
-                            .removeProduct(widget.state.uuid);
-                      },
-                      color: Colors.white, // color del ícono
-                      style: ButtonStyle(
-                        backgroundColor:
-                            WidgetStateProperty.all<Color>(Colors.black),
-                        padding: WidgetStateProperty.all<EdgeInsets>(
-                            const EdgeInsets.all(8)),
-                        shape: WidgetStateProperty.all(
-                          RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6)),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        tooltip: 'Eliminar',
+                        onPressed: () async {
+                          ref
+                              .read(productsPurchaseProvider.notifier)
+                              .removeProduct(widget.state.uuid);
+                        },
+                        color: Colors.white, // color del ícono
+                        style: ButtonStyle(
+                          backgroundColor:
+                              WidgetStateProperty.all<Color>(Colors.black),
+                          padding: WidgetStateProperty.all<EdgeInsets>(
+                              const EdgeInsets.all(8)),
+                          shape: WidgetStateProperty.all(
+                            RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6)),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      textAlign: TextAlign.center,
-                      widget.product.nombreProducto,
-                      style: styleField,
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    _SizeSelector(
-                        idSelectedSize: widget.state.idTalla ?? 0,
-                        sizes: widget.productSizes,
-                        onSizeChanged: onSizeChanged)
-                  ],
-                ),
-                Align(
-                  alignment: Alignment.center,
-                  child: _ColorSelector(
-                      idSelectedColor: widget.state.idColor ?? 0,
-                      colors: availableProductColors,
-                      onColorChanged: onColorChanged),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    CustomIncrementProductField(
-                      isBottomField: true,
-                      isTopField: true,
-                      textEditingController: quantityController,
-                      onDecrement: onDecrement,
-                      onIncrement: onIncrement,
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    CustomProductField(
-                      isBottomField: true,
-                      isTopField: true,
-                      iconData: Icons.edit,
-                      textEditingController: priceController,
-                      onChanged: onChangePrice,
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    Text(
-                      'Total: S/ $total',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.black87,
+                      const SizedBox(width: 8),
+                      Text(
+                        textAlign: TextAlign.center,
+                        widget.product.nombreProducto,
+                        style: styleField,
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      _SizeSelector(
+                          idSelectedSize: widget.state.idTalla ?? 0,
+                          sizes: widget.productSizes,
+                          onSizeChanged: onSizeChanged)
+                    ],
+                  ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: _ColorSelector(
+                        idSelectedColor: widget.state.idColor ?? 0,
+                        colors: availableProductColors,
+                        onColorChanged: onColorChanged),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      CustomIncrementProductField(
+                        isBottomField: true,
+                        isTopField: true,
+                        textEditingController: quantityController,
+                        onDecrement: onDecrement,
+                        onIncrement: onIncrement,
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      CustomProductField(
+                        isBottomField: true,
+                        isTopField: true,
+                        iconData: Icons.edit,
+                        textEditingController: priceController,
+                        onChanged: onChangePrice,
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      Text(
+                        'Total: S/ $total',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -299,58 +332,65 @@ class _ColorSelector extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: IntrinsicWidth(
-          child: SegmentedButton(
-        multiSelectionEnabled: false,
-        showSelectedIcon: false,
-        style: ButtonStyle(
-          visualDensity: VisualDensity.compact,
-          padding: WidgetStateProperty.all(
-            const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
-          ),
-          side: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return const BorderSide(color: Colors.red, width: 4);
-            }
-            return const BorderSide(color: Colors.grey, width: 1);
-          }),
-          backgroundColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return const Color.fromARGB(255, 79, 33, 243).withOpacity(0.12);
-            }
-            return Colors.transparent;
-          }),
-        ),
-        segments: colors.map((color) {
-          return ButtonSegment(
-            value: color.idColor,
-            label: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 2,
-              ),
-              decoration: BoxDecoration(
-                color: color.color,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                color.nombreColor,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: color.color.computeLuminance() < 0.5
-                      ? Colors.white
-                      : Colors.black,
+        child: colors.isEmpty
+            ? null
+            : SegmentedButton(
+                multiSelectionEnabled: false,
+                showSelectedIcon: false,
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  padding: WidgetStateProperty.all(
+                    const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
+                  ),
+                  side: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const BorderSide(color: Colors.red, width: 4);
+                    }
+                    return const BorderSide(color: Colors.grey, width: 1);
+                  }),
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color.fromARGB(255, 79, 33, 243)
+                          .withOpacity(0.12);
+                    }
+                    return Colors.transparent;
+                  }),
                 ),
+                segments: colors.map((color) {
+                  return ButtonSegment(
+                    value: color.idColor,
+                    label: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.idColor != colorsMap["NA"]!
+                            ? color.color
+                            : null,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        color.nombreColor,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: color.color.computeLuminance() < 0.5 &&
+                                  color.idColor != colorsMap["NA"]!
+                              ? Colors.white
+                              : Colors.black,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+                selected: {idSelectedColor},
+                onSelectionChanged: (newSelection) {
+                  FocusScope.of(context).unfocus();
+                  onColorChanged(newSelection.first);
+                },
               ),
-            ),
-          );
-        }).toList(),
-        selected: {idSelectedColor},
-        onSelectionChanged: (newSelection) {
-          FocusScope.of(context).unfocus();
-          onColorChanged(newSelection.first);
-        },
-      )),
+      ),
     );
   }
 }
