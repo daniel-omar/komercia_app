@@ -41,8 +41,8 @@ class MenusNotifier extends StateNotifier<MenusState> {
 
     final menus = toMenus(permisos);
     final menusHome_ = menus
-        .where((menu) =>
-            !["/balance", "/sale_detail", "/home","/products"].contains(menu.rutaMenu))
+        .where((menu) => !["/balance", "/sale_detail", "/home", "/products"]
+            .contains(menu.rutaMenu))
         .toList();
     final menusTab_ = menus
         .where((menu) => !["/new_sale", "/sale_detail"].contains(menu.rutaMenu))
@@ -50,6 +50,7 @@ class MenusNotifier extends StateNotifier<MenusState> {
 
     state = state.copyWith(
         isLoading: false,
+        menu: menusTab_.first,
         menus: [...state.menus, ...menus],
         menusHome: [...state.menus, ...menusHome_],
         menusTabBar: [...state.menusTabBar, ...menusTab_],

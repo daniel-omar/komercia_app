@@ -66,7 +66,7 @@ class _MenuHomeState extends ConsumerState<_MenuHome>
               child: MenuCard(
                 menu: menu,
                 onTap: () {
-                  ref.read(menusProvider.notifier).setMenu(menu);
+                  // ref.read(menusProvider.notifier).setMenu(menu);
                   context.push(menu.rutaMenu);
                 },
               ),

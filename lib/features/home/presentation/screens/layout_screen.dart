@@ -64,9 +64,6 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
   @override
   Widget build(BuildContext context) {
     final menuState = ref.watch(menusProvider);
-    _title = menuState.menusTabBar.isNotEmpty
-        ? menuState.menusTabBar[0].nombreMenu
-        : "";
 
     // ref.listen<MenusState>(menusProvider, (previous, next) {
     //   if (!next.isLoading && previous!.menus.isEmpty) {
@@ -82,7 +79,7 @@ class _LayoutViewState extends ConsumerState<_LayoutView>
             key: widget.scaffoldKey,
             drawer: SideMenu(scaffoldKey: widget.scaffoldKey),
             appBar: AppBar(
-              title: Text(_title),
+              title: Text(menuState.menu!.nombreMenu),
               backgroundColor: Colors.yellow[700],
               foregroundColor: Colors.black,
               actions: [
