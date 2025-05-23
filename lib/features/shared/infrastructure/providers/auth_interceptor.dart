@@ -1,10 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:komercia_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:komercia_app/features/auth/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:komercia_app/features/shared/infrastructure/services/key_value_storage_service.dart';
 import 'package:komercia_app/features/shared/infrastructure/services/key_value_storage_service_impl.dart';
 
 class AuthInterceptor implements Interceptor {
   final KeyValueStorageService keyValueStorageService =
       KeyValueStorageServiceImpl();
+
   @override
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
@@ -20,18 +23,35 @@ class AuthInterceptor implements Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
     final isUnauthorized = err.response?.statusCode == 401;
     final isRefreshing = err.requestOptions.extra["retry"] == true;
 
     if (isUnauthorized && !isRefreshing) {
-      // navigate to the authentication screen
-      return handler.reject(
-        DioException(
-          requestOptions: err.requestOptions,
-          error: 'The user has been deleted or the session is expired',
-        ),
-      );
+      try {
+        final refreshToken =
+            await keyValueStorageService.getValue<String>('refresh_token');
+
+        final authRepository = AuthRepositoryImpl();
+        final responseRefresh = await authRepository.refresh(refreshToken!);
+        String newToken = responseRefresh.token!;
+        await keyValueStorageService.setKeyValue('token', newToken);
+
+        // 🔁 2. Reintenta la petición original con el nuevo token
+        final retryOptions = err.requestOptions;
+        retryOptions.headers['authorization'] = 'Bearer $newToken';
+        retryOptions.extra['retry'] = true;
+
+        final clonedResponse = await Dio().fetch(retryOptions);
+        return handler.resolve(clonedResponse);
+      } catch (e) {
+        return handler.reject(
+          DioException(
+            requestOptions: err.requestOptions,
+            error: 'Sesión expirada. Iniciar sesión nuevamente',
+          ),
+        );
+      }
     }
     return handler.next(err);
   }

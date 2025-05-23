@@ -16,6 +16,7 @@ class User {
   bool esActivo;
   String nombrePerfil;
   String? token;
+  String? refreshToken;
 
   User(
       {this.idUsuario,
@@ -34,7 +35,8 @@ class User {
       this.idUsuarioActualizacion,
       required this.esActivo,
       required this.nombrePerfil,
-      this.token});
+      this.token,
+      this.refreshToken});
 
   bool get isTechnical {
     return nombrePerfil.toLowerCase().contains('técnico');

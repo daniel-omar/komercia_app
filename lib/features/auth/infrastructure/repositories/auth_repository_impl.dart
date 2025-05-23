@@ -1,15 +1,15 @@
-
-
+import 'package:dio/dio.dart';
 import 'package:komercia_app/features/auth/domain/domain.dart';
+import 'package:komercia_app/features/auth/domain/entities/auth_token.dart';
 import '../infrastructure.dart';
 
-
 class AuthRepositoryImpl extends AuthRepository {
-
   final AuthDataSource dataSource;
+  // final Dio? dio;
 
   AuthRepositoryImpl({
-    AuthDataSource? dataSource
+    AuthDataSource? dataSource,
+    // this.dio,
   }) : dataSource = dataSource ?? AuthDataSourceImpl();
 
   @override
@@ -27,4 +27,8 @@ class AuthRepositoryImpl extends AuthRepository {
     return dataSource.register(email, password, fullName);
   }
 
+  @override
+  Future<AuthToken> refresh(String refreshToken) {
+    return dataSource.refresh(refreshToken);
+  }
 }

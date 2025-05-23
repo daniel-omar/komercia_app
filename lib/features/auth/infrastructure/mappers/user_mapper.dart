@@ -40,5 +40,6 @@ class UserMapper {
       esActivo: json["usuario"]["es_activo"],
       nombrePerfil: json["usuario"]["nombre_perfil"],
       //roles: List<String>.from(json["roles"].map((role) => role)),
-      token: json['token'] ?? '');
+      token: json['token'] ?? '',
+      refreshToken: json['refreshToken'] ?? '');
 }
