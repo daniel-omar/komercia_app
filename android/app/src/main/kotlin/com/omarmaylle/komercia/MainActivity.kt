@@ -1,4 +1,4 @@
-package com.example.komercia_app
+package com.omarmaylle.komercia
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

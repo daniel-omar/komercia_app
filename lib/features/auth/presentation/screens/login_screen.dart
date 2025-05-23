@@ -196,16 +196,16 @@ class _LoginForm extends ConsumerWidget {
             ),
           ],
           const Spacer(flex: 2),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('¿No tienes cuenta?'),
-              TextButton(
-                  onPressed: () => context.push('/register'),
-                  child: const Text('Crea una aquí'))
-            ],
-          ),
-          const Spacer(flex: 1),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     const Text('¿No tienes cuenta?'),
+          //     TextButton(
+          //         onPressed: () => context.push('/register'),
+          //         child: const Text('Crea una aquí'))
+          //   ],
+          // ),
+          // const Spacer(flex: 1),
         ],
       ),
     );

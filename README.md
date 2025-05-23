@@ -1,16 +1,19 @@
 # komercia_app
 
-A new Flutter project.
+# dev
 
-## Getting Started
+1. Copiar el .env.template y renombrarlo a .env
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+# prod
+Para cambiar el nombre de la aplicación y publicar:
+1-Instalar el paquete change_app_package_name en dev
+2-Corres comando: dart run change_app_package_name:main com.dominio.name (recomendado)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Para cambiar el icono
+1-Instalar el paquete flutter_launcher_icons en dev
+2-Correr comando: dart run flutter_launcher_icons
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Generar key store
+1-cd "C:\Program Files\Android\Android Studio\jbr\bin"
+2-keytool -genkey -v -keystore "%USERPROFILE%\upload-keystore.jks" -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
