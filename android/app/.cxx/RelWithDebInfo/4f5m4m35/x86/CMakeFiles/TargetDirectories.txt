@@ -1,0 +1,2 @@
+D:/APRENDIZAJE/PROYECTOS/KathyGirl/komercia_app/android/app/.cxx/RelWithDebInfo/4f5m4m35/x86/CMakeFiles/edit_cache.dir
+D:/APRENDIZAJE/PROYECTOS/KathyGirl/komercia_app/android/app/.cxx/RelWithDebInfo/4f5m4m35/x86/CMakeFiles/rebuild_cache.dir
