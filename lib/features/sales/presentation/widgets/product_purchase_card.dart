@@ -40,17 +40,17 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
         TextEditingController(text: widget.state.precioVenta.toString());
 
     final sizeNA = widget.productSizes
-        .firstWhereOrNull((x) => x.idTalla == sizesMap["NA"]);
+        .firstWhereOrNull((x) => x.idTalla == sizesMap["P"]);
 
     Future.microtask(() async {
       if (sizeNA != null) {
         ref.read(productsPurchaseProvider.notifier).updateProduct(
               widget.state.uuid,
-              idTalla: sizesMap["NA"],
+              idTalla: sizesMap["P"],
             );
 
         final result = await ref.read(productColorsBySizeProvider(
-            (widget.product.idProducto, sizesMap["NA"]!)).future);
+            (widget.product.idProducto, sizesMap["P"]!)).future);
 
         setState(() {
           availableProductColors = result;
@@ -107,10 +107,10 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
         availableProductColors = result;
       });
 
-      if (idSize == colorsMap["NA"]) {
+      if (idSize == colorsMap["P"]) {
         ref.read(productsPurchaseProvider.notifier).updateProduct(
               widget.state.uuid,
-              idColor: colorsMap["NA"],
+              idColor: colorsMap["P"],
             );
       }
     }
@@ -365,7 +365,7 @@ class _ColorSelector extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: color.idColor != colorsMap["NA"]!
+                        color: color.idColor != colorsMap["P"]!
                             ? color.color
                             : null,
                         borderRadius: BorderRadius.circular(4),
@@ -376,7 +376,7 @@ class _ColorSelector extends StatelessWidget {
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: color.color.computeLuminance() < 0.5 &&
-                                  color.idColor != colorsMap["NA"]!
+                                  color.idColor != colorsMap["P"]!
                               ? Colors.white
                               : Colors.black,
                         ),
