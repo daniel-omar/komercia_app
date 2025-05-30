@@ -52,6 +52,21 @@ android {
             signingConfig = signingConfigs.release
         }
     }
+
+    flavorDimensions += "default"
+
+    productFlavors {
+        create("dev") {
+            dimension = "default"
+            applicationIdSuffix = ".dev"
+            resValue "string", "app_name", "Komercia [DEV]"
+        }
+        create("production") {
+            dimension = "default"
+            applicationIdSuffix = ".production"
+            resValue "string", "app_name", "Komercia"
+        }
+    }
 }
 
 flutter {
