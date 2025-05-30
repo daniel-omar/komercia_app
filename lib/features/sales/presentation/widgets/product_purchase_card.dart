@@ -39,8 +39,8 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
     priceController =
         TextEditingController(text: widget.state.precioVenta.toString());
 
-    final sizeNA = widget.productSizes
-        .firstWhereOrNull((x) => x.idTalla == sizesMap["P"]);
+    final sizeNA =
+        widget.productSizes.firstWhereOrNull((x) => x.idTalla == sizesMap["P"]);
 
     Future.microtask(() async {
       if (sizeNA != null) {
@@ -55,6 +55,13 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
         setState(() {
           availableProductColors = result;
         });
+
+        if (result.length == 1) {
+          ref.read(productsPurchaseProvider.notifier).updateProduct(
+              widget.state.uuid,
+              idColor: colorsMap["P"],
+              cantidadMaxima: result.first.cantidad);
+        }
       } else {
         setState(() {
           availableProductColors = widget.productColors;
@@ -107,19 +114,22 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
         availableProductColors = result;
       });
 
-      if (idSize == colorsMap["P"]) {
+      if (result.length == 1 && idSize == sizesMap["P"]) {
         ref.read(productsPurchaseProvider.notifier).updateProduct(
-              widget.state.uuid,
-              idColor: colorsMap["P"],
-            );
+            widget.state.uuid,
+            idColor: colorsMap["P"],
+            cantidadMaxima: result.first.cantidad);
       }
     }
 
     void onColorChanged(int idColor) {
+      final color =
+          availableProductColors.firstWhere((x) => x.idColor == idColor);
+
       ref.read(productsPurchaseProvider.notifier).updateProduct(
-            widget.state.uuid,
-            idColor: idColor,
-          );
+          widget.state.uuid,
+          idColor: idColor,
+          cantidadMaxima: color.cantidad);
       print(idColor);
     }
 
@@ -127,6 +137,10 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
     int currentValue() => int.tryParse(quantityController.text) ?? 0;
 
     void onIncrement() {
+      if (currentValue() == widget.state.cantidadMaxima) {
+        return;
+      }
+
       String cantidad = (currentValue() + 1).toString();
       quantityController.text = cantidad;
       updateQuantity(int.parse(cantidad));
@@ -221,22 +235,24 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
                       ),
                     ],
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      _SizeSelector(
-                          idSelectedSize: widget.state.idTalla ?? 0,
-                          sizes: widget.productSizes,
-                          onSizeChanged: onSizeChanged)
-                    ],
-                  ),
-                  Align(
-                    alignment: Alignment.center,
-                    child: _ColorSelector(
-                        idSelectedColor: widget.state.idColor ?? 0,
-                        colors: availableProductColors,
-                        onColorChanged: onColorChanged),
-                  ),
+                  if (widget.state.idColor != colorsMap["P"]) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        _SizeSelector(
+                            idSelectedSize: widget.state.idTalla ?? 0,
+                            sizes: widget.productSizes,
+                            onSizeChanged: onSizeChanged)
+                      ],
+                    ),
+                    Align(
+                      alignment: Alignment.center,
+                      child: _ColorSelector(
+                          idSelectedColor: widget.state.idColor ?? 0,
+                          colors: availableProductColors,
+                          onColorChanged: onColorChanged),
+                    ),
+                  ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[

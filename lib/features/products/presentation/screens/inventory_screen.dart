@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -6,6 +7,7 @@ import 'package:komercia_app/features/home/presentation/providers/menu_provider.
 import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_categories_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_provider.dart';
+import 'package:komercia_app/features/products/presentation/providers/select_products_provider.dart';
 import 'package:komercia_app/features/shared/widgets/full_screen_loader.dart';
 
 class InventoryScreen extends ConsumerStatefulWidget {
@@ -24,6 +26,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     });
   }
 
+  bool _isSelectionMode = false;
+
   @override
   Widget build(BuildContext context) {
     final productCategoriesState = ref.watch(productCategoriesProvider);
@@ -36,10 +40,29 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final products = productsState.products ?? [];
     final purcharsePriceTotal = productsState.purcharsePriceTotal ?? 0;
 
+    final selectedProducts = ref.watch(selectedProductsProvider);
+    final selectedCount = selectedProducts.length;
+
     return !productCategoriesState.isLoading
         ? Scaffold(
+            appBar: AppBar(
+              actions: [
+                IconButton(
+                  icon: Icon(_isSelectionMode ? Icons.close : Icons.print),
+                  onPressed: () {
+                    setState(() {
+                      _isSelectionMode = !_isSelectionMode;
+                      if (!_isSelectionMode) {
+                        // Limpiar selección cuando salgas del modo selección
+                        ref.read(selectedProductsProvider.notifier).clear();
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
             body: Container(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
               child: Column(
                 children: [
                   const SizedBox(height: 10),
@@ -65,10 +88,40 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   ),
                   const SizedBox(height: 10),
                   if (!productsState.isLoading)
-                    _ProductList(products: products),
+                    _ProductList(
+                      products: products,
+                      isSelectionMode: _isSelectionMode,
+                    ),
                 ],
               ),
             ),
+            bottomNavigationBar: _isSelectionMode && selectedCount > 0
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.print),
+                        label: Text('Generar etiquetas ($selectedCount)'),
+                        onPressed: () async {
+                          // Lógica para imprimir
+                          await ref
+                              .read(productsProvider(selectedId).notifier)
+                              .downloadTags(selectedProducts);
+
+                          setState(() {
+                            _isSelectionMode = !_isSelectionMode;
+                            if (!_isSelectionMode) {
+                              // Limpiar selección cuando salgas del modo selección
+                              ref
+                                  .read(selectedProductsProvider.notifier)
+                                  .clear();
+                            }
+                          });
+                        },
+                      )
+                    ],
+                  )
+                : null,
           )
         : const FullScreenLoader();
   }
@@ -189,7 +242,9 @@ class _SummaryCard extends StatelessWidget {
 
 class _ProductList extends ConsumerWidget {
   List<Product> products = [];
-  _ProductList({required this.products});
+  final bool isSelectionMode;
+
+  _ProductList({required this.products, required this.isSelectionMode});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -221,6 +276,7 @@ class _ProductList extends ConsumerWidget {
             salePrice: product.precioVenta ?? 0,
             purcharsePrice: product.precioCompra ?? 0,
             stock: product.cantidadDisponible ?? 0,
+            isSelectionMode: isSelectionMode,
           );
         },
       ),
@@ -234,16 +290,22 @@ class _ProductCard extends ConsumerWidget {
   final double salePrice;
   final double purcharsePrice;
   final int stock;
+  final bool isSelectionMode;
 
   const _ProductCard(
       {required this.name,
       required this.salePrice,
       required this.purcharsePrice,
       required this.stock,
-      required this.idProduct});
+      required this.idProduct,
+      required this.isSelectionMode});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final selectedProducts = ref.watch(selectedProductsProvider);
+    final isSelected = selectedProducts
+        .contains(selectedProducts.firstWhereOrNull((p) => p == idProduct));
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       shape: RoundedRectangleBorder(
@@ -271,15 +333,24 @@ class _ProductCard extends ConsumerWidget {
               )
             : null,
         child: ListTile(
-          leading: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.purple[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.toll, color: Colors.purple),
-          ),
+          leading: isSelectionMode
+              ? Checkbox(
+                  value: isSelected,
+                  onChanged: (value) {
+                    ref
+                        .read(selectedProductsProvider.notifier)
+                        .toggleProduct(idProduct);
+                  },
+                )
+              : Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.purple[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.toll, color: Colors.purple),
+                ),
           title: Text(name),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

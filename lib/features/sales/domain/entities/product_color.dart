@@ -6,12 +6,13 @@ class ProductColor {
   String nombreColor;
   String? descripcionColor;
   Color get color => colorMap[nombreColor] ?? Colors.grey;
+  int? cantidad;
 
-  ProductColor({
-    required this.idColor,
-    required this.nombreColor,
-    this.descripcionColor,
-  });
+  ProductColor(
+      {required this.idColor,
+      required this.nombreColor,
+      this.descripcionColor,
+      this.cantidad = 1});
 
   Map<String, dynamic> toJson() => {
         "id_color": idColor,

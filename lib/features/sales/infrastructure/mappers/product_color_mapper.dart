@@ -5,5 +5,6 @@ class ProductColorMapper {
       ProductColor(
         idColor: json["id_color"],
         nombreColor: json["nombre_color"],
+        cantidad: json["cantidad"],
       );
 }

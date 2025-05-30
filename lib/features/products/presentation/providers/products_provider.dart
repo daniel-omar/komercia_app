@@ -52,6 +52,20 @@ class ProductsNotifier extends StateNotifier<ProductsState> {
       print(e);
     }
   }
+
+  Future<void> downloadTags(List<int> idsProducto) async {
+    try {
+      state = state.copyWith(isLoading: true);
+
+      await productRepository.downloadTags(idsProducto);
+
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      // 404 product not found
+      state = state.copyWith(isLoading: false);
+      print(e);
+    }
+  }
 }
 
 class ProductsState {

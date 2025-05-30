@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
@@ -7,6 +10,8 @@ import 'package:komercia_app/features/products/infrastructure/mappers/product_va
 import 'package:komercia_app/features/shared/infrastructure/entities/response_main.dart';
 import 'package:komercia_app/features/shared/infrastructure/mappers/response_main_mapper.dart';
 import 'package:komercia_app/features/shared/infrastructure/providers/dio_client.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ProductDatasourceImpl extends ProductDatasource {
   late final dioClient = DioClient();
@@ -123,6 +128,34 @@ class ProductDatasourceImpl extends ProductDatasource {
           ResponseMainMapper.responseJsonToEntity(response.data);
 
       return true;
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  @override
+  Future<void> downloadTags(List<int> idsProducto) async {
+    try {
+      
+      Map<String, dynamic> body = {};
+      body["ids_producto"] = idsProducto;
+
+      final response =
+          await dioClient.dio.post('/products/product/generate_tags',
+              data: body,
+              options: Options(
+                responseType: ResponseType.bytes,
+                headers: {'Accept': 'application/pdf'},
+              ));
+
+      // Guardar archivo
+      final dir = await getTemporaryDirectory();
+      final filePath = '${dir.path}/etiquetas.pdf';
+      final file = File(filePath);
+      await file.writeAsBytes(response.data as Uint8List);
+
+      // Abrir PDF
+      await OpenFile.open(filePath);
     } catch (e) {
       throw Exception(e);
     }

@@ -31,4 +31,9 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<bool> update(Map<String, dynamic> data) {
     return datasource.update(data);
   }
+
+  @override
+  Future<void> downloadTags(List<int> idsProducto) {
+    return datasource.downloadTags(idsProducto);
+  }
 }

@@ -59,6 +59,9 @@ class AuthInterceptor implements Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     final responseData = response.data;
+    if (response.realUri.path.contains("generate_tags")) {
+      return handler.next(response);
+    }
     if (responseData is Map) {
       return handler.next(response);
     }

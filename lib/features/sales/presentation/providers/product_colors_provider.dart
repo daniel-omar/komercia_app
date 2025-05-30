@@ -93,8 +93,8 @@ class ProductColorsState {
       );
 }
 
-final productColorsBySizeProvider =
-    FutureProvider.family<List<ProductColor>, (int idProducto, int idTalla)>(
+final productColorsBySizeProvider = FutureProvider.family
+    .autoDispose<List<ProductColor>, (int idProducto, int idTalla)>(
         (ref, tuple) async {
   final repository = ref.watch(productColorRepositoryProvider);
   final (idProducto, idTalla) = tuple;

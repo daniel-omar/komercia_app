@@ -47,7 +47,11 @@ class ProductsNotifier extends StateNotifier<List<ProductPurchaseState>> {
   }
 
   void updateProduct(String uuid,
-      {double? precioVenta, int? cantidad, int? idTalla, int? idColor}) {
+      {double? precioVenta,
+      int? cantidad,
+      int? idTalla,
+      int? idColor,
+      int? cantidadMaxima}) {
     state = [
       for (final item in state)
         if (item.uuid == uuid)
@@ -56,7 +60,8 @@ class ProductsNotifier extends StateNotifier<List<ProductPurchaseState>> {
               precioVenta: precioVenta ?? item.precioVenta,
               cantidad: cantidad ?? item.cantidad,
               idTalla: idTalla ?? item.idTalla,
-              idColor: idColor ?? item.idColor)
+              idColor: idColor ?? item.idColor,
+              cantidadMaxima: cantidadMaxima ?? item.cantidadMaxima)
         else
           item,
     ];
@@ -82,6 +87,7 @@ class ProductPurchaseState {
   final int? idTalla;
   final int? idColor;
   final int cantidad;
+  final int cantidadMaxima;
   final bool isLoading;
   final bool isSaving;
 
@@ -97,22 +103,25 @@ class ProductPurchaseState {
       this.idCategoria = 0,
       this.idTalla = 0,
       this.idColor = 0,
-      this.cantidad = 0});
+      this.cantidad = 0,
+      this.cantidadMaxima = 0});
 
-  ProductPurchaseState copyWith(
-          {bool? isLoading,
-          bool? isSaving,
-          String? uuid,
-          int? idProducto,
-          Product? producto,
-          double? precio,
-          double? precioCompra,
-          double? precioVenta,
-          int? idCategoria,
-          int? idTalla,
-          int? idColor,
-          int? cantidad,
-          double? total}) =>
+  ProductPurchaseState copyWith({
+    bool? isLoading,
+    bool? isSaving,
+    String? uuid,
+    int? idProducto,
+    Product? producto,
+    double? precio,
+    double? precioCompra,
+    double? precioVenta,
+    int? idCategoria,
+    int? idTalla,
+    int? idColor,
+    int? cantidad,
+    int? cantidadMaxima,
+    double? total,
+  }) =>
       ProductPurchaseState(
           isLoading: isLoading ?? this.isLoading,
           isSaving: isSaving ?? this.isSaving,
@@ -125,7 +134,8 @@ class ProductPurchaseState {
           idCategoria: idCategoria ?? this.idCategoria,
           idTalla: idTalla ?? this.idTalla,
           idColor: idColor ?? this.idColor,
-          cantidad: cantidad ?? this.cantidad);
+          cantidad: cantidad ?? this.cantidad,
+          cantidadMaxima: cantidadMaxima ?? this.cantidadMaxima);
 
   double get total => (precioVenta ?? 0) * cantidad;
 }
