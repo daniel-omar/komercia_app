@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
 
-final inventoryProvider =
+final productsInventoryProvider =
     StateNotifierProvider<InventoryNotifier, List<ProductVariant>>((ref) {
   return InventoryNotifier();
 });

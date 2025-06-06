@@ -5,6 +5,7 @@ import 'package:komercia_app/features/auth/auth.dart';
 import 'package:komercia_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:komercia_app/features/home/presentation/screens/layout_screen.dart';
 import 'package:komercia_app/features/products/presentation/screens/inventory_screen.dart';
+import 'package:komercia_app/features/products/presentation/screens/load_inventory_screen.dart';
 import 'package:komercia_app/features/products/presentation/screens/product_screen.dart';
 import 'package:komercia_app/features/products/presentation/screens/product_variants_screen.dart';
 import 'package:komercia_app/features/sales/presentation/screens/balance_screen.dart';
@@ -58,6 +59,11 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/products',
         builder: (context, state) => const InventoryScreen(),
+      ),
+
+      GoRoute(
+        path: '/load_inventory',
+        builder: (context, state) => LoadInventoryScreen(),
       ),
 
       GoRoute(

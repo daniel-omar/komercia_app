@@ -47,6 +47,15 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         ? Scaffold(
             appBar: AppBar(
               actions: [
+                const SizedBox(width: 20),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.save),
+                  label: const Text('Agregar '),
+                  onPressed: () async {
+                    context.push("/load_inventory");
+                  },
+                ),
+                const Spacer(),
                 IconButton(
                   icon: Icon(_isSelectionMode ? Icons.close : Icons.print),
                   onPressed: () {
@@ -59,6 +68,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     });
                   },
                 ),
+                const SizedBox(width: 20),
               ],
             ),
             body: Container(
@@ -67,7 +77,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                 children: [
                   const SizedBox(height: 10),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _SummaryCard(
                           title: 'Total de referencias',
