@@ -1,4 +1,5 @@
 import 'package:komercia_app/features/products/domain/domain.dart';
+import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
 
 class ProductRepositoryImpl extends ProductRepository {
@@ -23,8 +24,13 @@ class ProductRepositoryImpl extends ProductRepository {
   }
 
   @override
-  Future<List<ProductVariantSize>> getVariants(int idProducto) {
+  Future<List<ProductVariant>> getVariants(int idProducto) {
     return datasource.getVariants(idProducto);
+  }
+
+  @override
+  Future<List<ProductVariantSize>> getVariantsGroup(int idProducto) {
+    return datasource.getVariantsGroup(idProducto);
   }
 
   @override
@@ -35,5 +41,10 @@ class ProductRepositoryImpl extends ProductRepository {
   @override
   Future<void> downloadTags(List<int> idsProducto) {
     return datasource.downloadTags(idsProducto);
+  }
+
+  @override
+  Future<bool> saveVariants(Map<String, dynamic> data) {
+    return datasource.saveVariants(data);
   }
 }

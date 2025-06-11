@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_color_repository_provider.dart';
 
-final productColorsProvider = StateNotifierProvider<
+final productColorsProvider = StateNotifierProvider.autoDispose<
     ProductColorsNotifier,
     ProductColorsState
     //int
@@ -36,6 +36,7 @@ class ProductColorsNotifier extends StateNotifier<ProductColorsState> {
 
       state = state.copyWith(isLoading: false, productColors: productColors);
     } catch (e) {
+      state = state.copyWith(isLoading: false);
       // 404 product not found
       print(e);
     }

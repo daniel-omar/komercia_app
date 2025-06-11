@@ -1,28 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_variants_provider.dart';
 
-class ProductVariantsScreen extends ConsumerWidget {
+class ProductVariantsScreen extends ConsumerStatefulWidget {
   final int idProduct;
   final String nameProduct;
 
-  const ProductVariantsScreen({
-    super.key,
-    required this.idProduct,
-    required this.nameProduct,
-  });
+  const ProductVariantsScreen(
+      {super.key, required this.idProduct, required this.nameProduct});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductVariantsScreen> createState() =>
+      _ProductVariantsScreenState();
+}
+
+class _ProductVariantsScreenState extends ConsumerState<ProductVariantsScreen> {
+  late int idProduct = widget.idProduct;
+  late String nameProduct = widget.nameProduct;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref
+          .watch(productVariantsProvider(widget.idProduct).notifier)
+          .getVariantsGroup();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final productVariantsState = ref.watch(productVariantsProvider(idProduct));
 
     return Scaffold(
-        appBar: AppBar(title: Text(nameProduct)),
-        body: productVariantsState.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _VariantsList(
-                variantes: productVariantsState.productVariantsSize!));
+      appBar: AppBar(
+        title: Text(nameProduct),
+        backgroundColor: Colors.yellow[700],
+        foregroundColor: Colors.black,
+      ),
+      body: productVariantsState.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _VariantsList(variantes: productVariantsState.productVariantsSize!),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          context.pushNamed(
+            'productoVariantesSave',
+            pathParameters: {'id_product': idProduct.toString()},
+            extra: {'name': nameProduct},
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Agregar Variantes'),
+      ),
+    );
   }
 }
 
@@ -64,7 +96,12 @@ class _VariantsList extends StatelessWidget {
                   children: talla.detalles.map((detalle) {
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(detalle.nombreColor),
+                      title: Column(
+                        children: [
+                          Text(detalle.codigoProductoVariante ?? ""),
+                          Text(detalle.nombreColor)
+                        ],
+                      ),
                       trailing: Text(
                         '${detalle.cantidad} unidades',
                         style: TextStyle(

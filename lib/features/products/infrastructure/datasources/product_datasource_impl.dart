@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
+import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
 import 'package:komercia_app/features/products/infrastructure/errors/product_errors.dart';
 import 'package:komercia_app/features/products/infrastructure/infrastructure.dart';
@@ -101,9 +102,28 @@ class ProductDatasourceImpl extends ProductDatasource {
   }
 
   @override
-  Future<List<ProductVariantSize>> getVariants(int idProducto) async {
+  Future<List<ProductVariant>> getVariants(int idProducto) async {
     final response =
         await dioClient.dio.get('/products/product/get_variants/$idProducto');
+
+    ResponseMain responseMain =
+        ResponseMainMapper.responseJsonToEntity(response.data);
+
+    final List<ProductVariant> productsVariants = [];
+
+    // ignore: no_leading_underscores_for_local_identifiers
+    for (final _material in responseMain.data ?? []) {
+      productsVariants
+          .add(ProductVariantMapper.productVariantJsonToEntity(_material));
+    }
+
+    return productsVariants;
+  }
+
+  @override
+  Future<List<ProductVariantSize>> getVariantsGroup(int idProducto) async {
+    final response =
+        await dioClient.dio.get('/products/product/get_variants_group/$idProducto');
 
     ResponseMain responseMain =
         ResponseMainMapper.responseJsonToEntity(response.data);
@@ -136,7 +156,6 @@ class ProductDatasourceImpl extends ProductDatasource {
   @override
   Future<void> downloadTags(List<int> idsProducto) async {
     try {
-      
       Map<String, dynamic> body = {};
       body["ids_producto"] = idsProducto;
 
@@ -156,6 +175,20 @@ class ProductDatasourceImpl extends ProductDatasource {
 
       // Abrir PDF
       await OpenFile.open(filePath);
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  @override
+  Future<bool> saveVariants(Map<String, dynamic> data) async {
+    try {
+      final response = await dioClient.dio
+          .post('/products/product/save_variants', data: data);
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+
+      return true;
     } catch (e) {
       throw Exception(e);
     }

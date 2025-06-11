@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_size_repository_provider.dart';
 
-final productSizesProvider = StateNotifierProvider<
+final productSizesProvider = StateNotifierProvider.autoDispose<
     ProductSizesNotifier,
     ProductSizesState
     //int
@@ -36,6 +36,7 @@ class ProductSizesNotifier extends StateNotifier<ProductSizesState> {
 
       state = state.copyWith(isLoading: false, productSizes: productSizes);
     } catch (e) {
+      state = state.copyWith(isLoading: false);
       // 404 product not found
       print(e);
     }
