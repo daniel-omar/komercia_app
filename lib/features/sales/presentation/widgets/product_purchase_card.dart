@@ -40,17 +40,17 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
         TextEditingController(text: widget.state.precioVenta.toString());
 
     final sizeNA =
-        widget.productSizes.firstWhereOrNull((x) => x.idTalla == sizesMap["P"]);
+        widget.productSizes.firstWhereOrNull((x) => x.idTalla == sizesMap["PDT"]);
 
     Future.microtask(() async {
       if (sizeNA != null) {
         ref.read(productsPurchaseProvider.notifier).updateProduct(
               widget.state.uuid,
-              idTalla: sizesMap["P"],
+              idTalla: sizesMap["PDT"],
             );
 
         final result = await ref.read(productColorsBySizeProvider(
-            (widget.product.idProducto, sizesMap["P"]!)).future);
+            (widget.product.idProducto, sizesMap["PDT"]!)).future);
 
         setState(() {
           availableProductColors = result;
@@ -59,7 +59,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
         if (result.length == 1) {
           ref.read(productsPurchaseProvider.notifier).updateProduct(
               widget.state.uuid,
-              idColor: colorsMap["P"],
+              idColor: colorsMap["Predeterminado"],
               cantidadMaxima: result.first.cantidad);
         }
       } else {
@@ -114,10 +114,10 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
         availableProductColors = result;
       });
 
-      if (result.length == 1 && idSize == sizesMap["P"]) {
+      if (result.length == 1 && idSize == sizesMap["PDT"]) {
         ref.read(productsPurchaseProvider.notifier).updateProduct(
             widget.state.uuid,
-            idColor: colorsMap["P"],
+            idColor: colorsMap["Predeterminado"],
             cantidadMaxima: result.first.cantidad);
       }
     }
@@ -235,7 +235,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
                       ),
                     ],
                   ),
-                  if (widget.state.idColor != colorsMap["P"]) ...[
+                  if (widget.state.idColor != colorsMap["Predeterminado"]) ...[
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
@@ -381,7 +381,7 @@ class _ColorSelector extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: color.idColor != colorsMap["P"]!
+                        color: color.idColor != colorsMap["Predeterminado"]!
                             ? color.color
                             : null,
                         borderRadius: BorderRadius.circular(4),
@@ -392,7 +392,7 @@ class _ColorSelector extends StatelessWidget {
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: color.color.computeLuminance() < 0.5 &&
-                                  color.idColor != colorsMap["P"]!
+                                  color.idColor != colorsMap["Predeterminado"]!
                               ? Colors.white
                               : Colors.black,
                         ),

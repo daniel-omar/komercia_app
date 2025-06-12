@@ -84,7 +84,7 @@ class _SaveProductVariantsScreenState
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: color.idColor != colorsMap["P"]!
+                                color: color.idColor != colorsMap["Predeterminado"]!
                                     ? color.color
                                     : null,
                                 borderRadius: BorderRadius.circular(4),
@@ -95,7 +95,7 @@ class _SaveProductVariantsScreenState
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   color: color.color.computeLuminance() < 0.5 &&
-                                          color.idColor != colorsMap["P"]!
+                                          color.idColor != colorsMap["Predeterminado"]!
                                       ? Colors.white
                                       : Colors.black,
                                 ),
@@ -327,7 +327,7 @@ class _ProductVariantCard extends ConsumerWidget {
             producVariant.idTalla *
             producVariant.idProducto), // Clave única por item
         child: ListTile(
-          // leading: Container(
+          // leading: Container( 
           //   width: 48,
           //   height: 48,
           //   decoration: BoxDecoration(
@@ -365,7 +365,7 @@ class _ProductVariantCard extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: producVariant.color!.idColor != colorsMap["P"]!
+                      color: producVariant.color!.idColor != colorsMap["Predeterminado"]!
                           ? producVariant.color!.color
                           : null,
                       borderRadius: BorderRadius.circular(4),
@@ -377,7 +377,7 @@ class _ProductVariantCard extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                         color: producVariant.color!.color.computeLuminance() <
                                     0.5 &&
-                                producVariant.color!.idColor != colorsMap["P"]!
+                                producVariant.color!.idColor != colorsMap["Predeterminado"]!
                             ? Colors.white
                             : Colors.black,
                       ),

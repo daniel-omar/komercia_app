@@ -44,10 +44,10 @@ final menuActionsMap = {
 
 final perfilesMap = {'Vendedor': 1, 'Supervisor': 2, 'Administrador': 3};
 
-final sizesMap = {'P': 1, 'S': 2, 'M': 3, 'L': 4, 'XL': 5, 'XLL': 6};
+final sizesMap = {'PDT': 1, 'S': 2, 'M': 3, 'L': 4, 'XL': 5, 'XLL': 6};
 
 final colorsMap = {
-  "P": 1,
+  "Predeterminado": 1,
   "Negro": 2,
   "Gris": 3,
   "Rojo": 4,
