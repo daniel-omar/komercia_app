@@ -84,7 +84,8 @@ class _SaveProductVariantsScreenState
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: color.idColor != colorsMap["Predeterminado"]!
+                                color: color.idColor !=
+                                        colorsMap["Predeterminado"]!
                                     ? color.color
                                     : null,
                                 borderRadius: BorderRadius.circular(4),
@@ -95,7 +96,8 @@ class _SaveProductVariantsScreenState
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   color: color.color.computeLuminance() < 0.5 &&
-                                          color.idColor != colorsMap["Predeterminado"]!
+                                          color.idColor !=
+                                              colorsMap["Predeterminado"]!
                                       ? Colors.white
                                       : Colors.black,
                                 ),
@@ -179,6 +181,7 @@ class _SaveProductVariantsScreenState
     setState(() => _variantes.removeAt(index));
   }
 
+  late final listener;
   @override
   void initState() {
     super.initState();
@@ -206,16 +209,34 @@ class _SaveProductVariantsScreenState
       ref.read(productSizesProvider.notifier).loadSizes();
     });
 
-    // Future.microtask(() {
-    //   ref.read(productColorsProvider.notifier).loadColors();
-    //   ref.read(productSizesProvider.notifier).loadSizes();
-    //   ref
-    //       .watch(productVariantsProvider(widget.idProduct).notifier)
-    //       .getVariants();
+    listener = ref.listenManual<ProductsState>(
+      productVariantsProvider(widget.idProduct),
+      (previous, next) {
+        if (!mounted) return;
+        if (next.success) {
+          // ignore: unused_result
+          // ref.refresh(productVariantsProvider(widget.idProduct));
+          Navigator.pop(context, true);
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   const SnackBar(
+          //       content: Text('Guardado con éxito'),
+          //       backgroundColor: Colors.green,
+          //       duration: Duration(seconds: 3), // Duración del SnackBar
+          //       behavior: SnackBarBehavior.floating),
+          // );
+        } else if (next.hasError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al guardar')),
+          );
+        }
+      },
+    );
+  }
 
-    //   final state = ref.watch(productVariantsProvider(widget.idProduct));
-    //   _variantes = state.productVariants ?? [];
-    // });
+  @override
+  void dispose() {
+    listener.close(); // cerrar manualmente para evitar múltiples ejecuciones
+    super.dispose();
   }
 
   @override
@@ -233,24 +254,6 @@ class _SaveProductVariantsScreenState
     }
 
     final state = ref.watch(productVariantsProvider(widget.idProduct));
-    ref.listen<ProductsState>(productVariantsProvider(widget.idProduct),
-        (previous, next) {
-      if (next.success) {
-        Navigator.pop(context); // bottomsheet
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Guardado con éxito'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 3), // Duración del SnackBar
-              behavior: SnackBarBehavior.floating),
-        );
-      } else if (next.hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al guardar')),
-        );
-      }
-    });
 
     return Scaffold(
       appBar: AppBar(
@@ -327,7 +330,7 @@ class _ProductVariantCard extends ConsumerWidget {
             producVariant.idTalla *
             producVariant.idProducto), // Clave única por item
         child: ListTile(
-          // leading: Container( 
+          // leading: Container(
           //   width: 48,
           //   height: 48,
           //   decoration: BoxDecoration(
@@ -365,7 +368,8 @@ class _ProductVariantCard extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: producVariant.color!.idColor != colorsMap["Predeterminado"]!
+                      color: producVariant.color!.idColor !=
+                              colorsMap["Predeterminado"]!
                           ? producVariant.color!.color
                           : null,
                       borderRadius: BorderRadius.circular(4),
@@ -377,7 +381,8 @@ class _ProductVariantCard extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                         color: producVariant.color!.color.computeLuminance() <
                                     0.5 &&
-                                producVariant.color!.idColor != colorsMap["Predeterminado"]!
+                                producVariant.color!.idColor !=
+                                    colorsMap["Predeterminado"]!
                             ? Colors.white
                             : Colors.black,
                       ),

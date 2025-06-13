@@ -77,7 +77,7 @@ class ProductsNotifier extends StateNotifier<ProductsState> {
 
   Future<void> saveVariants(List<ProductVariant> productoVariante) async {
     try {
-      state = state.copyWith(isSaving: true);
+      state = state.copyWith(isSaving: true, success: false);
 
       final save = {
         'variantes': productoVariante.map((e) => e.toJson()).toList()

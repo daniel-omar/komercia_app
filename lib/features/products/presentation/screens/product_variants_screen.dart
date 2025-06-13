@@ -23,11 +23,17 @@ class _ProductVariantsScreenState extends ConsumerState<ProductVariantsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Escuchar cambios en el provider y sincronizar _variantes
       ref
           .watch(productVariantsProvider(widget.idProduct).notifier)
           .getVariantsGroup();
     });
+    // Future.microtask(() {
+    //   ref
+    //       .watch(productVariantsProvider(widget.idProduct).notifier)
+    //       .getVariantsGroup();
+    // });
   }
 
   @override
@@ -44,12 +50,26 @@ class _ProductVariantsScreenState extends ConsumerState<ProductVariantsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _VariantsList(variantes: productVariantsState.productVariantsSize!),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          context.pushNamed(
+        onPressed: () async {
+          final result = await context.pushNamed(
             'productoVariantesSave',
             pathParameters: {'id_product': idProduct.toString()},
             extra: {'name': nameProduct},
           );
+          if (result == true) {
+            // ignore: unused_result
+            ref.refresh(productVariantsProvider(idProduct));
+            ref
+                .watch(productVariantsProvider(widget.idProduct).notifier)
+                .getVariantsGroup();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('Guardado con éxito'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 3), // Duración del SnackBar
+                  behavior: SnackBarBehavior.floating),
+            );
+          }
         },
         icon: const Icon(Icons.add),
         label: const Text('Agregar Variantes'),
