@@ -183,7 +183,7 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
                 itemBuilder: (_, i) {
                   final producVariant = productsVariants[i];
 
-                  return _ProductVariantCard(
+                  return ProductPurcharseCard(
                     producVariant: producVariant,
                   );
                 },
@@ -204,115 +204,232 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
   }
 }
 
-class _ProductVariantCard extends ConsumerWidget {
+class ProductPurcharseCard extends ConsumerStatefulWidget {
   final ProductVariant producVariant;
 
-  const _ProductVariantCard({required this.producVariant});
+  const ProductPurcharseCard({super.key, required this.producVariant});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductPurcharseCard> createState() =>
+      __ProductVariantCardState();
+}
+
+class __ProductVariantCardState extends ConsumerState<ProductPurcharseCard> {
+  late final TextEditingController quantityController;
+
+  @override
+  void initState() {
+    quantityController = TextEditingController(
+      text: widget.producVariant.cantidad.toString(),
+    );
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    quantityController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cantidadActual = widget.producVariant.cantidad.toString();
+    if (quantityController.text != cantidadActual) {
+      quantityController.text = cantidadActual;
+    }
+
+    void updateQuantity(int value) {
+      ref.read(productsInventoryProvider.notifier).updateProductVariant(
+            widget.producVariant,
+            cantidad: value,
+          );
+    }
+
+    int currentValue() => int.tryParse(quantityController.text) ?? 0;
+    void onIncrement() {
+      String cantidad = (currentValue() + 1).toString();
+      quantityController.text = cantidad;
+      updateQuantity(int.parse(cantidad));
+    }
+
+    void onDecrement() {
+      if (currentValue() > 1) {
+        String cantidad = (currentValue() - 1).toString();
+        quantityController.text = cantidad;
+        updateQuantity(int.parse(cantidad));
+      }
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Colors.blueGrey, width: 1)),
-      child: Slidable(
-        key: ValueKey(producVariant.idColor *
-            producVariant.idTalla *
-            producVariant.idProducto), // Clave única por item
-        child: ListTile(
-          leading: SizedBox(
-            width: 30,
-            child: Transform.scale(
-              scale:
-                  1.5, // aumenta o reduce el tamaño (1.0 es el tamaño por defecto)
-              child: IconButton(
-                icon: const Icon(Icons.delete),
-                color: Colors.red,
-                padding: const EdgeInsetsDirectional.symmetric(
-                    horizontal: 0, vertical: 0),
-                onPressed: () {
-                  ref
-                      .read(productsInventoryProvider.notifier)
-                      .removeProductVariant(producVariant.idProductoVariante!);
-                },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Botón eliminar
+            SizedBox(
+              width: 40,
+              child: Transform.scale(
+                scale: 1.5,
+                child: IconButton(
+                  icon: const Icon(Icons.delete),
+                  color: Colors.red,
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    ref
+                        .read(productsInventoryProvider.notifier)
+                        .removeProductVariant(
+                          widget.producVariant.idProductoVariante!,
+                        );
+                  },
+                ),
               ),
             ),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+
+            const SizedBox(width: 6),
+
+            // Información del producto
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Producto: '),
-                  Text(producVariant.nombreProducto ?? "",
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              ),
-              Row(
-                children: [
-                  const Text('Codigo: '),
-                  Text(producVariant.codigoProductoVariante ?? "",
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              ),
-              Row(
-                children: [
-                  const Text('Talla:   '),
-                  Text(producVariant.talla!.nombreTalla,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              ),
-              Row(
-                children: [
-                  const Text('Color: '),
-                  Container(
-                    width: 150,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 3,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: producVariant.color!.idColor !=
-                              colorsMap["Predeterminado"]!
-                          ? producVariant.color!.color
-                          : null,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      producVariant.color!.nombreColor,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: producVariant.color!.color.computeLuminance() <
-                                    0.5 &&
-                                producVariant.color!.idColor !=
-                                    colorsMap["Predeterminado"]!
-                            ? Colors.white
-                            : Colors.black,
+                  Row(children: [
+                    const Text('Producto: '),
+                    Text(widget.producVariant.nombreProducto ?? "",
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ]),
+                  Row(children: [
+                    const Text('Codigo: '),
+                    Text(widget.producVariant.codigoProductoVariante ?? "",
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ]),
+                  Row(children: [
+                    const Text('Talla:   '),
+                    Text(widget.producVariant.talla!.nombreTalla,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ]),
+                  Row(children: [
+                    const Text('Color: '),
+                    Container(
+                      width: 150,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 3, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: widget.producVariant.color!.idColor !=
+                                colorsMap["Predeterminado"]!
+                            ? widget.producVariant.color!.color
+                            : null,
+                        borderRadius: BorderRadius.circular(4),
                       ),
+                      child: Text(
+                        widget.producVariant.color!.nombreColor,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: widget.producVariant.color!.color
+                                          .computeLuminance() <
+                                      0.5 &&
+                                  widget.producVariant.color!.idColor !=
+                                      colorsMap["Predeterminado"]!
+                              ? Colors.white
+                              : Colors.black,
+                        ),
+                      ),
+                    ),
+                  ]),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 4),
+
+            // Botones de cantidad
+            SizedBox(
+              width: 30,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove),
+                    iconSize: 20,
+                    onPressed: onDecrement,
+                    color: Colors.white,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                    constraints: const BoxConstraints(
+                      minHeight: 30,
+                      minWidth: 30,
+                      maxHeight: 30,
+                      maxWidth: 30,
+                    ),
+                    style: ButtonStyle(
+                      backgroundColor:
+                          WidgetStateProperty.all<Color>(Colors.black),
+                      padding: WidgetStateProperty.all<EdgeInsets>(
+                          const EdgeInsets.symmetric(vertical: 0)),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 28,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
+                      child: TextField(
+                        controller: quantityController,
+                        key: ValueKey(widget.producVariant.cantidad),
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding:
+                              EdgeInsets.symmetric(vertical: 1, horizontal: 0),
+                          border: OutlineInputBorder(
+                            borderSide:
+                                BorderSide(width: 1, color: Colors.grey),
+                            borderRadius: BorderRadius.all(Radius.circular(4)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide:
+                                BorderSide(width: 1, color: Colors.black),
+                            borderRadius: BorderRadius.all(Radius.circular(4)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    iconSize: 20,
+                    onPressed: onIncrement,
+                    color: Colors.white,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minHeight: 30,
+                      minWidth: 30,
+                      maxHeight: 30,
+                      maxWidth: 30,
+                    ),
+                    style: ButtonStyle(
+                      backgroundColor:
+                          WidgetStateProperty.all<Color>(Colors.black),
+                      padding:
+                          WidgetStateProperty.all<EdgeInsets>(EdgeInsets.zero),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-          trailing: SizedBox(
-            width: 25,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return ScaleTransition(scale: animation, child: child);
-              },
-              child: Text(
-                producVariant.cantidad.toString(),
-                key: ValueKey(producVariant.cantidad), // MUY importante
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
             ),
-          ),
-          onTap: () {},
+          ],
         ),
       ),
     );

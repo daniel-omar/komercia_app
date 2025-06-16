@@ -70,9 +70,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   onPressed: () async {
                     final result = await context.push("/load_inventory");
                     if (result == true) {
+                      ref.read(productsInventoryProvider.notifier).clear();
                       // ignore: unused_result
                       ref.refresh(productVariantsProvider(0));
-                      ref.read(productsInventoryProvider.notifier).clear();
 
                       // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
