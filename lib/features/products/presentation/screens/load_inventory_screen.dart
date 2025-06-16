@@ -107,16 +107,15 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
 
     if (confirmed == false) return;
 
-    ref
-        .read(productVariantsProvider(0).notifier)
-        .saveVariants(productsVariants);
+    ref.read(productVariantsProvider(0).notifier).saveIncome(productsVariants);
   }
 
+  late final listener;
   @override
-  Widget build(BuildContext context) {
-    final productsVariants = ref.watch(productsInventoryProvider);
+  void initState() {
+    super.initState();
 
-    ref.listen<ProductVariantsState>(
+    listener = ref.listenManual<ProductVariantsState>(
       productVariantsProvider(0),
       (previous, next) {
         if (!mounted) return;
@@ -129,6 +128,17 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
         }
       },
     );
+  }
+
+  @override
+  void dispose() {
+    listener.close(); // cerrar manualmente para evitar múltiples ejecuciones
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final productsVariants = ref.watch(productsInventoryProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Carga de Inventario')),

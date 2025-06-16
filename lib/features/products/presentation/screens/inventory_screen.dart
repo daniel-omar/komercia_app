@@ -8,6 +8,8 @@ import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
 import 'package:komercia_app/features/products/presentation/providers/print_products_variants_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_categories_provider.dart';
+import 'package:komercia_app/features/products/presentation/providers/product_variants_provider.dart';
+import 'package:komercia_app/features/products/presentation/providers/products_inventory_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_provider.dart';
 import 'package:komercia_app/features/shared/widgets/full_screen_loader.dart';
 
@@ -66,7 +68,22 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   icon: const Icon(Icons.save),
                   label: const Text('Agregar '),
                   onPressed: () async {
-                    context.push("/load_inventory");
+                    final result = await context.push("/load_inventory");
+                    if (result == true) {
+                      // ignore: unused_result
+                      ref.refresh(productVariantsProvider(0));
+                      ref.read(productsInventoryProvider.notifier).clear();
+
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Guardado con éxito'),
+                            backgroundColor: Colors.green,
+                            duration:
+                                Duration(seconds: 3), // Duración del SnackBar
+                            behavior: SnackBarBehavior.floating),
+                      );
+                    }
                   },
                 ),
                 const Spacer(),
