@@ -66,7 +66,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                 const SizedBox(width: 20),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.save),
-                  label: const Text('Agregar '),
+                  label: const Text('Inventariar'),
                   onPressed: () async {
                     final result = await context.push("/load_inventory");
                     if (result == true) {
