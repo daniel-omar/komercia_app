@@ -39,12 +39,25 @@ class ProductRepositoryImpl extends ProductRepository {
   }
 
   @override
-  Future<void> downloadTags(List<int> idsProducto) {
-    return datasource.downloadTags(idsProducto);
+  Future<void> downloadTags(Map<String, dynamic> data) {
+    return datasource.downloadTags(data);
   }
 
   @override
   Future<bool> saveVariants(Map<String, dynamic> data) {
     return datasource.saveVariants(data);
+  }
+
+  @override
+  Future<ProductVariant> findProductVariant(
+      {int? idProductoVariante, String? codigoProductoVariante}) {
+    return datasource.findProductVariant(
+        idProductoVariante: idProductoVariante,
+        codigoProductoVariante: codigoProductoVariante);
+  }
+
+  @override
+  Future<bool> saveIncome(Map<String, dynamic> data) {
+    return datasource.saveIncome(data);
   }
 }

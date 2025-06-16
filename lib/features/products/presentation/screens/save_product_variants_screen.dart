@@ -188,7 +188,7 @@ class _SaveProductVariantsScreenState
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Escuchar cambios en el provider y sincronizar _variantes
-      ref.listenManual<ProductsState>(
+      ref.listenManual<ProductVariantsState>(
         productVariantsProvider(widget.idProduct),
         (previous, next) {
           if (next.productVariants != null) {
@@ -209,7 +209,7 @@ class _SaveProductVariantsScreenState
       ref.read(productSizesProvider.notifier).loadSizes();
     });
 
-    listener = ref.listenManual<ProductsState>(
+    listener = ref.listenManual<ProductVariantsState>(
       productVariantsProvider(widget.idProduct),
       (previous, next) {
         if (!mounted) return;

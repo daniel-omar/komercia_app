@@ -5,9 +5,10 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:komercia_app/features/home/presentation/providers/menu_provider.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
+import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
+import 'package:komercia_app/features/products/presentation/providers/print_products_variants_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_categories_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_provider.dart';
-import 'package:komercia_app/features/products/presentation/providers/select_products_provider.dart';
 import 'package:komercia_app/features/shared/widgets/full_screen_loader.dart';
 
 class InventoryScreen extends ConsumerStatefulWidget {
@@ -40,8 +41,21 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final products = productsState.products ?? [];
     final purcharsePriceTotal = productsState.purcharsePriceTotal ?? 0;
 
-    final selectedProducts = ref.watch(selectedProductsProvider);
-    final selectedCount = selectedProducts.length;
+    final productVariantsSelection = ref.watch(printSelectionProvider);
+    final selectedCount = productVariantsSelection.length;
+
+    ref.listen<ProductsState>(
+      productsProvider(selectedId),
+      (previous, next) {
+        if (!mounted) return;
+        if (next.success) {
+        } else if (next.hasError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al guardar')),
+          );
+        }
+      },
+    );
 
     return !productCategoriesState.isLoading
         ? Scaffold(
@@ -63,7 +77,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       _isSelectionMode = !_isSelectionMode;
                       if (!_isSelectionMode) {
                         // Limpiar selección cuando salgas del modo selección
-                        ref.read(selectedProductsProvider.notifier).clear();
+                        ref.read(printSelectionProvider.notifier).clear();
                       }
                     });
                   },
@@ -114,17 +128,30 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         label: Text('Generar etiquetas ($selectedCount)'),
                         onPressed: () async {
                           // Lógica para imprimir
+                          List<ProductVariant> productsVariants = [];
+                          for (var i = 0;
+                              i < productVariantsSelection.length;
+                              i++) {
+                            final productVariantSelection =
+                                productVariantsSelection[i];
+                            productsVariants.add(ProductVariant(
+                                idProducto: productVariantSelection.idProducto,
+                                idProductoVariante:
+                                    productVariantSelection.idProductoVariante,
+                                idTalla: 0,
+                                idColor: 0,
+                                cantidad: productVariantSelection.cantidad));
+                          }
+
                           await ref
                               .read(productsProvider(selectedId).notifier)
-                              .downloadTags(selectedProducts);
+                              .downloadTags(productsVariants);
 
                           setState(() {
                             _isSelectionMode = !_isSelectionMode;
                             if (!_isSelectionMode) {
                               // Limpiar selección cuando salgas del modo selección
-                              ref
-                                  .read(selectedProductsProvider.notifier)
-                                  .clear();
+                              ref.read(printSelectionProvider.notifier).clear();
                             }
                           });
                         },
@@ -312,9 +339,8 @@ class _ProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedProducts = ref.watch(selectedProductsProvider);
-    final isSelected = selectedProducts
-        .contains(selectedProducts.firstWhereOrNull((p) => p == idProduct));
+    final selectionProvider = ref.watch(printSelectionProvider);
+    final selecteds = selectionProvider.where((s) => s.idProducto == idProduct);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -343,24 +369,17 @@ class _ProductCard extends ConsumerWidget {
               )
             : null,
         child: ListTile(
-          leading: isSelectionMode
-              ? Checkbox(
-                  value: isSelected,
-                  onChanged: (value) {
-                    ref
-                        .read(selectedProductsProvider.notifier)
-                        .toggleProduct(idProduct);
-                  },
-                )
-              : Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.purple[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.toll, color: Colors.purple),
-                ),
+          leading: Container(
+            width: 35,
+            height: 48,
+            decoration: BoxDecoration(
+              // color: Colors.purple[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: isSelectionMode
+                ? const Icon(Icons.print, color: Colors.deepOrange)
+                : const Icon(Icons.toll, color: Colors.purple),
+          ),
           title: Text(name),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -388,27 +407,45 @@ class _ProductCard extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                '$stock',
+                isSelectionMode ? '${selecteds.length}' : '$stock',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: stock < 0 ? Colors.red : Colors.black,
                     fontSize: 12),
               ),
-              Text(
-                'Disponibles',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: stock < 0 ? Colors.red : Colors.black,
-                    fontSize: 12),
-              )
+              if (isSelectionMode) ...[
+                Text(
+                  'Items seleccionados',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: stock < 0 ? Colors.red : Colors.black,
+                      fontSize: 12),
+                )
+              ] else ...[
+                Text(
+                  'Disponibles',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: stock < 0 ? Colors.red : Colors.black,
+                      fontSize: 12),
+                )
+              ],
             ],
           ),
           onTap: () {
-            context.pushNamed(
-              'productoVariantes',
-              pathParameters: {'id_product': idProduct.toString()},
-              extra: {'name': name},
-            );
+            if (isSelectionMode) {
+              context.pushNamed(
+                'productoVariantesPrint',
+                pathParameters: {'id_product': idProduct.toString()},
+                extra: {'name': name},
+              );
+            } else {
+              context.pushNamed(
+                'productoVariantes',
+                pathParameters: {'id_product': idProduct.toString()},
+                extra: {'name': name},
+              );
+            }
           },
         ),
       ),

@@ -9,6 +9,9 @@ abstract class ProductDatasource {
   Future<List<ProductVariant>> getVariants(int idProducto);
   Future<List<ProductVariantSize>> getVariantsGroup(int idProducto);
   Future<bool> update(Map<String, dynamic> data);
-  Future<void> downloadTags(List<int> idsProducto);
+  Future<void> downloadTags(Map<String, dynamic> data);
   Future<bool> saveVariants(Map<String, dynamic> data);
+  Future<ProductVariant> findProductVariant(
+      {int? idProductoVariante, String? codigoProductoVariante});
+  Future<bool> saveIncome(Map<String, dynamic> data);
 }

@@ -3,6 +3,7 @@ import 'package:komercia_app/features/sales/domain/entities/product_size.dart';
 
 class ProductVariant {
   int idProducto;
+  String? nombreProducto;
   int? idProductoVariante;
   String? codigoProductoVariante;
   int idTalla;
@@ -16,6 +17,7 @@ class ProductVariant {
       {this.idProductoVariante,
       this.codigoProductoVariante,
       required this.idProducto,
+      this.nombreProducto,
       required this.idTalla,
       this.talla,
       required this.idColor,
@@ -24,10 +26,12 @@ class ProductVariant {
       this.esActivo = true});
 
   Map<String, dynamic> toJson() => {
+        "id_producto_variante": idProductoVariante,
         "codigo_producto_variante": codigoProductoVariante,
         "id_producto": idProducto,
         "id_talla": idTalla,
         "id_color": idColor,
-        "es_activo": esActivo
+        "es_activo": esActivo,
+        "cantidad": cantidad
       };
 }

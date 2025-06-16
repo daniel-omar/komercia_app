@@ -5,21 +5,21 @@ import 'package:komercia_app/features/products/domain/entities/product_variant_s
 import 'package:komercia_app/features/products/presentation/providers/product_repository_provider.dart';
 
 final productVariantsProvider = StateNotifierProvider.family
-    .autoDispose<ProductsNotifier, ProductsState, int>((ref, idProduct) {
+    .autoDispose<ProductsNotifier, ProductVariantsState, int>((ref, idProduct) {
   final productRepository = ref.watch(productRepositoryProvider);
 
   return ProductsNotifier(
       productRepository: productRepository, idProduct: idProduct);
 });
 
-class ProductsNotifier extends StateNotifier<ProductsState> {
+class ProductsNotifier extends StateNotifier<ProductVariantsState> {
   final ProductRepository productRepository;
   final int idProduct;
 
   ProductsNotifier({
     required this.productRepository,
     required this.idProduct,
-  }) : super(ProductsState()) {
+  }) : super(ProductVariantsState()) {
     //getVariantsGroup(idProduct);
   }
 
@@ -77,7 +77,7 @@ class ProductsNotifier extends StateNotifier<ProductsState> {
 
   Future<void> saveVariants(List<ProductVariant> productoVariante) async {
     try {
-      state = state.copyWith(isSaving: true, success: false);
+      state = state.copyWith(isSaving: true, success: false, hasError: false);
 
       final save = {
         'variantes': productoVariante.map((e) => e.toJson()).toList()
@@ -95,9 +95,30 @@ class ProductsNotifier extends StateNotifier<ProductsState> {
       print(e);
     }
   }
+
+  Future<void> saveIncome(List<ProductVariant> productoVariante) async {
+    try {
+      state = state.copyWith(isSaving: true, success: false);
+
+      final save = {
+        'productos_variantes': productoVariante.map((e) => e.toJson()).toList()
+      };
+      bool saveIncome = await productRepository.saveIncome(save);
+
+      state = state.copyWith(isSaving: false, success: true);
+    } catch (e) {
+      // 404 product not found
+      state = state.copyWith(
+          isSaving: false,
+          success: false,
+          hasError: true,
+          errorMessage: e.toString());
+      print(e);
+    }
+  }
 }
 
-class ProductsState {
+class ProductVariantsState {
   final bool isLoading;
   final bool isSaving;
   final List<ProductVariantSize>? productVariantsSize;
@@ -106,7 +127,7 @@ class ProductsState {
   final String? errorMessage;
   final bool success;
 
-  ProductsState(
+  ProductVariantsState(
       {this.isLoading = true,
       this.isSaving = false,
       this.productVariantsSize,
@@ -115,7 +136,7 @@ class ProductsState {
       this.success = false,
       this.errorMessage});
 
-  ProductsState copyWith(
+  ProductVariantsState copyWith(
           {bool? isLoading,
           bool? isSaving,
           List<ProductVariantSize>? productVariantsSize,
@@ -123,7 +144,7 @@ class ProductsState {
           bool? hasError,
           String? errorMessage,
           bool? success}) =>
-      ProductsState(
+      ProductVariantsState(
           isLoading: isLoading ?? this.isLoading,
           isSaving: isSaving ?? this.isSaving,
           productVariantsSize: productVariantsSize ?? this.productVariantsSize,

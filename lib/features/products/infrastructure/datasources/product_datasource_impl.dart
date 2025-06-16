@@ -122,8 +122,8 @@ class ProductDatasourceImpl extends ProductDatasource {
 
   @override
   Future<List<ProductVariantSize>> getVariantsGroup(int idProducto) async {
-    final response =
-        await dioClient.dio.get('/products/product/get_variants_group/$idProducto');
+    final response = await dioClient.dio
+        .get('/products/product/get_variants_group/$idProducto');
 
     ResponseMain responseMain =
         ResponseMainMapper.responseJsonToEntity(response.data);
@@ -153,15 +153,39 @@ class ProductDatasourceImpl extends ProductDatasource {
     }
   }
 
-  @override
-  Future<void> downloadTags(List<int> idsProducto) async {
-    try {
-      Map<String, dynamic> body = {};
-      body["ids_producto"] = idsProducto;
+  // @override
+  // Future<void> downloadTags(List<int> idsProducto) async {
+  //   try {
+  //     Map<String, dynamic> body = {};
+  //     body["ids_producto"] = idsProducto;
 
+  //     final response =
+  //         await dioClient.dio.post('/products/product/generate_tags',
+  //             data: body,
+  //             options: Options(
+  //               responseType: ResponseType.bytes,
+  //               headers: {'Accept': 'application/pdf'},
+  //             ));
+
+  //     // Guardar archivo
+  //     final dir = await getTemporaryDirectory();
+  //     final filePath = '${dir.path}/etiquetas.pdf';
+  //     final file = File(filePath);
+  //     await file.writeAsBytes(response.data as Uint8List);
+
+  //     // Abrir PDF
+  //     await OpenFile.open(filePath);
+  //   } catch (e) {
+  //     throw Exception(e);
+  //   }
+  // }
+
+  @override
+  Future<void> downloadTags(Map<String, dynamic> data) async {
+    try {
       final response =
-          await dioClient.dio.post('/products/product/generate_tags',
-              data: body,
+          await dioClient.dio.post('/products/product/generate_tags_variantes',
+              data: data,
               options: Options(
                 responseType: ResponseType.bytes,
                 headers: {'Accept': 'application/pdf'},
@@ -185,6 +209,60 @@ class ProductDatasourceImpl extends ProductDatasource {
     try {
       final response = await dioClient.dio
           .post('/products/product/save_variants', data: data);
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+
+      return true;
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  @override
+  Future<ProductVariant> findProductVariant(
+      {int? idProductoVariante, String? codigoProductoVariante}) async {
+    try {
+      List<Map<String, dynamic>> paramsList = [];
+      if (idProductoVariante != null) {
+        paramsList.add({
+          'key': 'id_producto_variante',
+          'value': idProductoVariante.toString()
+        });
+      }
+      if (codigoProductoVariante != null) {
+        paramsList.add({
+          'key': 'codigo_producto_variante',
+          'value': codigoProductoVariante
+        });
+      }
+
+      String queryString = paramsList
+          .map((param) =>
+              '${Uri.encodeComponent(param['key']!)}=${Uri.encodeComponent(param['value']!)}')
+          .join('&');
+
+      final response = await dioClient.dio
+          .get('/products/product/find_product_variant?$queryString');
+
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+
+      final product =
+          ProductVariantMapper.productVariantJsonToEntity(responseMain.data);
+      return product;
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw ProductNotFound();
+      throw Exception(e);
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  @override
+  Future<bool> saveIncome(Map<String, dynamic> data) async {
+    try {
+      final response =
+          await dioClient.dio.post('/products/product/save_income', data: data);
       ResponseMain responseMain =
           ResponseMainMapper.responseJsonToEntity(response.data);
 

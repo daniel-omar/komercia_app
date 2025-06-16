@@ -6,6 +6,7 @@ import 'package:komercia_app/features/auth/presentation/providers/auth_provider.
 import 'package:komercia_app/features/home/presentation/screens/layout_screen.dart';
 import 'package:komercia_app/features/products/presentation/screens/inventory_screen.dart';
 import 'package:komercia_app/features/products/presentation/screens/load_inventory_screen.dart';
+import 'package:komercia_app/features/products/presentation/screens/print_product_variants_screen.dart';
 import 'package:komercia_app/features/products/presentation/screens/product_screen.dart';
 import 'package:komercia_app/features/products/presentation/screens/product_variants_screen.dart';
 import 'package:komercia_app/features/products/presentation/screens/save_product_variants_screen.dart';
@@ -76,6 +77,19 @@ final goRouterProvider = Provider((ref) {
           return ProductVariantsScreen(
             idProduct: id,
             nameProduct: name,
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/product_variants/:id_product/print',
+        name: 'productoVariantesPrint',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id_product']!);
+          final name = (state.extra as Map)['name'] as String;
+          return PrintProductVariantsScreen(
+            idProduct: id,
+            name: name,
           );
         },
       ),

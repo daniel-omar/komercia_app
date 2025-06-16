@@ -32,6 +32,8 @@ class ProductVariantMapper {
   static ProductVariant productVariantJsonToEntity(Map<String, dynamic> json) =>
       ProductVariant(
         idProducto: json['id_producto'],
+        nombreProducto: json['nombre_producto'],
+        idProductoVariante: json['id_producto_variante'],
         codigoProductoVariante: json['codigo_producto_variante'],
         idTalla: json['id_talla'],
         talla: json["talla"] != null

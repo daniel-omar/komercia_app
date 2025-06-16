@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
+import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_repository_provider.dart';
 
 final productsProvider = StateNotifierProvider.family
@@ -53,16 +54,25 @@ class ProductsNotifier extends StateNotifier<ProductsState> {
     }
   }
 
-  Future<void> downloadTags(List<int> idsProducto) async {
+  Future<void> downloadTags(List<ProductVariant> productosVariantes) async {
     try {
-      state = state.copyWith(isLoading: true);
+      state = state.copyWith(isLoading: true, success: false, hasError: false);
 
-      await productRepository.downloadTags(idsProducto);
+      final productosVariantesJson = {
+        'productos_variantes':
+            productosVariantes.map((e) => e.toJson()).toList()
+      };
 
-      state = state.copyWith(isLoading: false);
+      await productRepository.downloadTags(productosVariantesJson);
+
+      state = state.copyWith(isLoading: false, success: true);
     } catch (e) {
       // 404 product not found
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(
+          isLoading: false,
+          success: false,
+          hasError: true,
+          errorMessage: e.toString());
       print(e);
     }
   }
@@ -74,27 +84,36 @@ class ProductsState {
   final List<Product>? products;
   final double? purcharsePriceTotal;
   final double? salePriceTotal;
+  final bool hasError;
+  final String? errorMessage;
+  final bool success;
 
-  ProductsState({
-    this.isLoading = true,
-    this.isSaving = false,
-    this.products,
-    this.purcharsePriceTotal = 0,
-    this.salePriceTotal = 0,
-  });
+  ProductsState(
+      {this.isLoading = true,
+      this.isSaving = false,
+      this.products,
+      this.purcharsePriceTotal = 0,
+      this.salePriceTotal = 0,
+      this.hasError = false,
+      this.success = false,
+      this.errorMessage});
 
-  ProductsState copyWith({
-    bool? isLoading,
-    bool? isSaving,
-    List<Product>? products,
-    double? purcharsePriceTotal,
-    double? salePriceTotal,
-  }) =>
+  ProductsState copyWith(
+          {bool? isLoading,
+          bool? isSaving,
+          List<Product>? products,
+          double? purcharsePriceTotal,
+          double? salePriceTotal,
+          bool? hasError,
+          String? errorMessage,
+          bool? success}) =>
       ProductsState(
-        isLoading: isLoading ?? this.isLoading,
-        isSaving: isSaving ?? this.isSaving,
-        products: products ?? this.products,
-        purcharsePriceTotal: purcharsePriceTotal ?? this.purcharsePriceTotal,
-        salePriceTotal: salePriceTotal ?? this.salePriceTotal,
-      );
+          isLoading: isLoading ?? this.isLoading,
+          isSaving: isSaving ?? this.isSaving,
+          products: products ?? this.products,
+          purcharsePriceTotal: purcharsePriceTotal ?? this.purcharsePriceTotal,
+          salePriceTotal: salePriceTotal ?? this.salePriceTotal,
+          hasError: hasError ?? this.hasError,
+          errorMessage: errorMessage ?? this.errorMessage,
+          success: success ?? this.success);
 }
