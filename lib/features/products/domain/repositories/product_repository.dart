@@ -12,6 +12,8 @@ abstract class ProductRepository {
   Future<void> downloadTags(Map<String, dynamic> data);
   Future<bool> saveVariants(Map<String, dynamic> data);
   Future<ProductVariant> findProductVariant(
-      {int? idProductoVariante, String? codigoProductoVariante});
+      {int? idProductoVariante,
+      String? codigoProductoVariante,
+      bool? esActivo});
   Future<bool> saveIncome(Map<String, dynamic> data);
 }

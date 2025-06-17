@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:komercia_app/features/sales/domain/domain.dart';
+import 'package:komercia_app/features/sales/domain/entities/product_variant.dart';
 import 'package:komercia_app/features/sales/infrastructure/errors/product_errors.dart';
 import 'package:komercia_app/features/sales/infrastructure/infrastructure.dart';
+import 'package:komercia_app/features/sales/infrastructure/mappers/product_variant_mapper.dart';
 import 'package:komercia_app/features/shared/infrastructure/entities/response_main.dart';
 import 'package:komercia_app/features/shared/infrastructure/mappers/response_main_mapper.dart';
 import 'package:komercia_app/features/shared/infrastructure/providers/dio_client.dart';
@@ -94,6 +96,56 @@ class ProductDatasourceImpl extends ProductDatasource {
           ResponseMainMapper.responseJsonToEntity(response.data);
 
       final product = ProductMapper.productJsonToEntity(responseMain.data);
+      return product;
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw ProductNotFound();
+      throw Exception(e);
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  @override
+  Future<ProductVariant> findProductVariant(
+      {int? idProductoVariante,
+      String? codigoProductoVariante,
+      bool? esActivo,
+      bool? tieneCantidad}) async {
+    try {
+      List<Map<String, dynamic>> paramsList = [];
+      if (idProductoVariante != null) {
+        paramsList.add({
+          'key': 'id_producto_variante',
+          'value': idProductoVariante.toString()
+        });
+      }
+      if (codigoProductoVariante != null) {
+        paramsList.add({
+          'key': 'codigo_producto_variante',
+          'value': codigoProductoVariante
+        });
+      }
+      if (esActivo != null) {
+        paramsList.add({'key': 'es_activo', 'value': esActivo.toString()});
+      }
+      if (tieneCantidad != null) {
+        paramsList
+            .add({'key': 'tiene_cantidad', 'value': tieneCantidad.toString()});
+      }
+
+      String queryString = paramsList
+          .map((param) =>
+              '${Uri.encodeComponent(param['key']!)}=${Uri.encodeComponent(param['value']!)}')
+          .join('&');
+
+      final response = await dioClient.dio
+          .get('/products/product/find_product_variant?$queryString');
+
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+
+      final product =
+          ProductVariantMapper.productVariantJsonToEntity(responseMain.data);
       return product;
     } on DioException catch (e) {
       if (e.response!.statusCode == 404) throw ProductNotFound();

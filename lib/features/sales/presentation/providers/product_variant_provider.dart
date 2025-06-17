@@ -1,8 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:komercia_app/features/products/domain/domain.dart';
-import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
-import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
-import 'package:komercia_app/features/products/presentation/providers/product_repository_provider.dart';
+import 'package:komercia_app/features/sales/domain/domain.dart';
+import 'package:komercia_app/features/sales/domain/entities/product_variant.dart';
+import 'package:komercia_app/features/sales/presentation/providers/product_repository_provider.dart';
 
 final productVariantProvider = StateNotifierProvider.autoDispose<
     ProductVariantNotifier, ProductVariantState>((ref) {
@@ -25,7 +24,9 @@ class ProductVariantNotifier extends StateNotifier<ProductVariantState> {
 
       ProductVariant productVariant =
           await productRepository.findProductVariant(
-              codigoProductoVariante: codigoProductoVariante, esActivo: true);
+              codigoProductoVariante: codigoProductoVariante,
+              tieneCantidad: true,
+              esActivo: true);
 
       // state = state.copyWith(
       //     isLoading: false,
@@ -35,8 +36,8 @@ class ProductVariantNotifier extends StateNotifier<ProductVariantState> {
       return productVariant;
     } catch (e) {
       // 404 product not found
-      state = state.copyWith(
-          isLoading: false, hasError: true, errorMessage: e.toString());
+      // state = state.copyWith(
+      //     isLoading: false, hasError: true, errorMessage: e.toString());
       print(e);
       return null;
     }

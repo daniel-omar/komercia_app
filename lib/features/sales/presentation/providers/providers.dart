@@ -1,6 +1,5 @@
 export 'sale_provider.dart';
 export 'sales_provider.dart';
-export 'sale_products_provider.dart';
 export 'product_provider.dart';
 export 'products_provider.dart';
 export 'product_category_provider.dart';

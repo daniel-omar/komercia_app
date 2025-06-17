@@ -73,6 +73,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       ref.read(productsInventoryProvider.notifier).clear();
                       // ignore: unused_result
                       ref.refresh(productVariantsProvider(0));
+                      ref.read(productsProvider(selectedId));
 
                       // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(

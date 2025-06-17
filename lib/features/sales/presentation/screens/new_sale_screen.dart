@@ -2,15 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:komercia_app/features/sales/presentation/providers/product_variant_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/discount_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/payment_types_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_colors_provider.dart';
-import 'package:komercia_app/features/sales/presentation/providers/product_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_sizes_provider.dart';
-import 'package:komercia_app/features/sales/presentation/providers/products_purchase_provider.dart';
-import 'package:komercia_app/features/sales/presentation/providers/providers.dart';
+import 'package:komercia_app/features/sales/presentation/providers/products_variants_purchase_provider.dart';
 import 'package:komercia_app/features/sales/presentation/widgets/payment_type_bottom_sheet.dart';
-import 'package:komercia_app/features/sales/presentation/widgets/product_purchase_card.dart';
+import 'package:komercia_app/features/sales/presentation/widgets/product_variant_purchase_card.dart';
 import 'package:komercia_app/features/shared/widgets/barcode_scanner.dart';
 
 class NewSaleScreen extends ConsumerStatefulWidget {
@@ -74,12 +73,12 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      await findProduct(codigoProducto, context);
+      await findProductVariant(codigoProducto, context);
     });
   }
 
   void onClear() async {
-    ref.read(productsPurchaseProvider.notifier).clear();
+    ref.read(productsVariantsPurchaseProvider.notifier).clear();
     ref.read(discountProvider.notifier).state = DiscountState.none();
   }
 
@@ -91,20 +90,16 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
     return result;
   }
 
-  Future<void> findProduct(String codigoProducto, BuildContext context) async {
+  Future<void> findProductVariant(
+      String codigoProducto, BuildContext context) async {
     setState(() {
       isLoading = true;
     });
     try {
-      final product =
-          await ref.read(productProvider.notifier).findProduct(codigoProducto);
-      if (!mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        return;
-      }
-      if (product == null) {
+      final productVariant = await ref
+          .read(productVariantProvider.notifier)
+          .findProductVariant(codigoProducto);
+      if (productVariant == null) {
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -116,53 +111,9 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
         return;
       }
 
-      final productoState = ref.read(productProvider);
-
-      await ref
-          .read(productSizesProvider.notifier)
-          .loadSizesByProduct(productoState.idProducto);
-      if (!mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        return;
-      }
-      final productSizesState = ref.watch(productSizesProvider);
-      if (productSizesState.productSizes!.isEmpty) {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No cuenta con tallas disponibles.')),
-        );
-        setState(() {
-          isLoading = false;
-        });
-        return;
-      }
-
-      await ref
-          .read(productColorsProvider.notifier)
-          .loadColorsByProduct(productoState.idProducto);
-      if (!mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        return;
-      }
-      final productColorsState = ref.read(productColorsProvider);
-      if (productColorsState.productColors!.isEmpty) {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No cuenta con colores disponibles.')),
-        );
-        setState(() {
-          isLoading = false;
-        });
-        return;
-      }
-
       ref
-          .read(productsPurchaseProvider.notifier)
-          .addProduct(productoState.producto!);
+          .read(productsVariantsPurchaseProvider.notifier)
+          .addProductVariant(productVariant);
     } catch (e) {
       print(e);
     }
@@ -172,7 +123,7 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
   }
 
   void _showPaymentOptionsSheet(BuildContext _context) {
-    final productsPurchaseState = ref.read(productsPurchaseProvider);
+    final productsPurchaseState = ref.read(productsVariantsPurchaseProvider);
     if (productsPurchaseState.isEmpty) {
       ScaffoldMessenger.of(_context).showSnackBar(
         const SnackBar(content: Text('Debe escanear productos.')),
@@ -180,8 +131,7 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
       return;
     }
 
-    final hasInvalid =
-        productsPurchaseState.any((p) => (p.idTalla == 0 || p.idColor == 0));
+    final hasInvalid = productsPurchaseState.any((p) => (p.precioVenta == 0));
     if (hasInvalid) {
       ScaffoldMessenger.of(_context).showSnackBar(
         const SnackBar(
@@ -407,14 +357,8 @@ class __ProductsPurcharseState extends ConsumerState {
 
   @override
   Widget build(BuildContext context) {
-    final productsPurchaseState = ref.watch(productsPurchaseProvider);
-    final productColorsState = ref.watch(productColorsProvider);
-    final productSizesState = ref.watch(productSizesProvider);
-
-    final hasColors = productColorsState.productColors != null &&
-        productColorsState.productColors!.isNotEmpty;
-    final hasSizes = productSizesState.productSizes != null &&
-        productSizesState.productSizes!.isNotEmpty;
+    final productsVariantsPurchaseState =
+        ref.watch(productsVariantsPurchaseProvider);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -422,24 +366,14 @@ class __ProductsPurcharseState extends ConsumerState {
       child: ListView.builder(
         controller: scrollController,
         physics: const BouncingScrollPhysics(),
-        itemCount: productsPurchaseState.length,
+        itemCount: productsVariantsPurchaseState.length,
         itemBuilder: (context, index) {
-          final productPurchaseState = productsPurchaseState[index];
+          final productVariantPurchaseState =
+              productsVariantsPurchaseState[index];
 
-          if (!hasColors || !hasSizes) {
-            return const SizedBox.shrink(); // o CircularProgressIndicator()
-          }
-
-          return ProductPurcharseCard(
-            product: productPurchaseState.producto!,
-            state: productPurchaseState,
-            productColors: productColorsState.productColors != null
-                ? productColorsState.productColors!
-                : [],
-            productSizes: productSizesState.productSizes != null
-                ? productSizesState.productSizes!
-                : [],
-          );
+          return ProductVariantPurcharseCard(
+              productVariant: productVariantPurchaseState.productoVariante!,
+              state: productVariantPurchaseState);
         },
       ),
     );

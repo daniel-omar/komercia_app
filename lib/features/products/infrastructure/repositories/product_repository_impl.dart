@@ -50,10 +50,13 @@ class ProductRepositoryImpl extends ProductRepository {
 
   @override
   Future<ProductVariant> findProductVariant(
-      {int? idProductoVariante, String? codigoProductoVariante}) {
+      {int? idProductoVariante,
+      String? codigoProductoVariante,
+      bool? esActivo}) {
     return datasource.findProductVariant(
         idProductoVariante: idProductoVariante,
-        codigoProductoVariante: codigoProductoVariante);
+        codigoProductoVariante: codigoProductoVariante,
+        esActivo: esActivo);
   }
 
   @override

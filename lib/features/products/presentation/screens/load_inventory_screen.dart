@@ -20,12 +20,11 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
   final TextEditingController _codigoController = TextEditingController();
 
   bool isLoading = false;
-  String? codigoProducto;
 
   void onScanner() async {
-    codigoProducto = await readScanner(context);
+    String? codigoProducto = await readScanner(context);
     if (!mounted || codigoProducto == null) return;
-    _codigoController.text = codigoProducto!;
+    _codigoController.text = codigoProducto;
   }
 
   Future<String?> readScanner(BuildContext context_) async {
@@ -51,7 +50,7 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
   }
 
   void addProduct() async {
-    if (codigoProducto == null) {
+    if (_codigoController.text == "") {
       _codigoController.text = "";
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Código inválido')),
@@ -61,13 +60,13 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
     setState(() {
       isLoading = true;
     });
-    final productVariant = await findProductVariant(codigoProducto!, context);
+    final productVariant =
+        await findProductVariant(_codigoController.text, context);
 
     if (productVariant == null) {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Producto no se encuentra en inventario.')),
+        const SnackBar(content: Text('Producto no existe o está inactivo.')),
       );
       setState(() {
         isLoading = false;

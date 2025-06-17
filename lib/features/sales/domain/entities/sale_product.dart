@@ -1,6 +1,7 @@
 import 'package:komercia_app/features/sales/domain/entities/product_category.dart';
 
 class SaleProduct {
+  int idProductoVariante;
   int idProducto;
   int? idColor;
   int? idTalla;
@@ -10,7 +11,8 @@ class SaleProduct {
   double? sub_total;
 
   SaleProduct(
-      {required this.idProducto,
+      {required this.idProductoVariante,
+      required this.idProducto,
       this.idColor,
       this.idTalla,
       required this.cantidad,
@@ -19,6 +21,7 @@ class SaleProduct {
       this.sub_total});
 
   Map<String, dynamic> toJson() => {
+        "id_producto_variante": idProductoVariante,
         "id_producto": idProducto,
         "id_color": idColor,
         "id_talla": idTalla,

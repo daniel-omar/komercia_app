@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/sales/domain/entities/sale_product.dart';
 import 'package:komercia_app/features/sales/presentation/providers/discount_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/payment_types_provider.dart';
-import 'package:komercia_app/features/sales/presentation/providers/products_purchase_provider.dart';
+import 'package:komercia_app/features/sales/presentation/providers/products_variants_purchase_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/sale_submission_provider.dart';
 import 'package:komercia_app/features/sales/presentation/widgets/payment_type_card.dart';
 
@@ -24,10 +24,9 @@ class PaymentTypeBottomSheet extends ConsumerWidget {
       return;
     }
 
-    final productsPurchaseState = ref.read(productsPurchaseProvider);
+    final productsPurchaseState = ref.read(productsVariantsPurchaseProvider);
 
-    final hasInvalid =
-        productsPurchaseState.any((p) => (p.idTalla == 0 || p.idColor == 0));
+    final hasInvalid = productsPurchaseState.any((p) => (p.precioVenta == 0));
 
     if (hasInvalid) {
       Navigator.pop(context); // bottomsheet
@@ -145,11 +144,17 @@ class PaymentTypeBottomSheet extends ConsumerWidget {
   }
 }
 
-class ConceptBottomSheet extends ConsumerWidget {
+class ConceptBottomSheet extends ConsumerStatefulWidget {
   final int idTipoPago;
-  TextEditingController _controller = TextEditingController();
 
-  ConceptBottomSheet({super.key, required this.idTipoPago});
+  const ConceptBottomSheet({super.key, required this.idTipoPago});
+
+  @override
+  ConsumerState<ConceptBottomSheet> createState() => _ConceptBottomSheetState();
+}
+
+class _ConceptBottomSheetState extends ConsumerState<ConceptBottomSheet> {
+  final TextEditingController _controller = TextEditingController();
 
   void _handlePayment(BuildContext context, WidgetRef ref) async {
     print(_controller.text.trim());
@@ -174,15 +179,15 @@ class ConceptBottomSheet extends ConsumerWidget {
 
     // if (confirmed == false) return;
 
-    final productsPurchaseState = ref.read(productsPurchaseProvider);
+    final productsVariantsPurchaseState =
+        ref.read(productsVariantsPurchaseProvider);
     final saleSubmissionNotifier = ref.read(saleSubmissionProvider.notifier);
-    final saleProducts = productsPurchaseState
+    final saleProducts = productsVariantsPurchaseState
         .map((e) => SaleProduct(
-              idProducto: e.idProducto,
+              idProductoVariante: e.productoVariante!.idProductoVariante!,
+              idProducto: e.productoVariante!.idProducto,
               cantidad: e.cantidad,
-              precio: e.precio!,
-              idColor: e.idColor,
-              idTalla: e.idTalla,
+              precio: e.precioVenta!,
               sub_total: e.total,
             ))
         .toList();
@@ -191,19 +196,25 @@ class ConceptBottomSheet extends ConsumerWidget {
     double amountDiscount = discount.monto;
     String discountType = discount.type.name;
 
-    await saleSubmissionNotifier.submitSale(saleProducts, idTipoPago,
+    await saleSubmissionNotifier.submitSale(saleProducts, widget.idTipoPago,
         discountType, amountDiscount, _controller.text.trim());
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final paymentTypesState = ref.watch(paymentTypesProvider);
     final saleSubmissionState = ref.watch(saleSubmissionProvider);
 
     ref.listen<SaleSubmissionState>(saleSubmissionProvider, (previous, next) {
       if (next.success) {
         ref.read(saleSubmissionProvider.notifier).reset();
-        ref.read(productsPurchaseProvider.notifier).clear();
+        ref.read(productsVariantsPurchaseProvider.notifier).clear();
         ref.read(discountProvider.notifier).state = DiscountState.none();
 
         Navigator.pop(context); // bottomsheet
@@ -218,6 +229,8 @@ class ConceptBottomSheet extends ConsumerWidget {
               behavior: SnackBarBehavior.floating),
         );
       } else if (next.hasError) {
+        Navigator.pop(context); // bottomsheet
+        Navigator.pop(context); // bottomsheet
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(next.errorMessage ?? 'Error al registrar venta')),

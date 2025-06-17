@@ -220,7 +220,9 @@ class ProductDatasourceImpl extends ProductDatasource {
 
   @override
   Future<ProductVariant> findProductVariant(
-      {int? idProductoVariante, String? codigoProductoVariante}) async {
+      {int? idProductoVariante,
+      String? codigoProductoVariante,
+      bool? esActivo}) async {
     try {
       List<Map<String, dynamic>> paramsList = [];
       if (idProductoVariante != null) {
@@ -234,6 +236,9 @@ class ProductDatasourceImpl extends ProductDatasource {
           'key': 'codigo_producto_variante',
           'value': codigoProductoVariante
         });
+      }
+      if (esActivo != null) {
+        paramsList.add({'key': 'es_activo', 'value': esActivo.toString()});
       }
 
       String queryString = paramsList
