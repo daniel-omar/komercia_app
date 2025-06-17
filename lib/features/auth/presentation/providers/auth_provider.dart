@@ -27,12 +27,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     checkAuthStatus();
   }
 
-  Future<void> loginUser(String email, String password) async {
+  Future<void> loginUser(String email, String password,
+      {bool? rememberMe = false}) async {
     await Future.delayed(const Duration(milliseconds: 500));
 
     try {
       final user = await authRepository.login(email, password);
-      _setPreferencesLoginUser(email, password);
+      _setPreferencesLoginUser(email, password, rememberMe: rememberMe);
       _setLoggedUser(user);
     } on CustomError catch (e) {
       logout(e.message);
@@ -72,10 +73,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
   }
 
-  void _setPreferencesLoginUser(String correo, String clave) async {
+  void _setPreferencesLoginUser(String correo, String clave,
+      {bool? rememberMe = false}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('correo', correo);
     await prefs.setString('clave', clave);
+    if (rememberMe != null) {
+      if (rememberMe) {
+        await prefs.setBool('rememberMe', rememberMe);
+      } else {
+        await prefs.remove('rememberMe');
+      }
+    }
   }
 
   void _clearPreferencesLoginUser() async {

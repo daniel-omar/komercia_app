@@ -15,7 +15,7 @@ final loginFormProvider =
 
 //! 2 - Como implementamos un notifier
 class LoginFormNotifier extends StateNotifier<LoginFormState> {
-  final Function(String, String) loginUserCallback;
+  final Function(String, String, {bool? rememberMe}) loginUserCallback;
 
   LoginFormNotifier({
     required this.loginUserCallback,
@@ -42,7 +42,8 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
 
     state = state.copyWith(isPosting: true);
 
-    await loginUserCallback(state.email.value, state.password.value);
+    await loginUserCallback(state.email.value, state.password.value,
+        rememberMe: state.rememberMe);
 
     state = state.copyWith(isPosting: false);
   }
@@ -87,6 +88,10 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
       return false;
     }
   }
+
+  void toggleRememberMe(bool value) {
+    state = state.copyWith(rememberMe: value);
+  }
 }
 
 //! 1 - State del provider
@@ -97,15 +102,16 @@ class LoginFormState {
   final Email email;
   final Password password;
   final bool isObscurePassword;
+  final bool rememberMe;
 
-  LoginFormState({
-    this.isPosting = false,
-    this.isFormPosted = false,
-    this.isValid = false,
-    this.email = const Email.pure(),
-    this.password = const Password.pure(),
-    this.isObscurePassword = false,
-  });
+  LoginFormState(
+      {this.isPosting = false,
+      this.isFormPosted = false,
+      this.isValid = false,
+      this.email = const Email.pure(),
+      this.password = const Password.pure(),
+      this.isObscurePassword = false,
+      this.rememberMe = false});
 
   LoginFormState copyWith({
     bool? isPosting,
@@ -114,6 +120,7 @@ class LoginFormState {
     Email? email,
     Password? password,
     bool? isObscurePassword,
+    bool? rememberMe,
   }) =>
       LoginFormState(
         isPosting: isPosting ?? this.isPosting,
@@ -122,6 +129,7 @@ class LoginFormState {
         email: email ?? this.email,
         password: password ?? this.password,
         isObscurePassword: isObscurePassword ?? this.isObscurePassword,
+        rememberMe: rememberMe ?? this.rememberMe,
       );
 
   @override

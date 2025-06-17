@@ -21,7 +21,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     // Solo se llama una vez al construir el widget por primera vez
-    Future.microtask(() {
+    Future.microtask(() async {
       ref.read(biometricProvider.notifier).checkFingerprint();
     });
   }
@@ -116,8 +116,45 @@ Future<void> verificarHuella(BuildContext context, WidgetRef ref) async {
   }
 }
 
-class _LoginForm extends ConsumerWidget {
+class _LoginForm extends ConsumerStatefulWidget {
   const _LoginForm();
+
+  @override
+  ConsumerState<_LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends ConsumerState<_LoginForm> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // cargar valor guardado
+    Future.microtask(() async {
+      final prefs = await SharedPreferences.getInstance();
+      bool? rememberMe = prefs.getBool('rememberMe');
+      if (rememberMe != null && rememberMe) {
+        final correo = prefs.getString('correo');
+        final clave = prefs.getString('clave');
+
+        emailController.text = correo ?? "";
+        passwordController.text = clave ?? "";
+
+        ref.read(loginFormProvider.notifier).onEmailChange(correo ?? "");
+        ref.read(loginFormProvider.notifier).onPasswordChanged(clave ?? "");
+        ref.read(loginFormProvider.notifier).toggleRememberMe(true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   void showSnackbar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -126,8 +163,11 @@ class _LoginForm extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final loginForm = ref.watch(loginFormProvider);
+    emailController.text = loginForm.email.value;
+    passwordController.text = loginForm.password.value;
+
     ref.listen(authProvider, (previous, next) {
       if (next.errorMessage.isEmpty) return;
       showSnackbar(context, next.errorMessage);
@@ -148,6 +188,7 @@ class _LoginForm extends ConsumerWidget {
           const SizedBox(height: 50),
           CustomTextFormField(
             label: 'Correo',
+            textEditingController: emailController,
             keyboardType: TextInputType.emailAddress,
             onChanged: ref.read(loginFormProvider.notifier).onEmailChange,
             errorMessage:
@@ -157,6 +198,7 @@ class _LoginForm extends ConsumerWidget {
           const SizedBox(height: 30),
           CustomTextFormField(
             label: 'Contraseña',
+            textEditingController: passwordController,
             obscureText: loginForm.isObscurePassword,
             onChanged: ref.read(loginFormProvider.notifier).onPasswordChanged,
             onFieldSubmitted: (_) =>
@@ -168,7 +210,21 @@ class _LoginForm extends ConsumerWidget {
             onSufix: ref.read(loginFormProvider.notifier).onSufix,
             suffixIcon: Icons.remove_red_eye,
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Checkbox(
+                value: loginForm.rememberMe,
+                onChanged: (value) {
+                  ref
+                      .read(loginFormProvider.notifier)
+                      .toggleRememberMe(value ?? false);
+                },
+              ),
+              const Text('Recordar usuario'),
+            ],
+          ),
+          const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
             height: 60,
