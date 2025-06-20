@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_repository_provider.dart';
@@ -49,6 +51,24 @@ class ProductNotifier extends StateNotifier<ProductState> {
         isLoading: false,
         producto: updatedProduct,
       );
+    } catch (e) {
+      print("Error al actualizar producto: $e");
+      // throw Exception(e);
+      state = state.copyWith(
+          isSaving: false,
+          isLoading: false,
+          errorMessage: "Error al modificar, comunicarse con el administrador");
+    }
+  }
+
+  Future<void> updloadFile(File file) async {
+    try {
+      state = state.copyWith(isSaving: true, isLoading: true, errorMessage: '');
+
+      await productRepository.saveBulk(file);
+
+      // Actualizar el producto local
+      state = state.copyWith(isSaving: true, isLoading: false);
     } catch (e) {
       print("Error al actualizar producto: $e");
       // throw Exception(e);

@@ -8,7 +8,7 @@
             "name": "komercia_app",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "release",
+            "flutterMode": "debug",
             "args": [
                 "--flavor",
                 "production"

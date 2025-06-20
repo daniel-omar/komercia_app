@@ -32,6 +32,7 @@ dependencies:
   connectivity_plus: ^6.1.4
   cupertino_icons: ^1.0.8
   dio: ^5.8.0+1
+  file_picker: ^10.2.0
   flutter:
     sdk: flutter
   flutter_dotenv: ^5.2.1
@@ -66,6 +67,8 @@ flutter:
 
   assets:
     - .env
+    - .env.dev
+    - .env.prod
     - assets/loaders/
     - assets/images/
     - assets/icons/

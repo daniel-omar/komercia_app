@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
@@ -62,5 +64,10 @@ class ProductRepositoryImpl extends ProductRepository {
   @override
   Future<bool> saveIncome(Map<String, dynamic> data) {
     return datasource.saveIncome(data);
+  }
+
+  @override
+  Future<bool> saveBulk(File file) {
+    return datasource.saveBulk(file);
   }
 }

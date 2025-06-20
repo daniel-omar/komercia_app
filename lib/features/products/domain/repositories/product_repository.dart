@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:komercia_app/features/products/domain/entities/product.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
@@ -16,4 +18,5 @@ abstract class ProductRepository {
       String? codigoProductoVariante,
       bool? esActivo});
   Future<bool> saveIncome(Map<String, dynamic> data);
+  Future<bool> saveBulk(File file);
 }

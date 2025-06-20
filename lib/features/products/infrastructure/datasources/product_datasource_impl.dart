@@ -276,4 +276,23 @@ class ProductDatasourceImpl extends ProductDatasource {
       throw Exception(e);
     }
   }
+
+  @override
+  Future<bool> saveBulk(File file) async {
+    try {
+      final fileName = file.path.split('/').last;
+      FormData formData = FormData.fromMap({
+        "file": await MultipartFile.fromFile(file.path, filename: fileName),
+      });
+
+      final response = await dioClient.dio
+          .post('/products/product/save_bulk', data: formData);
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+
+      return responseMain.status == 1;
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
 }

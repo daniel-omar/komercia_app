@@ -1,4 +1,6 @@
-import 'package:collection/collection.dart';
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -11,6 +13,7 @@ import 'package:komercia_app/features/products/presentation/providers/product_ca
 import 'package:komercia_app/features/products/presentation/providers/product_variants_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_inventory_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_provider.dart';
+import 'package:komercia_app/features/products/presentation/providers/upload_products_provider.dart';
 import 'package:komercia_app/features/shared/widgets/full_screen_loader.dart';
 
 class InventoryScreen extends ConsumerStatefulWidget {
@@ -27,6 +30,46 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.watch(productCategoriesProvider);
     });
+  }
+
+  void uploadFileProducts() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['xls', 'xlsx'],
+    );
+
+    if (result == null || result.files.single.path == null) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Debe seleccionar un archivo para cargar.')),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      // ignore: use_build_context_synchronously
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Guardar'),
+        content: const Text('¿Está seguro de guardar?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == false) return;
+
+    final file = File(result.files.single.path!);
+    ref.read(uploadProductsProvider.notifier).uploadExcel(file);
   }
 
   bool _isSelectionMode = false;
@@ -59,6 +102,27 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       },
     );
 
+    ref.listen<UploadProductState>(
+      uploadProductsProvider,
+      (previous, next) {
+        if (!mounted) return;
+        if (next.success) {
+          // Navigator.pop(context); // bottomsheet
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Productos registrados'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 3), // Duración del SnackBar
+                behavior: SnackBarBehavior.floating),
+          );
+        } else if (next.errorMessage != '') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al guardar productos')),
+          );
+        }
+      },
+    );
+
     return !productCategoriesState.isLoading
         ? Scaffold(
             appBar: AppBar(
@@ -66,7 +130,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                 const SizedBox(width: 20),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.save),
-                  label: const Text('Inventariar'),
+                  label: const Text(
+                    'Inventariar',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
                   onPressed: () async {
                     final result = await context.push("/load_inventory");
                     if (result == true) {
@@ -86,10 +153,15 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       );
                     }
                   },
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.amber),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: Icon(_isSelectionMode ? Icons.close : Icons.print),
+                  icon: Icon(
+                    _isSelectionMode ? Icons.close : Icons.print,
+                    size: 30,
+                  ),
                   onPressed: () {
                     setState(() {
                       _isSelectionMode = !_isSelectionMode;
@@ -176,7 +248,45 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       )
                     ],
                   )
-                : null,
+                : (ref
+                        .read(menusProvider.notifier)
+                        .tienePermisoEdicion("/products", "Modificar")
+                    ? Row(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              uploadFileProducts();
+                            },
+                            icon: const Icon(Icons.upload_file,
+                                color: Colors.white, size: 25),
+                            label: const Text(
+                              'Cargar productos',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green),
+                          ),
+                          const Spacer(),
+                          ElevatedButton.icon(
+                            onPressed: null,
+                            icon: const Icon(Icons.create,
+                                color: Colors.white, size: 25),
+                            label: const Text(
+                              'Crear producto',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber),
+                          )
+                        ],
+                      )
+                    : null),
           )
         : const FullScreenLoader();
   }

@@ -10,7 +10,7 @@ void main() async {
     printer: PrettyPrinter(methodCount: 0),
     level: Level.info, //Personaliza el formato de los mensajes
   );
-
+  WidgetsFlutterBinding.ensureInitialized();
   await Environment.initEnvironment();
 
   runApp(const ProviderScope(child: MainApp()));
@@ -22,7 +22,7 @@ class MainApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appRouter = ref.watch(goRouterProvider);
-   
+
     return MaterialApp.router(
       routerConfig: appRouter,
       theme: AppTheme().getTheme(),
