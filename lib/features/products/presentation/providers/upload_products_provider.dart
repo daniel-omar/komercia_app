@@ -26,7 +26,7 @@ class UploadProductNotifier extends StateNotifier<UploadProductState> {
       state = state.copyWith(
           isLoading: true,
           success: false,
-          errorMessage: "Error al cargar productos.");
+          errorMessage: e.toString());
     }
   }
 

@@ -12,6 +12,7 @@ class Product {
   ProductCategory? categoria;
   int? idMarca;
   int? cantidadDisponible;
+  bool? esActivo;
 
   Product(
       {required this.idProducto,
@@ -24,7 +25,8 @@ class Product {
       this.idCategoria,
       this.categoria,
       this.idMarca,
-      this.cantidadDisponible});
+      this.cantidadDisponible,
+      this.esActivo});
 
   Map<String, dynamic> toJson() => {
         "id_producto": idProducto,

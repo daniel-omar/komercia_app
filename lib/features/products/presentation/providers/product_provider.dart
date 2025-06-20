@@ -40,7 +40,8 @@ class ProductNotifier extends StateNotifier<ProductState> {
 
   Future<void> updateProduct(Product updatedProduct) async {
     try {
-      state = state.copyWith(isSaving: true, isLoading: true, errorMessage: '');
+      state =
+          state.copyWith(isSaving: true, isLoading: true, errorMessage: null);
 
       final productJson = updatedProduct.toJson();
       await productRepository.update(productJson);
@@ -61,17 +62,16 @@ class ProductNotifier extends StateNotifier<ProductState> {
     }
   }
 
-  Future<void> updloadFile(File file) async {
+  Future<void> updateActive(int idProducto, bool esActivo) async {
     try {
-      state = state.copyWith(isSaving: true, isLoading: true, errorMessage: '');
+      state =
+          state.copyWith(isSaving: true, isLoading: true, errorMessage: null);
 
-      await productRepository.saveBulk(file);
+      final sale = {'id_producto': idProducto, 'es_activo': esActivo};
+      await productRepository.updateActive(sale);
 
-      // Actualizar el producto local
-      state = state.copyWith(isSaving: true, isLoading: false);
+      state = state.copyWith(isSaving: false, isLoading: false);
     } catch (e) {
-      print("Error al actualizar producto: $e");
-      // throw Exception(e);
       state = state.copyWith(
           isSaving: false,
           isLoading: false,

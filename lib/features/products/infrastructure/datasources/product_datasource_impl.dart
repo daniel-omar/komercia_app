@@ -8,6 +8,7 @@ import 'package:komercia_app/features/products/domain/entities/product_variant_s
 import 'package:komercia_app/features/products/infrastructure/errors/product_errors.dart';
 import 'package:komercia_app/features/products/infrastructure/infrastructure.dart';
 import 'package:komercia_app/features/products/infrastructure/mappers/product_variant_mapper.dart';
+import 'package:komercia_app/features/sales/infrastructure/errors/sale_errors.dart';
 import 'package:komercia_app/features/shared/infrastructure/entities/response_main.dart';
 import 'package:komercia_app/features/shared/infrastructure/mappers/response_main_mapper.dart';
 import 'package:komercia_app/features/shared/infrastructure/providers/dio_client.dart';
@@ -148,6 +149,35 @@ class ProductDatasourceImpl extends ProductDatasource {
           ResponseMainMapper.responseJsonToEntity(response.data);
 
       return true;
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw ProductNotFound();
+      if (e.response != null) {
+        ResponseMain responseError =
+            ResponseMainMapper.responseJsonToEntity(e.response!.data);
+        throw Exception(responseError.message);
+      }
+      throw Exception(e);
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  @override
+  Future<bool> updateActive(Map<String, dynamic> data) async {
+    try {
+      final response = await dioClient.dio
+          .put('/products/product/update_active', data: data);
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+      return true;
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw ProductNotFound();
+      if (e.response != null) {
+        ResponseMain responseError =
+            ResponseMainMapper.responseJsonToEntity(e.response!.data);
+        throw Exception(responseError.message);
+      }
+      throw Exception(e);
     } catch (e) {
       throw Exception(e);
     }
@@ -199,6 +229,14 @@ class ProductDatasourceImpl extends ProductDatasource {
 
       // Abrir PDF
       await OpenFile.open(filePath);
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw ProductNotFound();
+      if (e.response != null) {
+        ResponseMain responseError =
+            ResponseMainMapper.responseJsonToEntity(e.response!.data);
+        throw Exception(responseError.message);
+      }
+      throw Exception(e);
     } catch (e) {
       throw Exception(e);
     }
@@ -272,6 +310,14 @@ class ProductDatasourceImpl extends ProductDatasource {
           ResponseMainMapper.responseJsonToEntity(response.data);
 
       return true;
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw ProductNotFound();
+      if (e.response != null) {
+        ResponseMain responseError =
+            ResponseMainMapper.responseJsonToEntity(e.response!.data);
+        throw Exception(responseError.message);
+      }
+      throw Exception(e);
     } catch (e) {
       throw Exception(e);
     }
@@ -291,6 +337,14 @@ class ProductDatasourceImpl extends ProductDatasource {
           ResponseMainMapper.responseJsonToEntity(response.data);
 
       return responseMain.status == 1;
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw ProductNotFound();
+      if (e.response != null) {
+        ResponseMain responseError =
+            ResponseMainMapper.responseJsonToEntity(e.response!.data);
+        throw Exception(responseError.message);
+      }
+      throw Exception(e);
     } catch (e) {
       throw Exception(e);
     }
@@ -306,8 +360,12 @@ class ProductDatasourceImpl extends ProductDatasource {
                     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
               }));
 
-      final dir = await getDownloadsDirectory();
-      final filePath = '${dir!.path}/plantilla.xlsx';
+      final directory = await getDownloadsDirectory();
+      if (directory == null) {
+        throw Exception("No se pudo acceder a carpeta de descarga.");
+      }
+      // final downloadsDir = Directory('/storage/emulated/0/Download');
+      final filePath = '${directory.path}/plantilla.xlsx';
 
       final file = File(filePath);
       await file.writeAsBytes(response.data);

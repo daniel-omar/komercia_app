@@ -23,6 +23,7 @@ class ProductMapper {
         cantidadDisponible: json["cantidad_disponible"] == null
             ? null
             : int.parse(json["cantidad_disponible"]),
+        esActivo: json["es_activo"] ?? false,
       );
 
   static productGroupJsonToEntity(Map<String, dynamic> json) {

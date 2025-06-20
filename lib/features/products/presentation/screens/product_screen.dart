@@ -35,6 +35,33 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void updateActive(bool activar) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar registro'),
+        content: Text(
+            '¿Está seguro de ${(activar ? "Activar" : "Desactivar")} el producto?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == false) return;
+
+    final productNotifier =
+        ref.read(productProvider(widget.idProduct).notifier);
+    await productNotifier.updateActive(widget.idProduct, activar);
+  }
+
   @override
   Widget build(BuildContext context) {
     final productFormState = ref.watch(productFormProvider(widget.idProduct));
@@ -60,15 +87,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
         if (next.errorMessage.isNotEmpty) {
           showSnackbar(context, next.errorMessage);
         } else {
-          Navigator.of(context).pop();
-          // Navegar o hacer otra acción
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Producto actualizado con éxito'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 3), // Duración del SnackBar
-                behavior: SnackBarBehavior.floating),
-          );
+          Navigator.pop(context, true);
         }
       }
     });
@@ -159,23 +178,36 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
       bottomNavigationBar: ref
               .read(menusProvider.notifier)
               .tienePermisoEdicion("/products", "Modificar")
-          ? Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 60,
-                child: CustomFilledButton(
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                SizedBox(
+                  width: 200,
+                  child: CustomFilledButton(
+                      text: productFormState.isPosting
+                          ? 'Guardando...'
+                          : 'Modificar',
+                      buttonColor: Colors.black,
+                      onPressed: productFormState.isPosting
+                          ? null
+                          : ref
+                              .read(productFormProvider(widget.idProduct)
+                                  .notifier)
+                              .onFormUpdateSubmit),
+                ),
+                // const Spacer(),
+                CustomFilledButton(
                     text: productFormState.isPosting
                         ? 'Guardando...'
-                        : 'Modificar',
-                    buttonColor: Colors.black,
+                        : (productFormState.isActive
+                            ? 'Desactivar'
+                            : "Activar"),
+                    buttonColor:
+                        (productFormState.isActive ? Colors.red : Colors.green),
                     onPressed: productFormState.isPosting
                         ? null
-                        : ref
-                            .read(
-                                productFormProvider(widget.idProduct).notifier)
-                            .onFormUpdateSubmit),
-              ),
+                        : () => updateActive(!productFormState.isActive)),
+              ],
             )
           : null,
     );

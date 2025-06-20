@@ -75,4 +75,9 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<void> downloadTemplateProducts() {
     return datasource.downloadTemplateProducts();
   }
+
+  @override
+  Future<bool> updateActive(Map<String, dynamic> data) async {
+    return datasource.updateActive(data);
+  }
 }

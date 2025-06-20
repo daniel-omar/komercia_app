@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,8 @@ import 'package:komercia_app/features/products/presentation/providers/products_p
 import 'package:komercia_app/features/products/presentation/providers/upload_products_provider.dart';
 import 'package:komercia_app/features/shared/widgets/full_screen_loader.dart';
 
+import 'package:permission_handler/permission_handler.dart';
+
 class InventoryScreen extends ConsumerStatefulWidget {
   const InventoryScreen({super.key});
 
@@ -30,6 +33,18 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.watch(productCategoriesProvider);
     });
+  }
+
+  Future<bool> requestPermission(Permission permission) async {
+    AndroidDeviceInfo build = await DeviceInfoPlugin().androidInfo;
+    if (build.version.sdkInt >= 30) {
+      var re = await Permission.manageExternalStorage.request();
+      return re.isGranted;
+    } else {
+      if (await permission.isGranted) return true;
+      var result = await permission.request();
+      return result.isGranted;
+    }
   }
 
   void uploadFileProducts() async {
@@ -72,6 +87,35 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     ref.read(uploadProductsProvider.notifier).uploadExcel(file);
   }
 
+  void downloadFile() async {
+    final status = await requestPermission(Permission.storage);
+    if (!status) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('No cuenta con permiso para descargar recurso.')),
+      );
+      return;
+    }
+    ref.read(uploadProductsProvider.notifier).downloadExcel();
+  }
+
+  void onSelectProduct(int idProducto) async {
+    final result = await context.push("/product/$idProducto");
+    if (result == true) {
+      // ignore: unused_result
+      ref.refresh(productsProvider(0));
+
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Producto actualizado con éxito.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3), // Duración del SnackBar
+            behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
+
   bool _isSelectionMode = false;
 
   @override
@@ -108,6 +152,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         if (!mounted) return;
         if (next.success) {
           // Navigator.pop(context); // bottomsheet
+          // ignore: unused_result
+          ref.refresh(productsProvider(selectedId));
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Productos registrados'),
@@ -139,8 +185,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     if (result == true) {
                       ref.read(productsInventoryProvider.notifier).clear();
                       // ignore: unused_result
+                      ref.refresh(productsProvider(selectedId));
+                      // ignore: unused_result
                       ref.refresh(productVariantsProvider(0));
-                      ref.read(productsProvider(selectedId));
 
                       // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -205,6 +252,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     _ProductList(
                       products: products,
                       isSelectionMode: _isSelectionMode,
+                      onSelectProduct: onSelectProduct,
                     ),
                 ],
               ),
@@ -255,7 +303,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         children: [
                           IconButton(
                             icon: Container(
-                              padding: const EdgeInsets.all(6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 6),
                               decoration: const BoxDecoration(
                                 color: Colors.green, // Fondo del icono
                                 shape: BoxShape.circle,
@@ -267,9 +316,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               ),
                             ),
                             onPressed: () {
-                              ref
-                                  .read(uploadProductsProvider.notifier)
-                                  .downloadExcel();
+                              downloadFile();
                             },
                           ),
                           ElevatedButton.icon(
@@ -298,14 +345,16 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 15, vertical: 5),
+                                  horizontal: 10, vertical: 5),
                             ),
                           ),
                           const Spacer(),
                           ElevatedButton(
                             onPressed: null,
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.amber),
+                                backgroundColor: Colors.amber,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 5)),
                             child: const Text(
                               'Crear producto',
                               style: TextStyle(
@@ -438,8 +487,12 @@ class _SummaryCard extends StatelessWidget {
 class _ProductList extends ConsumerWidget {
   List<Product> products = [];
   final bool isSelectionMode;
+  final void Function(int idProduct) onSelectProduct;
 
-  _ProductList({required this.products, required this.isSelectionMode});
+  _ProductList(
+      {required this.products,
+      required this.isSelectionMode,
+      required this.onSelectProduct});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -472,6 +525,9 @@ class _ProductList extends ConsumerWidget {
             purcharsePrice: product.precioCompra ?? 0,
             stock: product.cantidadDisponible ?? 0,
             isSelectionMode: isSelectionMode,
+            isActive: product.esActivo ?? false,
+            idCategory: 0,
+            onSelectProduct: onSelectProduct,
           );
         },
       ),
@@ -486,6 +542,9 @@ class _ProductCard extends ConsumerWidget {
   final double purcharsePrice;
   final int stock;
   final bool isSelectionMode;
+  final bool isActive;
+  final int idCategory;
+  final void Function(int idProduct) onSelectProduct;
 
   const _ProductCard(
       {required this.name,
@@ -493,7 +552,10 @@ class _ProductCard extends ConsumerWidget {
       required this.purcharsePrice,
       required this.stock,
       required this.idProduct,
-      required this.isSelectionMode});
+      required this.isSelectionMode,
+      required this.isActive,
+      required this.idCategory,
+      required this.onSelectProduct});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -514,9 +576,7 @@ class _ProductCard extends ConsumerWidget {
                 motion: const ScrollMotion(),
                 children: [
                   SlidableAction(
-                    onPressed: (context) {
-                      context.push("/product/$idProduct");
-                    },
+                    onPressed: (context) => onSelectProduct(idProduct),
                     backgroundColor: Colors.amber,
                     foregroundColor: Colors.white,
                     icon: Icons.edit,
@@ -535,8 +595,16 @@ class _ProductCard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: isSelectionMode
-                ? const Icon(Icons.print, color: Colors.deepOrange)
-                : const Icon(Icons.toll, color: Colors.purple),
+                ? const Icon(
+                    Icons.print,
+                    color: Colors.deepOrange,
+                    size: 35,
+                  )
+                : Icon(
+                    Icons.toll,
+                    color: isActive ? Colors.green : Colors.red,
+                    size: 35,
+                  ),
           ),
           title: Text(name),
           subtitle: Column(

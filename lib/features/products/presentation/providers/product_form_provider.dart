@@ -40,7 +40,8 @@ class ProductFormNotifier extends StateNotifier<ProductFormState> {
         description: TextField.dirty(product.descripcionProducto ?? ""),
         pursharsePrice: Price.dirty(product.precioCompra ?? 0),
         salePrice: Price.dirty(product.precioVenta ?? 0),
-        idCategory: product.idCategoria);
+        idCategory: product.idCategoria,
+        isActive: product.esActivo ?? false);
   }
 
   onNameChange(String value) {
@@ -146,6 +147,7 @@ class ProductFormState {
   final Price pursharsePrice;
   final Price salePrice;
   final int idCategory;
+  final bool isActive;
 
   ProductFormState(
       {this.isLoading = true,
@@ -158,7 +160,8 @@ class ProductFormState {
       this.description = const TextField.pure(),
       this.pursharsePrice = const Price.pure(),
       this.salePrice = const Price.pure(),
-      this.idCategory = 0});
+      this.idCategory = 0,
+      this.isActive = false});
 
   ProductFormState copyWith(
           {bool? isLoading,
@@ -172,7 +175,8 @@ class ProductFormState {
           Price? pursharsePrice,
           Price? salePrice,
           int? idCategory,
-          bool? isObscurePassword}) =>
+          bool? isObscurePassword,
+          bool? isActive}) =>
       ProductFormState(
           isLoading: isLoading ?? this.isLoading,
           isPosting: isPosting ?? this.isPosting,
@@ -184,7 +188,8 @@ class ProductFormState {
           description: description ?? this.description,
           pursharsePrice: pursharsePrice ?? this.pursharsePrice,
           salePrice: salePrice ?? this.salePrice,
-          idCategory: idCategory ?? this.idCategory);
+          idCategory: idCategory ?? this.idCategory,
+          isActive: isActive ?? this.isActive);
 
   @override
   String toString() {

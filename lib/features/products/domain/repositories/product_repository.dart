@@ -20,4 +20,5 @@ abstract class ProductRepository {
   Future<bool> saveIncome(Map<String, dynamic> data);
   Future<bool> saveBulk(File file);
   Future<void> downloadTemplateProducts();
+  Future<bool> updateActive(Map<String, dynamic> data);
 }
