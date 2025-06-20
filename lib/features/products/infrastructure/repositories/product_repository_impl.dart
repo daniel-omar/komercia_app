@@ -70,4 +70,9 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<bool> saveBulk(File file) {
     return datasource.saveBulk(file);
   }
+
+  @override
+  Future<void> downloadTemplateProducts() {
+    return datasource.downloadTemplateProducts();
+  }
 }

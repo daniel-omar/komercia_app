@@ -295,4 +295,26 @@ class ProductDatasourceImpl extends ProductDatasource {
       throw Exception(e);
     }
   }
+
+  @override
+  Future<void> downloadTemplateProducts() async {
+    try {
+      final response = await dioClient.dio
+          .get('/products/product/download_template_products',
+              options: Options(responseType: ResponseType.bytes, headers: {
+                'Accept':
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+              }));
+
+      final dir = await getDownloadsDirectory();
+      final filePath = '${dir!.path}/plantilla.xlsx';
+
+      final file = File(filePath);
+      await file.writeAsBytes(response.data);
+
+      await OpenFile.open(filePath);
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
 }

@@ -117,7 +117,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
           );
         } else if (next.errorMessage != '') {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al guardar productos')),
+            SnackBar(content: Text(next.errorMessage)),
           );
         }
       },
@@ -253,36 +253,66 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         .tienePermisoEdicion("/products", "Modificar")
                     ? Row(
                         children: [
+                          IconButton(
+                            icon: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.green, // Fondo del icono
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.download,
+                                color: Colors.white, // Color del ícono
+                                size: 30,
+                              ),
+                            ),
+                            onPressed: () {
+                              ref
+                                  .read(uploadProductsProvider.notifier)
+                                  .downloadExcel();
+                            },
+                          ),
                           ElevatedButton.icon(
                             onPressed: () {
                               uploadFileProducts();
                             },
-                            icon: const Icon(Icons.upload_file,
-                                color: Colors.white, size: 25),
+                            icon: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.white, // Fondo del icono
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.upload_file,
+                                color: Colors.green, // Color del ícono
+                                size: 20,
+                              ),
+                            ),
                             label: const Text(
                               'Cargar productos',
                               style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 15),
+                                  fontSize: 14),
                             ),
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green),
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 15, vertical: 5),
+                            ),
                           ),
                           const Spacer(),
-                          ElevatedButton.icon(
+                          ElevatedButton(
                             onPressed: null,
-                            icon: const Icon(Icons.create,
-                                color: Colors.white, size: 25),
-                            label: const Text(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber),
+                            child: const Text(
                               'Crear producto',
                               style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 15),
+                                  fontSize: 14),
                             ),
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.amber),
                           )
                         ],
                       )

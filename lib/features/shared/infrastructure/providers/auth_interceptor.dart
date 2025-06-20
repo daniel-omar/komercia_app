@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:komercia_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:komercia_app/features/auth/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:komercia_app/features/shared/infrastructure/services/key_value_storage_service.dart';
 import 'package:komercia_app/features/shared/infrastructure/services/key_value_storage_service_impl.dart';
@@ -59,7 +58,8 @@ class AuthInterceptor implements Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     final responseData = response.data;
-    if (response.realUri.path.contains("generate_tags")) {
+    if (response.realUri.path.contains("generate_tags") ||
+        response.realUri.path.contains("download_template_products")) {
       return handler.next(response);
     }
     if (responseData is Map) {

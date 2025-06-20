@@ -24,7 +24,18 @@ class UploadProductNotifier extends StateNotifier<UploadProductState> {
       state = state.copyWith(isLoading: true, success: true);
     } catch (e) {
       state = state.copyWith(
-          isLoading: true, success: false, errorMessage: e.toString());
+          isLoading: true,
+          success: false,
+          errorMessage: "Error al cargar productos.");
+    }
+  }
+
+  Future<void> downloadExcel() async {
+    try {
+      await productRepository.downloadTemplateProducts();
+    } catch (e) {
+      state = state.copyWith(
+          isLoading: true, success: false, errorMessage: "Error al descargar");
     }
   }
 }

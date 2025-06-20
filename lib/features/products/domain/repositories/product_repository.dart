@@ -19,4 +19,5 @@ abstract class ProductRepository {
       bool? esActivo});
   Future<bool> saveIncome(Map<String, dynamic> data);
   Future<bool> saveBulk(File file);
+  Future<void> downloadTemplateProducts();
 }
