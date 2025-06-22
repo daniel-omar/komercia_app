@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
-import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_repository_provider.dart';
 
 final productVariantProvider = StateNotifierProvider.autoDispose<
