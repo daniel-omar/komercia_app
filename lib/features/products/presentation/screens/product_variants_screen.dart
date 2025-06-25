@@ -1,8 +1,14 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
+import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
+import 'package:komercia_app/features/products/presentation/providers/products_variants_selection_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_variants_provider.dart';
+import 'package:komercia_app/features/shared/infrastructure/maps/general.map.dart';
+import 'package:komercia_app/features/shared/widgets/full_screen_loader.dart';
 
 class ProductVariantsScreen extends ConsumerStatefulWidget {
   final int idProduct;
@@ -17,140 +23,356 @@ class ProductVariantsScreen extends ConsumerStatefulWidget {
 }
 
 class _ProductVariantsScreenState extends ConsumerState<ProductVariantsScreen> {
-  late int idProduct = widget.idProduct;
-  late String nameProduct = widget.nameProduct;
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Escuchar cambios en el provider y sincronizar _variantes
+
+    // Llamar getVariants cuando se monte el modal
+    Future.microtask(() {
       ref
-          .watch(productVariantsProvider(widget.idProduct).notifier)
-          .getVariantsGroup();
+          .read(productVariantsProvider(widget.idProduct).notifier)
+          .getVariants();
     });
-    // Future.microtask(() {
-    //   ref
-    //       .watch(productVariantsProvider(widget.idProduct).notifier)
-    //       .getVariantsGroup();
-    // });
   }
+
+  bool _isSelectionMode = false;
 
   @override
   Widget build(BuildContext context) {
-    final productVariantsState = ref.watch(productVariantsProvider(idProduct));
+    final productVariantsState =
+        ref.watch(productVariantsProvider(widget.idProduct));
+    final productVariantsSelection =
+        ref.watch(productsVariantSelectionProvider);
+
+    if (productVariantsState.isLoading) {
+      return const FullScreenLoader();
+    }
+
+    final productVariants = productVariantsState.productVariants ?? [];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(nameProduct),
+        title: Text('Etiquetas: ${widget.nameProduct}'),
         backgroundColor: Colors.yellow[700],
         foregroundColor: Colors.black,
       ),
-      body: productVariantsState.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _VariantsList(variantes: productVariantsState.productVariantsSize!),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await context.pushNamed(
-            'productoVariantesSave',
-            pathParameters: {'id_product': idProduct.toString()},
-            extra: {'name': nameProduct},
-          );
-          if (result == true) {
-            // ignore: unused_result
-            ref.refresh(productVariantsProvider(idProduct));
-            ref
-                .watch(productVariantsProvider(widget.idProduct).notifier)
-                .getVariantsGroup();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Guardado con éxito'),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 3), // Duración del SnackBar
-                  behavior: SnackBarBehavior.floating),
-            );
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Agregar Variantes'),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(widget.nameProduct.toUpperCase(),
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                const Spacer(),
+                IconButton(
+                  tooltip: "Eliminar materiales",
+                  icon: Icon(
+                    _isSelectionMode ? Icons.close : Icons.delete_outline,
+                    size: 30,
+                    color: Colors.red,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isSelectionMode = !_isSelectionMode;
+                      if (!_isSelectionMode) {
+                        // Limpiar selección cuando salgas del modo selección
+                        ref
+                            .read(productsVariantSelectionProvider.notifier)
+                            .clear();
+                      }
+                    });
+                  },
+                )
+              ],
+            ),
+            const SizedBox(height: 5),
+            Expanded(
+              child: ListView.builder(
+                itemCount: productVariants.length,
+                itemBuilder: (_, i) {
+                  final producVariant = productVariants[i];
+                  final producVariantSelection =
+                      productVariantsSelection.firstWhereOrNull((s) =>
+                          s.idProductoVariante ==
+                          producVariant.idProductoVariante);
+
+                  return _ProductVariantCard(
+                    producVariant: producVariant,
+                    producVariantSelection: producVariantSelection,
+                    isDelete: _isSelectionMode,
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _VariantsList extends StatelessWidget {
-  final List<ProductVariantSize> variantes;
+class _ProductVariantCard extends ConsumerStatefulWidget {
+  final ProductVariant producVariant;
+  final ProductVariantSelection? producVariantSelection;
+  final bool isDelete;
 
-  const _VariantsList({required this.variantes});
+  const _ProductVariantCard(
+      {super.key,
+      required this.producVariant,
+      required this.producVariantSelection,
+      required this.isDelete});
+
+  @override
+  ConsumerState<_ProductVariantCard> createState() =>
+      _ProductVariantCardState();
+}
+
+class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
+  late final TextEditingController quantityController;
+
+  @override
+  void initState() {
+    quantityController = TextEditingController(
+      text: widget.producVariant.cantidad.toString(),
+    );
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    quantityController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      separatorBuilder: (_, __) => const SizedBox(height: 5),
-      itemCount: variantes.length,
-      itemBuilder: (_, i) {
-        final talla = variantes[i];
-        return Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Título de la talla
-                Text(
-                  'Talla: ${talla.nombreTalla}',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.indigo,
-                      fontSize: 25),
+    final isSelected = widget.producVariantSelection == null ? false : true;
+    final producVariant = widget.producVariant;
+    final producVariantSelection = widget.producVariantSelection;
+    final isDelete = widget.isDelete;
+
+    final cantidadActual = producVariantSelection == null
+        ? 0.toString()
+        : producVariantSelection.cantidad.toString();
+    if (quantityController.text != cantidadActual) {
+      quantityController.text = cantidadActual;
+    }
+
+    void updateQuantity(int value) {
+      ref.read(productsVariantSelectionProvider.notifier).updateCantidad(
+            producVariant.idProductoVariante!,
+            value,
+          );
+    }
+
+    int currentValue() => int.tryParse(quantityController.text) ?? 0;
+    void onIncrement() {
+      int cantidad = currentValue() + 1;
+      if (cantidad >= producVariant.cantidad) return;
+      quantityController.text = cantidad.toString();
+      updateQuantity(cantidad);
+    }
+
+    void onDecrement() {
+      if (currentValue() > 1) {
+        int cantidad = currentValue() - 1;
+        quantityController.text = cantidad.toString();
+        updateQuantity(cantidad);
+      }
+    }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Colors.blueGrey, width: 1)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Botón eliminar
+            if (isDelete) ...[
+              SizedBox(
+                width: 35,
+                child: Transform.scale(
+                  scale:
+                      1.75, // aumenta o reduce el tamaño (1.0 es el tamaño por defecto)
+                  child: Checkbox(
+                    value: isSelected,
+                    onChanged: (_) {
+                      ref
+                          .read(productsVariantSelectionProvider.notifier)
+                          .toggleSelection(producVariant.idProducto,
+                              producVariant.idProductoVariante!);
+                    },
+                  ),
                 ),
-                const SizedBox(height: 5),
-                // Lista de colores
-                Column(
-                  children: talla.detalles.map((detalle) {
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Column(
-                        children: [
-                          Text(detalle.codigoProductoVariante ?? ""),
-                          Text(detalle.nombreColor)
-                        ],
-                      ),
-                      trailing: Text(
-                        '${detalle.cantidad} unidades',
-                        style: TextStyle(
-                            color: detalle.cantidad == 0
-                                ? Colors.red
-                                : Colors.green[700],
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15),
-                      ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: detalle.color,
-                          border: Border.all(
-                            color: Colors.deepPurple, // Color del borde
-                            width: 2, // Grosor del borde
-                          ),
-                          borderRadius: BorderRadius.circular(12),
+              ),
+            ],
+
+            const SizedBox(width: 6),
+
+            // Información del producto
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (producVariant.codigoProductoVariante != null) ...[
+                    Row(
+                      children: [
+                        const Text('Codigo: '),
+                        Text(producVariant.codigoProductoVariante!,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ],
+                  Row(
+                    children: [
+                      const Text('Talla:   '),
+                      Text(producVariant.talla!.nombreTalla,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      const Text('Color: '),
+                      Container(
+                        width: 150,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 3,
+                          vertical: 2,
                         ),
-                        child: Icon(Icons.color_lens, color: detalle.color),
+                        decoration: BoxDecoration(
+                          color: producVariant.color!.idColor !=
+                                  colorsMap["Predeterminado"]!
+                              ? producVariant.color!.color
+                              : null,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          producVariant.color!.nombreColor,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                producVariant.color!.color.computeLuminance() <
+                                            0.5 &&
+                                        producVariant.color!.idColor !=
+                                            colorsMap["Predeterminado"]!
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                        ),
                       ),
-                    );
-                  }).toList(),
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+
+            const SizedBox(width: 4),
+
+            if (isDelete) ...[
+              // Botones de cantidad
+              SizedBox(
+                width: 30,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove),
+                      iconSize: 20,
+                      onPressed: onDecrement,
+                      color: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 0, vertical: 0),
+                      constraints: const BoxConstraints(
+                        minHeight: 30,
+                        minWidth: 30,
+                        maxHeight: 30,
+                        maxWidth: 30,
+                      ),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            WidgetStateProperty.all<Color>(Colors.black),
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                            const EdgeInsets.symmetric(vertical: 0)),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 28,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                          return ScaleTransition(
+                              scale: animation, child: child);
+                        },
+                        child: TextField(
+                          controller: quantityController,
+                          key: ValueKey(widget.producVariant.cantidad),
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 1, horizontal: 0),
+                            border: OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(width: 1, color: Colors.grey),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(4)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(width: 1, color: Colors.black),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(4)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      iconSize: 20,
+                      onPressed: onIncrement,
+                      color: Colors.white,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minHeight: 30,
+                        minWidth: 30,
+                        maxHeight: 30,
+                        maxWidth: 30,
+                      ),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            WidgetStateProperty.all<Color>(Colors.black),
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                            EdgeInsets.zero),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              Text(
+                producVariant.cantidad.toString(),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              )
+            ]
+          ],
+        ),
+      ),
     );
   }
 }

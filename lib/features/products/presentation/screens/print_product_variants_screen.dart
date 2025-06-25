@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
-import 'package:komercia_app/features/products/presentation/providers/print_products_variants_provider.dart';
+import 'package:komercia_app/features/products/presentation/providers/products_variants_selection_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_variants_provider.dart';
 import 'package:komercia_app/features/shared/infrastructure/maps/general.map.dart';
 import 'package:komercia_app/features/shared/widgets/full_screen_loader.dart';
@@ -38,7 +38,7 @@ class _PrintProductVariantsScreen
   Widget build(BuildContext context) {
     final productVariantsState =
         ref.watch(productVariantsProvider(widget.idProduct));
-    final productVariantsSelection = ref.watch(printSelectionProvider);
+    final productVariantsSelection = ref.watch(productsVariantSelectionProvider);
 
     if (productVariantsState.isLoading) {
       return const FullScreenLoader();
@@ -114,7 +114,7 @@ class _ProductVariantCard extends ConsumerWidget {
               child: Checkbox(
                 value: isSelected,
                 onChanged: (_) {
-                  ref.read(printSelectionProvider.notifier).toggleSelection(
+                  ref.read(productsVariantSelectionProvider.notifier).toggleSelection(
                       producVariant.idProducto,
                       producVariant.idProductoVariante!);
                 },
@@ -192,7 +192,7 @@ class _ProductVariantCard extends ConsumerWidget {
                       fontSize: 16)),
               onChanged: (val) {
                 final cantidad = int.tryParse(val) ?? 1;
-                ref.read(printSelectionProvider.notifier).updateCantidad(
+                ref.read(productsVariantSelectionProvider.notifier).updateCantidad(
                     producVariant.idProductoVariante!, cantidad);
               },
             ),

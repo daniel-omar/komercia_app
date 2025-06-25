@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PrintSelectionNotifier
+class ProductVariantSelectionNotifier
     extends StateNotifier<List<ProductVariantSelection>> {
-  PrintSelectionNotifier() : super([]);
+  ProductVariantSelectionNotifier() : super([]);
 
   void toggleSelection(int idProducto, int idProductoVariante) {
     final exists = state.any((e) => e.idProductoVariante == idProductoVariante);
@@ -29,9 +29,9 @@ class PrintSelectionNotifier
   void clear() => state = [];
 }
 
-final printSelectionProvider = StateNotifierProvider<PrintSelectionNotifier,
+final productsVariantSelectionProvider = StateNotifierProvider<ProductVariantSelectionNotifier,
     List<ProductVariantSelection>>(
-  (ref) => PrintSelectionNotifier(),
+  (ref) => ProductVariantSelectionNotifier(),
 );
 
 class ProductVariantSelection {

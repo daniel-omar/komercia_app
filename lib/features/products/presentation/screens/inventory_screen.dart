@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:komercia_app/features/home/presentation/providers/menu_provider.dart';
 import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
-import 'package:komercia_app/features/products/presentation/providers/print_products_variants_provider.dart';
+import 'package:komercia_app/features/products/presentation/providers/products_variants_selection_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_categories_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_variants_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_inventory_provider.dart';
@@ -130,7 +130,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final products = productsState.products ?? [];
     final purcharsePriceTotal = productsState.purcharsePriceTotal ?? 0;
 
-    final productVariantsSelection = ref.watch(printSelectionProvider);
+    final productVariantsSelection =
+        ref.watch(productsVariantSelectionProvider);
     final selectedCount = productVariantsSelection.length;
 
     ref.listen<ProductsState>(
@@ -214,7 +215,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       _isSelectionMode = !_isSelectionMode;
                       if (!_isSelectionMode) {
                         // Limpiar selección cuando salgas del modo selección
-                        ref.read(printSelectionProvider.notifier).clear();
+                        ref
+                            .read(productsVariantSelectionProvider.notifier)
+                            .clear();
                       }
                     });
                   },
@@ -289,7 +292,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                             _isSelectionMode = !_isSelectionMode;
                             if (!_isSelectionMode) {
                               // Limpiar selección cuando salgas del modo selección
-                              ref.read(printSelectionProvider.notifier).clear();
+                              ref
+                                  .read(
+                                      productsVariantSelectionProvider.notifier)
+                                  .clear();
                             }
                           });
                         },
@@ -559,7 +565,7 @@ class _ProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectionProvider = ref.watch(printSelectionProvider);
+    final selectionProvider = ref.watch(productsVariantSelectionProvider);
     final selecteds = selectionProvider.where((s) => s.idProducto == idProduct);
 
     return Card(
