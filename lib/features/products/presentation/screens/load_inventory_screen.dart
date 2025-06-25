@@ -194,7 +194,10 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
                   : () {
                       saveIncome(productsVariants);
                     },
-              child: const Text('Guardar Inventario'),
+              child: const Text(
+                'Guardar Inventario',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),

@@ -23,16 +23,79 @@ class ProductVariantsScreen extends ConsumerStatefulWidget {
 }
 
 class _ProductVariantsScreenState extends ConsumerState<ProductVariantsScreen> {
+  late final listener;
   @override
   void initState() {
     super.initState();
 
-    // Llamar getVariants cuando se monte el modal
+    listener = ref.listenManual<ProductVariantsState>(
+      productVariantsProvider(widget.idProduct),
+      (previous, next) {
+        if (!mounted) return;
+        if (next.success) {
+          Navigator.pop(context, true);
+        } else if (next.hasError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al guardar')),
+          );
+        }
+      },
+    );
+
     Future.microtask(() {
+      ref.read(productsVariantSelectionProvider.notifier).clear();
+
       ref
           .read(productVariantsProvider(widget.idProduct).notifier)
           .getVariants();
     });
+  }
+
+  @override
+  void dispose() {
+    listener.close(); // cerrar manualmente para evitar múltiples ejecuciones
+    super.dispose();
+  }
+
+  void saveOutput(
+      List<ProductVariantSelection> productVariantsSelection) async {
+    if (productVariantsSelection.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Elimnar'),
+        content: const Text('¿Está seguro de eliminar?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == false) return;
+
+    // Lógica para imprimir
+    List<ProductVariant> productsVariants = [];
+    for (var i = 0; i < productVariantsSelection.length; i++) {
+      final productVariantSelection = productVariantsSelection[i];
+      productsVariants.add(ProductVariant(
+          idProducto: productVariantSelection.idProducto,
+          idProductoVariante: productVariantSelection.idProductoVariante,
+          idTalla: 0,
+          idColor: 0,
+          cantidad: productVariantSelection.cantidad));
+    }
+
+    ref
+        .read(productVariantsProvider(widget.idProduct).notifier)
+        .saveOutput(productsVariants);
   }
 
   bool _isSelectionMode = false;
@@ -59,7 +122,7 @@ class _ProductVariantsScreenState extends ConsumerState<ProductVariantsScreen> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
               children: [
@@ -106,7 +169,20 @@ class _ProductVariantsScreenState extends ConsumerState<ProductVariantsScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 10),
+            if (_isSelectionMode) ...[
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: productVariantsSelection.isEmpty
+                    ? null
+                    : () {
+                        saveOutput(productVariantsSelection);
+                      },
+                child: const Text(
+                  'Reajustar cantidades',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ]
           ],
         ),
       ),
@@ -171,7 +247,7 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
     int currentValue() => int.tryParse(quantityController.text) ?? 0;
     void onIncrement() {
       int cantidad = currentValue() + 1;
-      if (cantidad >= producVariant.cantidad) return;
+      if (cantidad > producVariant.cantidad) return;
       quantityController.text = cantidad.toString();
       updateQuantity(cantidad);
     }
@@ -190,7 +266,8 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Colors.blueGrey, width: 1)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+        padding:
+            EdgeInsets.symmetric(horizontal: 8, vertical: (isDelete ? 0 : 8)),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -271,20 +348,29 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
                       ),
                     ],
                   ),
+                  if (isDelete) ...[
+                    Row(
+                      children: [
+                        const Text('Cantidad:   '),
+                        Text(producVariant.cantidad.toString(),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ]
                 ],
               ),
             ),
 
             const SizedBox(width: 4),
 
-            if (isDelete) ...[
-              // Botones de cantidad
-              SizedBox(
-                width: 30,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+            SizedBox(
+              width: 45,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (isDelete) ...[
                     IconButton(
                       icon: const Icon(Icons.remove),
                       iconSize: 20,
@@ -315,6 +401,7 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
                               scale: animation, child: child);
                         },
                         child: TextField(
+                          enabled: isSelected,
                           controller: quantityController,
                           key: ValueKey(widget.producVariant.cantidad),
                           textAlign: TextAlign.center,
@@ -360,16 +447,16 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
                             EdgeInsets.zero),
                       ),
                     ),
-                  ],
-                ),
+                  ] else ...[
+                    Text(
+                      producVariant.cantidad.toString(),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    )
+                  ]
+                ],
               ),
-            ] else ...[
-              Text(
-                producVariant.cantidad.toString(),
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              )
-            ]
+            ),
           ],
         ),
       ),

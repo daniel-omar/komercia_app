@@ -116,6 +116,29 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     }
   }
 
+  void onSelectProductVariants(int idProducto, String nombre) async {
+    final result = await context.pushNamed(
+      'productoVariantes',
+      pathParameters: {'id_product': idProducto.toString()},
+      extra: {'name': nombre},
+    );
+    if (result == true) {
+      // ignore: unused_result
+      ref.refresh(productsProvider(0));
+      // ignore: unused_result
+      ref.refresh(productVariantsProvider(idProducto));
+
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Guardado con éxito'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3), // Duración del SnackBar
+            behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
+
   bool _isSelectionMode = false;
 
   @override
@@ -230,16 +253,39 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _SummaryCard(
-                          title: 'Total de referencias',
-                          value: (products.length.toString())),
-                      _SummaryCard(
-                          title: 'Costo total',
-                          value: 'S/ ${purcharsePriceTotal.toString()}'),
-                    ],
+                  SingleChildScrollView(
+                    scrollDirection:
+                        Axis.horizontal, // Establece la dirección horizontal
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _SummaryCard(
+                            title: 'Productos',
+                            value: (products.length.toString())),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        _SummaryCard(
+                            title: 'Productos disponibles',
+                            value: (products
+                                .fold(
+                                    0,
+                                    (previousValue, producto) =>
+                                        previousValue +
+                                        (producto.cantidadDisponible ?? 0))
+                                .toString())),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        if (ref
+                            .read(menusProvider.notifier)
+                            .tienePermisoEdicion("/products", "Modificar")) ...[
+                          _SummaryCard(
+                              title: 'Costo total',
+                              value: 'S/ ${purcharsePriceTotal.toString()}'),
+                        ]
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Row(
@@ -253,10 +299,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   const SizedBox(height: 10),
                   if (!productsState.isLoading)
                     _ProductList(
-                      products: products,
-                      isSelectionMode: _isSelectionMode,
-                      onSelectProduct: onSelectProduct,
-                    ),
+                        products: products,
+                        isSelectionMode: _isSelectionMode,
+                        onSelectProduct: onSelectProduct,
+                        onSelectProductVariants: onSelectProductVariants),
                 ],
               ),
             ),
@@ -460,7 +506,7 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 160,
+      width: 120,
       height: 105,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -494,11 +540,13 @@ class _ProductList extends ConsumerWidget {
   List<Product> products = [];
   final bool isSelectionMode;
   final void Function(int idProduct) onSelectProduct;
+  final void Function(int idProduct, String name) onSelectProductVariants;
 
   _ProductList(
       {required this.products,
       required this.isSelectionMode,
-      required this.onSelectProduct});
+      required this.onSelectProduct,
+      required this.onSelectProductVariants});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -525,16 +573,16 @@ class _ProductList extends ConsumerWidget {
         itemBuilder: (_, i) {
           final product = products[i];
           return _ProductCard(
-            idProduct: product.idProducto,
-            name: product.nombreProducto,
-            salePrice: product.precioVenta ?? 0,
-            purcharsePrice: product.precioCompra ?? 0,
-            stock: product.cantidadDisponible ?? 0,
-            isSelectionMode: isSelectionMode,
-            isActive: product.esActivo ?? false,
-            idCategory: 0,
-            onSelectProduct: onSelectProduct,
-          );
+              idProduct: product.idProducto,
+              name: product.nombreProducto,
+              salePrice: product.precioVenta ?? 0,
+              purcharsePrice: product.precioCompra ?? 0,
+              stock: product.cantidadDisponible ?? 0,
+              isSelectionMode: isSelectionMode,
+              isActive: product.esActivo ?? false,
+              idCategory: 0,
+              onSelectProduct: onSelectProduct,
+              onSelectProductVariants: onSelectProductVariants);
         },
       ),
     );
@@ -551,6 +599,7 @@ class _ProductCard extends ConsumerWidget {
   final bool isActive;
   final int idCategory;
   final void Function(int idProduct) onSelectProduct;
+  final void Function(int idProduct, String name) onSelectProductVariants;
 
   const _ProductCard(
       {required this.name,
@@ -561,7 +610,8 @@ class _ProductCard extends ConsumerWidget {
       required this.isSelectionMode,
       required this.isActive,
       required this.idCategory,
-      required this.onSelectProduct});
+      required this.onSelectProduct,
+      required this.onSelectProductVariants});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -664,7 +714,7 @@ class _ProductCard extends ConsumerWidget {
               ],
             ],
           ),
-          onTap: () {
+          onTap: () async {
             if (isSelectionMode) {
               context.pushNamed(
                 'productoVariantesPrint',
@@ -672,11 +722,7 @@ class _ProductCard extends ConsumerWidget {
                 extra: {'name': name},
               );
             } else {
-              context.pushNamed(
-                'productoVariantes',
-                pathParameters: {'id_product': idProduct.toString()},
-                extra: {'name': name},
-              );
+              onSelectProductVariants(idProduct, name);
             }
           },
         ),

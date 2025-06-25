@@ -80,4 +80,9 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<bool> updateActive(Map<String, dynamic> data) async {
     return datasource.updateActive(data);
   }
+
+  @override
+  Future<bool> saveOutput(Map<String, dynamic> data) {
+    return datasource.saveOutput(data);
+  }
 }

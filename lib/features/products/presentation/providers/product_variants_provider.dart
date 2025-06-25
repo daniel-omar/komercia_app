@@ -116,6 +116,27 @@ class ProductsNotifier extends StateNotifier<ProductVariantsState> {
       print(e);
     }
   }
+
+  Future<void> saveOutput(List<ProductVariant> productoVariante) async {
+    try {
+      state = state.copyWith(isSaving: true, success: false);
+
+      final save = {
+        'productos_variantes': productoVariante.map((e) => e.toJson()).toList()
+      };
+      bool saveOutput = await productRepository.saveOutput(save);
+
+      state = state.copyWith(isSaving: false, success: true);
+    } catch (e) {
+      // 404 product not found
+      state = state.copyWith(
+          isSaving: false,
+          success: false,
+          hasError: true,
+          errorMessage: e.toString());
+      print(e);
+    }
+  }
 }
 
 class ProductVariantsState {

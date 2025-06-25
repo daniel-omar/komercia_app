@@ -375,4 +375,26 @@ class ProductDatasourceImpl extends ProductDatasource {
       throw Exception(e);
     }
   }
+
+  @override
+  Future<bool> saveOutput(Map<String, dynamic> data) async {
+    try {
+      final response =
+          await dioClient.dio.post('/products/product/save_output', data: data);
+      ResponseMain responseMain =
+          ResponseMainMapper.responseJsonToEntity(response.data);
+
+      return true;
+    } on DioException catch (e) {
+      if (e.response!.statusCode == 404) throw ProductNotFound();
+      if (e.response != null) {
+        ResponseMain responseError =
+            ResponseMainMapper.responseJsonToEntity(e.response!.data);
+        throw Exception(responseError.message);
+      }
+      throw Exception(e);
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
 }
