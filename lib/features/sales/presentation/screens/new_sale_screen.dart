@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:komercia_app/features/sales/domain/entities/product_variant.dart';
 import 'package:komercia_app/features/sales/presentation/providers/product_variant_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/discount_provider.dart';
 import 'package:komercia_app/features/sales/presentation/providers/payment_types_provider.dart';
@@ -26,6 +27,8 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text('Orden Actualizado')));
   }
+
+  final TextEditingController _codigoController = TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -73,8 +76,30 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      await findProductVariant(codigoProducto, context);
+      final productVariant = await findProductVariant(codigoProducto, context);
+
+      if (productVariant == null) return;
+      ref
+          .read(productsVariantsPurchaseProvider.notifier)
+          .addProductVariant(productVariant);
     });
+  }
+
+  void searchProduct() async {
+    if (_codigoController.text == "") {
+      _codigoController.text = "";
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Código inválido')),
+      );
+      return;
+    }
+    final productVariant =
+        await findProductVariant(_codigoController.text, context);
+
+    if (productVariant == null) return;
+    ref
+        .read(productsVariantsPurchaseProvider.notifier)
+        .addProductVariant(productVariant);
   }
 
   void onClear() async {
@@ -90,7 +115,7 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
     return result;
   }
 
-  Future<void> findProductVariant(
+  Future<ProductVariant?> findProductVariant(
       String codigoProducto, BuildContext context) async {
     setState(() {
       isLoading = true;
@@ -108,18 +133,24 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
         setState(() {
           isLoading = false;
         });
-        return;
+        return null;
       }
 
-      ref
-          .read(productsVariantsPurchaseProvider.notifier)
-          .addProductVariant(productVariant);
+      setState(() {
+        isLoading = false;
+      });
+
+      return productVariant;
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+      setState(() {
+        isLoading = false;
+      });
       print(e);
+      return null;
     }
-    setState(() {
-      isLoading = false;
-    });
   }
 
   void _showPaymentOptionsSheet(BuildContext _context) {
@@ -157,177 +188,215 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
   Widget build(BuildContext context) {
     // ref.read(orderProvider.notifier).loadSale(widget.idSale);
 
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Nueva Venta'),
-          backgroundColor: Colors.yellow[700],
-          foregroundColor: Colors.black,
-          actions: [
-            SizedBox(
-              child: Container(
-                margin: const EdgeInsets.all(0.0),
-                padding: const EdgeInsets.all(0.0),
-                alignment: Alignment.center,
-                child: IconButton(
-                  icon: const Icon(Icons.restore_from_trash_rounded),
-                  tooltip: 'Limpiar',
-                  onPressed: onClear,
-                ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Nueva Venta'),
+        backgroundColor: Colors.yellow[700],
+        foregroundColor: Colors.black,
+        actions: [
+          SizedBox(
+            child: Container(
+              margin: const EdgeInsets.all(0.0),
+              padding: const EdgeInsets.all(0.0),
+              alignment: Alignment.center,
+              child: IconButton(
+                icon: const Icon(Icons.restore_from_trash_rounded),
+                tooltip: 'Limpiar',
+                onPressed: onClear,
               ),
             ),
-            SizedBox(
-              child: Container(
-                margin: const EdgeInsets.all(0.0),
-                padding: const EdgeInsets.all(0.0),
-                alignment: Alignment.center,
-                child: IconButton(
-                  icon: const Icon(Icons.qr_code_scanner),
-                  tooltip: 'Escanear QR',
-                  onPressed: onScanner,
-                ),
+          ),
+          SizedBox(
+            child: Container(
+              margin: const EdgeInsets.all(0.0),
+              padding: const EdgeInsets.all(0.0),
+              alignment: Alignment.center,
+              child: IconButton(
+                icon: const Icon(Icons.qr_code_scanner),
+                tooltip: 'Escanear QR',
+                onPressed: onScanner,
               ),
             ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            const _ProductsPurcharseView(),
-            if (isLoading)
-              Container(
-                color: Colors.black.withOpacity(0.3), // fondo semitransparente
-                child: const Center(
-                  child: CircularProgressIndicator(),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          const SizedBox(
+            height: 10,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Código del Producto',
+                    // border: OutlineInputBorder(),
+                  ),
+                  controller: _codigoController,
                 ),
               ),
-          ],
-        ),
-        bottomNavigationBar: Consumer(
-          builder: (context, ref, _) {
-            final discount = ref.watch(discountProvider);
-
-            final total = ref.watch(totalSaleComputedProvider);
-            final totalFinal = ref.watch(totalFinalComputedProvider);
-
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: Colors.black12)),
+              const SizedBox(width: 20),
+              IconButton(
+                icon: const Icon(Icons.search),
+                tooltip: 'Busqueda',
+                onPressed: searchProduct,
+                style: ButtonStyle(
+                  backgroundColor:
+                      WidgetStateProperty.all<Color>(Colors.orangeAccent),
+                ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              const SizedBox(width: 10),
+            ],
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Stack(
                 children: [
+                  const _ProductsPurcharseView(),
+                  if (isLoading)
+                    Container(
+                      color: Colors.black
+                          .withOpacity(0.3), // fondo semitransparente
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          )
+        ],
+      ),
+      bottomNavigationBar: Consumer(
+        builder: (context, ref, _) {
+          final discount = ref.watch(discountProvider);
+
+          final total = ref.watch(totalSaleComputedProvider);
+          final totalFinal = ref.watch(totalFinalComputedProvider);
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: Colors.black12)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total:',
+                      style:
+                          TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "S/ ${total.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                          fontSize: 17, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                if (discount.hasDiscount) ...[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Total:',
-                        style: TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.bold),
-                      ),
+                      const Text("Descuento:",
+                          style: TextStyle(
+                              color: Colors.teal,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold)),
                       Text(
-                        "S/ ${total.toStringAsFixed(2)}",
+                        'S/ ${(total - totalFinal).toStringAsFixed(2)}',
                         style: const TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.bold),
+                            color: Colors.teal,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
-                  if (discount.hasDiscount) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("Descuento:",
-                            style: TextStyle(
-                                color: Colors.teal,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold)),
-                        Text(
-                          'S/ ${(total - totalFinal).toStringAsFixed(2)}',
-                          style: const TextStyle(
-                              color: Colors.teal,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Total final:',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 18)),
-                        Text(
-                          'S/ ${totalFinal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.black87),
-                        ),
-                      ],
-                    ),
-                  ],
-                  const Divider(),
+                  const SizedBox(height: 5),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SizedBox(
-                        width: 250,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            _showPaymentOptionsSheet(context);
-                          },
-                          icon: const Icon(
-                            Icons.payment,
+                      const Text('Total final:',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18)),
+                      Text(
+                        'S/ ${totalFinal.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                ],
+                const Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      width: 250,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          _showPaymentOptionsSheet(context);
+                        },
+                        icon: const Icon(
+                          Icons.payment,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Pagar',
+                          style: TextStyle(
                             color: Colors.white,
-                          ),
-                          label: const Text(
-                            'Pagar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            backgroundColor: Colors.blue.shade900,
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(6), // menor radio aquí
-                            ),
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (_) =>
-                                const _DiscountSelectorBottomSheet(),
-                          );
-                        },
-                        icon: const Icon(Icons.percent),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 5, vertical: 12),
-                          backgroundColor: Colors.orange.shade700,
+                              horizontal: 24, vertical: 12),
+                          backgroundColor: Colors.blue.shade900,
                           shape: RoundedRectangleBorder(
                             borderRadius:
                                 BorderRadius.circular(6), // menor radio aquí
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (_) => const _DiscountSelectorBottomSheet(),
+                        );
+                      },
+                      icon: const Icon(Icons.percent),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 12),
+                        backgroundColor: Colors.orange.shade700,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(6), // menor radio aquí
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

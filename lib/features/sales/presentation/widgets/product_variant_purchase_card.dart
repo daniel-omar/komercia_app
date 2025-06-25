@@ -75,16 +75,16 @@ class _ProductVariantPurcharseCardState
         return;
       }
 
-      String cantidad = (currentValue() + 1).toString();
-      quantityController.text = cantidad;
-      updateQuantity(int.parse(cantidad));
+      int cantidad = currentValue() + 1;
+      quantityController.text = cantidad.toString();
+      updateQuantity(cantidad);
     }
 
     void onDecrement() {
-      if (currentValue() > 0) {
-        String cantidad = (currentValue() - 1).toString();
-        quantityController.text = cantidad;
-        updateQuantity(int.parse(cantidad));
+      int cantidad = currentValue() - 1;
+      if (cantidad > 0) {
+        quantityController.text = cantidad.toString();
+        updateQuantity(cantidad);
       }
     }
 
@@ -100,7 +100,7 @@ class _ProductVariantPurcharseCardState
     }
 
     const TextStyle styleField =
-        TextStyle(fontSize: 18, fontWeight: FontWeight.bold);
+        TextStyle(fontSize: 17, fontWeight: FontWeight.bold);
 
     final showErrors = ref.watch(showProductPurchaseValidationErrorsProvider);
     final isInvalid = (widget.state.precioVenta == 0);
@@ -149,7 +149,7 @@ class _ProductVariantPurcharseCardState
                       color: Colors.white, // color del ícono
                       style: ButtonStyle(
                         backgroundColor:
-                            WidgetStateProperty.all<Color>(Colors.black),
+                            WidgetStateProperty.all<Color>(Colors.red),
                         padding: WidgetStateProperty.all<EdgeInsets>(
                             const EdgeInsets.all(8)),
                         shape: WidgetStateProperty.all(
@@ -162,6 +162,20 @@ class _ProductVariantPurcharseCardState
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // const Text('Codigo: '),
+                              SelectableText(
+                                widget.productVariant.codigoProductoVariante ??
+                                    "",
+                                style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blueGrey),
+                              ),
+                            ],
+                          ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -196,7 +210,7 @@ class _ProductVariantPurcharseCardState
                                 ),
                               ),
                               const Text(
-                                "//",
+                                "::",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,

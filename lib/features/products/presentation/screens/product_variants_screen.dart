@@ -280,12 +280,14 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
                       1.75, // aumenta o reduce el tamaño (1.0 es el tamaño por defecto)
                   child: Checkbox(
                     value: isSelected,
-                    onChanged: (_) {
-                      ref
-                          .read(productsVariantSelectionProvider.notifier)
-                          .toggleSelection(producVariant.idProducto,
-                              producVariant.idProductoVariante!);
-                    },
+                    onChanged: producVariant.cantidad > 0
+                        ? (_) {
+                            ref
+                                .read(productsVariantSelectionProvider.notifier)
+                                .toggleSelection(producVariant.idProducto,
+                                    producVariant.idProductoVariante!);
+                          }
+                        : null,
                   ),
                 ),
               ),
@@ -302,9 +304,10 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
                     Row(
                       children: [
                         const Text('Codigo: '),
-                        Text(producVariant.codigoProductoVariante!,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
+                        SelectableText(
+                          producVariant.codigoProductoVariante!,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ],

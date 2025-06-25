@@ -35,15 +35,57 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
     return result;
   }
 
+  void searchProduct() async {
+    if (_codigoController.text == "") {
+      _codigoController.text = "";
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Código inválido')),
+      );
+      return;
+    }
+    final productVariant =
+        await findProductVariant(_codigoController.text, context);
+
+    if (productVariant == null) return;
+    ref
+        .read(productsInventoryProvider.notifier)
+        .addProductVariant(productVariant, 1);
+  }
+
   Future<ProductVariant?> findProductVariant(
       String codigoProductoVariante, BuildContext context) async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       final productVariant = await ref
           .read(productVariantProvider.notifier)
           .findProductVariant(codigoProductoVariante);
 
+      if (productVariant == null) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Producto no se encuentra en inventario.')),
+        );
+        setState(() {
+          isLoading = false;
+        });
+        return null;
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+
       return productVariant;
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+      setState(() {
+        isLoading = false;
+      });
       print(e);
       return null;
     }
@@ -57,30 +99,14 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
       );
       return;
     }
-    setState(() {
-      isLoading = true;
-    });
+
     final productVariant =
         await findProductVariant(_codigoController.text, context);
 
-    if (productVariant == null) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Producto no existe o está inactivo.')),
-      );
-      setState(() {
-        isLoading = false;
-      });
-      return null;
-    }
-
+    if (productVariant == null) return;
     ref
         .read(productsInventoryProvider.notifier)
         .addProductVariant(productVariant, 1);
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   void saveIncome(List<ProductVariant> productsVariants) async {
@@ -140,7 +166,25 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
     final productsVariants = ref.watch(productsInventoryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Carga de Inventario')),
+      appBar: AppBar(
+        title: const Text('Carga de Inventario'),
+        backgroundColor: Colors.yellow[700],
+        foregroundColor: Colors.black,
+        actions: [
+          SizedBox(
+            child: Container(
+              margin: const EdgeInsets.all(0.0),
+              padding: const EdgeInsets.all(0.0),
+              alignment: Alignment.center,
+              child: IconButton(
+                icon: const Icon(Icons.qr_code_scanner),
+                tooltip: 'Escanear QR',
+                onPressed: onScanner,
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -160,22 +204,22 @@ class _LoadInventoryScreenState extends ConsumerState<LoadInventoryScreen> {
                 ),
                 const SizedBox(width: 20),
                 IconButton(
-                  icon: const Icon(Icons.qr_code_scanner),
-                  tooltip: 'Escanear QR',
-                  onPressed: onScanner,
+                  icon: const Icon(Icons.search),
+                  tooltip: 'Busqueda',
+                  onPressed: searchProduct,
                   style: ButtonStyle(
                     backgroundColor:
                         WidgetStateProperty.all<Color>(Colors.orangeAccent),
                   ),
-                )
+                ),
               ],
             ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: addProduct,
-              child: const Text('Agregar'),
-            ),
-            const SizedBox(height: 20),
+            // const SizedBox(height: 8),
+            // ElevatedButton(
+            //   onPressed: addProduct,
+            //   child: const Text('Agregar'),
+            // ),
+            const SizedBox(height: 15),
             Expanded(
               child: ListView.builder(
                 itemCount: productsVariants.length,
@@ -300,13 +344,15 @@ class __ProductVariantCardState extends ConsumerState<ProductPurcharseCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
-                    const Text('Producto: '),
-                    Text(widget.producVariant.nombreProducto ?? "",
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Codigo: '),
+                    SelectableText(
+                      widget.producVariant.codigoProductoVariante ?? "",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ]),
                   Row(children: [
-                    const Text('Codigo: '),
-                    Text(widget.producVariant.codigoProductoVariante ?? "",
+                    const Text('Producto: '),
+                    Text(widget.producVariant.nombreProducto ?? "",
                         style: const TextStyle(fontWeight: FontWeight.bold)),
                   ]),
                   Row(children: [

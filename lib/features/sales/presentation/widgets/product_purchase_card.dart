@@ -39,8 +39,8 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
     priceController =
         TextEditingController(text: widget.state.precioVenta.toString());
 
-    final sizeNA =
-        widget.productSizes.firstWhereOrNull((x) => x.idTalla == sizesMap["PDT"]);
+    final sizeNA = widget.productSizes
+        .firstWhereOrNull((x) => x.idTalla == sizesMap["PDT"]);
 
     Future.microtask(() async {
       if (sizeNA != null) {
@@ -141,16 +141,16 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
         return;
       }
 
-      String cantidad = (currentValue() + 1).toString();
-      quantityController.text = cantidad;
-      updateQuantity(int.parse(cantidad));
+      int cantidad = currentValue() + 1;
+      quantityController.text = cantidad.toString();
+      updateQuantity(cantidad);
     }
 
     void onDecrement() {
-      if (currentValue() > 0) {
-        String cantidad = (currentValue() - 1).toString();
-        quantityController.text = cantidad;
-        updateQuantity(int.parse(cantidad));
+      int cantidad = currentValue() - 1;
+      if (cantidad > 0) {
+        quantityController.text = cantidad.toString();
+        updateQuantity(cantidad);
       }
     }
 
