@@ -15,8 +15,10 @@ class ProductRepositoryImpl extends ProductRepository {
   }
 
   @override
-  Future<List<Product>> getByFilters({List<int>? idsCategoriaProducto}) {
-    return datasource.getByFilters(idsCategoriaProducto: idsCategoriaProducto);
+  Future<List<Product>> getByFilters(
+      {List<int>? idsCategoriaProducto, bool? esActivo}) {
+    return datasource.getByFilters(
+        idsCategoriaProducto: idsCategoriaProducto, esActivo: esActivo);
   }
 
   @override

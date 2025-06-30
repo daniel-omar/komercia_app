@@ -5,7 +5,7 @@ import 'package:komercia_app/features/products/domain/entities/product_variant.d
 import 'package:komercia_app/features/products/domain/entities/product_variant_size.dart';
 
 abstract class ProductDatasource {
-  Future<List<Product>> getByFilters({List<int>? idsCategoriaProducto});
+  Future<List<Product>> getByFilters({List<int>? idsCategoriaProducto, bool? esActivo});
   Future<Product> getById(int idProducto);
   Future<Product> find({int? idProducto, String? codigoProducto});
   Future<List<ProductVariant>> getVariants(int idProducto);

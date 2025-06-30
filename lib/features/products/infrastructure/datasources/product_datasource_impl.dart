@@ -40,7 +40,8 @@ class ProductDatasourceImpl extends ProductDatasource {
   }
 
   @override
-  Future<List<Product>> getByFilters({List<int>? idsCategoriaProducto}) async {
+  Future<List<Product>> getByFilters(
+      {List<int>? idsCategoriaProducto, bool? esActivo}) async {
     // Map<String, dynamic> body = {};
     // if (idsCategoriaProducto != null) {
     //   body["ids_categoria"] = idsCategoriaProducto;
@@ -49,6 +50,9 @@ class ProductDatasourceImpl extends ProductDatasource {
     if (idsCategoriaProducto != null && idsCategoriaProducto.isNotEmpty) {
       paramsList.add(
           {'key': 'ids_categoria', 'value': idsCategoriaProducto.join(',')});
+    }
+    if (esActivo != null) {
+      paramsList.add({'key': 'es_activo', 'value': esActivo.toString()});
     }
     String queryString = paramsList
         .map((param) =>

@@ -140,6 +140,15 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   }
 
   bool _isSelectionMode = false;
+  bool _isActive = true;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -148,9 +157,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     if (selectedCategory == null) {
       return const FullScreenLoader(); // o un Container si prefieres algo vacío
     }
-    final selectedId = selectedCategory.idCategoria;
-    final productsState = ref.watch(productsProvider(selectedId));
+    final selectedCategoryId = selectedCategory.idCategoria;
+    final productsState = ref.watch(productsProvider(selectedCategoryId));
     final products = productsState.products ?? [];
+    final filteredProducts = products.where((product) {
+      if (_searchQuery.isEmpty) return true;
+      return product.nombreProducto.toLowerCase().contains(_searchQuery);
+    }).toList();
     final purcharsePriceTotal = productsState.purcharsePriceTotal ?? 0;
 
     final productVariantsSelection =
@@ -158,7 +171,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final selectedCount = productVariantsSelection.length;
 
     ref.listen<ProductsState>(
-      productsProvider(selectedId),
+      productsProvider(selectedCategoryId),
       (previous, next) {
         if (!mounted) return;
         if (next.success) {
@@ -177,7 +190,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         if (next.success) {
           // Navigator.pop(context); // bottomsheet
           // ignore: unused_result
-          ref.refresh(productsProvider(selectedId));
+          ref.refresh(productsProvider(selectedCategoryId));
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Productos registrados'),
@@ -195,59 +208,59 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
 
     return !productCategoriesState.isLoading
         ? Scaffold(
-            appBar: AppBar(
-              actions: [
-                const SizedBox(width: 20),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.save),
-                  label: const Text(
-                    'Inventariar',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
-                  onPressed: () async {
-                    final result = await context.push("/load_inventory");
-                    if (result == true) {
-                      ref.read(productsInventoryProvider.notifier).clear();
-                      // ignore: unused_result
-                      ref.refresh(productsProvider(selectedId));
-                      // ignore: unused_result
-                      ref.refresh(productVariantsProvider(0));
+            // appBar: AppBar(
+            //   actions: [
+            //     // const SizedBox(width: 20),
+            //     // ElevatedButton.icon(
+            //     //   icon: const Icon(Icons.save),
+            //     //   label: const Text(
+            //     //     'Inventariar',
+            //     //     style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            //     //   ),
+            //     //   onPressed: () async {
+            //     //     final result = await context.push("/load_inventory");
+            //     //     if (result == true) {
+            //     //       ref.read(productsInventoryProvider.notifier).clear();
+            //     //       // ignore: unused_result
+            //     //       ref.refresh(productsProvider(selectedId));
+            //     //       // ignore: unused_result
+            //     //       ref.refresh(productVariantsProvider(0));
 
-                      // ignore: use_build_context_synchronously
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Guardado con éxito'),
-                            backgroundColor: Colors.green,
-                            duration:
-                                Duration(seconds: 3), // Duración del SnackBar
-                            behavior: SnackBarBehavior.floating),
-                      );
-                    }
-                  },
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: Icon(
-                    _isSelectionMode ? Icons.close : Icons.print,
-                    size: 30,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isSelectionMode = !_isSelectionMode;
-                      if (!_isSelectionMode) {
-                        // Limpiar selección cuando salgas del modo selección
-                        ref
-                            .read(productsVariantSelectionProvider.notifier)
-                            .clear();
-                      }
-                    });
-                  },
-                ),
-                const SizedBox(width: 20),
-              ],
-            ),
+            //     //       // ignore: use_build_context_synchronously
+            //     //       ScaffoldMessenger.of(context).showSnackBar(
+            //     //         const SnackBar(
+            //     //             content: Text('Guardado con éxito'),
+            //     //             backgroundColor: Colors.green,
+            //     //             duration:
+            //     //                 Duration(seconds: 3), // Duración del SnackBar
+            //     //             behavior: SnackBarBehavior.floating),
+            //     //       );
+            //     //     }
+            //     //   },
+            //     //   style:
+            //     //       ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+            //     // ),
+            //     const Spacer(),
+            //     IconButton(
+            //       icon: Icon(
+            //         _isSelectionMode ? Icons.close : Icons.print,
+            //         size: 30,
+            //       ),
+            //       onPressed: () {
+            //         setState(() {
+            //           _isSelectionMode = !_isSelectionMode;
+            //           if (!_isSelectionMode) {
+            //             // Limpiar selección cuando salgas del modo selección
+            //             ref
+            //                 .read(productsVariantSelectionProvider.notifier)
+            //                 .clear();
+            //           }
+            //         });
+            //       },
+            //     ),
+            //     const SizedBox(width: 20),
+            //   ],
+            // ),
             body: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
               child: Column(
@@ -287,7 +300,57 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const SizedBox(
+                        width: 5,
+                      ),
+                      Expanded(
+                        child: Row(children: [
+                          ChoiceChip(
+                            label: const Text("Activos"),
+                            selected: _isActive,
+                            onSelected: (_) {
+                              setState(() {
+                                _isActive = !_isActive;
+                              });
+                              ref
+                                  .read(productsProvider(selectedCategoryId)
+                                      .notifier)
+                                  .updateActive(_isActive);
+                              ref
+                                  .watch(productsProvider(selectedCategoryId)
+                                      .notifier)
+                                  .getByFilters(selectedCategoryId);
+                            },
+                            selectedColor: Colors.green.shade300,
+                          ),
+                          const SizedBox(
+                            width: 6,
+                          ),
+                          ChoiceChip(
+                            label: const Text("Inactivos"),
+                            selected: !_isActive,
+                            onSelected: (_) {
+                              setState(() {
+                                _isActive = !_isActive;
+                              });
+                              ref
+                                  .read(productsProvider(selectedCategoryId)
+                                      .notifier)
+                                  .updateActive(_isActive);
+                              ref
+                                  .watch(productsProvider(selectedCategoryId)
+                                      .notifier)
+                                  .getByFilters(selectedCategoryId);
+                            },
+                            selectedColor: Colors.red.shade300,
+                          )
+                        ]), // Ocupa todo el espacio disponible
+                      ),
+                    ],
+                  ),
                   Row(
                     children: [
                       Expanded(
@@ -296,10 +359,54 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: SizedBox(
+                          width: 280,
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value.toLowerCase().trim();
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Buscar producto por nombre...',
+                              prefixIcon: const Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: Icon(
+                          _isSelectionMode ? Icons.close : Icons.print,
+                          size: 30,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isSelectionMode = !_isSelectionMode;
+                            if (!_isSelectionMode) {
+                              // Limpiar selección cuando salgas del modo selección
+                              ref
+                                  .read(
+                                      productsVariantSelectionProvider.notifier)
+                                  .clear();
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
                   if (!productsState.isLoading)
                     _ProductList(
-                        products: products,
+                        products: filteredProducts,
                         isSelectionMode: _isSelectionMode,
                         onSelectProduct: onSelectProduct,
                         onSelectProductVariants: onSelectProductVariants),
@@ -331,7 +438,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                           }
 
                           await ref
-                              .read(productsProvider(selectedId).notifier)
+                              .read(
+                                  productsProvider(selectedCategoryId).notifier)
                               .downloadTags(productsVariants);
 
                           setState(() {
@@ -470,9 +578,9 @@ class _ProductCategorySelectorState
       child: ListView.separated(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         itemCount: productCategoriesState.productCategories!.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, __) => const SizedBox(width: 5),
         itemBuilder: (_, index) {
           final productCategory =
               productCategoriesState.productCategories![index];
@@ -554,15 +662,17 @@ class _ProductList extends ConsumerWidget {
 
     if (products.isEmpty) {
       return const Expanded(
-        child: Column(
-          children: [
-            Icon(
-              Icons.image_search_rounded,
-              size: 100,
-            ),
-            SizedBox(height: 12),
-            Text('No tienes registros creados en esta fecha.')
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Icon(
+                Icons.image_search_rounded,
+                size: 100,
+              ),
+              SizedBox(height: 12),
+              Text('No tienes registros creados en esta fecha.')
+            ],
+          ),
         ),
       );
     }
@@ -643,8 +753,10 @@ class _ProductCard extends ConsumerWidget {
               )
             : null,
         child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
           leading: Container(
-            width: 35,
+            width: 25,
             height: 48,
             decoration: BoxDecoration(
               // color: Colors.purple[100],
@@ -684,35 +796,41 @@ class _ProductCard extends ConsumerWidget {
               ),
             ],
           ),
-          trailing: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                isSelectionMode ? '${selecteds.length}' : '$stock',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: stock < 0 ? Colors.red : Colors.black,
-                    fontSize: 12),
-              ),
-              if (isSelectionMode) ...[
+          trailing: SizedBox(
+            width: 85,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 Text(
-                  'Items seleccionados',
+                  isSelectionMode ? '${selecteds.length}' : '$stock',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: stock < 0 ? Colors.red : Colors.black,
                       fontSize: 12),
-                )
-              ] else ...[
-                Text(
-                  'Disponibles',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: stock < 0 ? Colors.red : Colors.black,
-                      fontSize: 12),
-                )
+                ),
+                if (isSelectionMode) ...[
+                  Text(
+                    'Items seleccionados',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: stock < 0 ? Colors.red : Colors.black,
+                        fontSize: 12),
+                  )
+                ] else ...[
+                  Text(
+                    'Disponibles',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: stock < 0 ? Colors.red : Colors.black,
+                        fontSize: 12),
+                  )
+                ],
               ],
-            ],
+            ),
           ),
           onTap: () async {
             if (isSelectionMode) {

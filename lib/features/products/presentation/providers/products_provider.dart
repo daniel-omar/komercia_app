@@ -3,9 +3,8 @@ import 'package:komercia_app/features/products/domain/domain.dart';
 import 'package:komercia_app/features/products/domain/entities/product_variant.dart';
 import 'package:komercia_app/features/products/presentation/providers/product_repository_provider.dart';
 
-final productsProvider = StateNotifierProvider.family
-    .autoDispose<ProductsNotifier, ProductsState, int>(
-        (ref, idProductCategory) {
+final productsProvider = StateNotifierProvider.autoDispose
+    .family<ProductsNotifier, ProductsState, int>((ref, idProductCategory) {
   final productRepository = ref.watch(productRepositoryProvider);
 
   return ProductsNotifier(
@@ -16,20 +15,23 @@ final productsProvider = StateNotifierProvider.family
 class ProductsNotifier extends StateNotifier<ProductsState> {
   final ProductRepository productRepository;
 
-  ProductsNotifier({
-    required this.productRepository,
-    required int idProductCategory,
-  }) : super(ProductsState()) {
-    getByIdCategory(idProductCategory);
+  ProductsNotifier(
+      {required this.productRepository, required int idProductCategory})
+      : super(ProductsState()) {
+    getByFilters(idProductCategory);
   }
 
-  Future<void> getByIdCategory(int idProductCategory) async {
+  void updateActive(bool esActivo) {
+    state = state.copyWith(esActivo: esActivo);
+  }
+
+  Future<void> getByFilters(int idProductCategory) async {
     try {
       state = state.copyWith(isLoading: true);
       List<int> idsCategoriaProducto = [];
       if (idProductCategory > 0) idsCategoriaProducto = [idProductCategory];
       List<Product> products = await productRepository.getByFilters(
-          idsCategoriaProducto: idsCategoriaProducto);
+          idsCategoriaProducto: idsCategoriaProducto, esActivo: state.esActivo);
 
       double purcharsePriceTotal = products.fold<double>(
         0,
@@ -87,6 +89,7 @@ class ProductsState {
   final bool hasError;
   final String? errorMessage;
   final bool success;
+  final bool esActivo;
 
   ProductsState(
       {this.isLoading = true,
@@ -96,7 +99,8 @@ class ProductsState {
       this.salePriceTotal = 0,
       this.hasError = false,
       this.success = false,
-      this.errorMessage});
+      this.errorMessage,
+      this.esActivo = true});
 
   ProductsState copyWith(
           {bool? isLoading,
@@ -106,7 +110,8 @@ class ProductsState {
           double? salePriceTotal,
           bool? hasError,
           String? errorMessage,
-          bool? success}) =>
+          bool? success,
+          bool? esActivo}) =>
       ProductsState(
           isLoading: isLoading ?? this.isLoading,
           isSaving: isSaving ?? this.isSaving,
@@ -115,5 +120,6 @@ class ProductsState {
           salePriceTotal: salePriceTotal ?? this.salePriceTotal,
           hasError: hasError ?? this.hasError,
           errorMessage: errorMessage ?? this.errorMessage,
-          success: success ?? this.success);
+          success: success ?? this.success,
+          esActivo: esActivo ?? this.esActivo);
 }
