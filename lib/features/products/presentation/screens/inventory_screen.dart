@@ -442,6 +442,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                   productsProvider(selectedCategoryId).notifier)
                               .downloadTags(productsVariants);
 
+                          await ref
+                              .read(
+                                  productsProvider(selectedCategoryId).notifier)
+                              .getByFilters(selectedCategoryId);
+
                           setState(() {
                             _isSelectionMode = !_isSelectionMode;
                             if (!_isSelectionMode) {
