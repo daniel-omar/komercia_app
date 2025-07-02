@@ -38,7 +38,8 @@ class _PrintProductVariantsScreen
   Widget build(BuildContext context) {
     final productVariantsState =
         ref.watch(productVariantsProvider(widget.idProduct));
-    final productVariantsSelection = ref.watch(productsVariantSelectionProvider);
+    final productVariantsSelection =
+        ref.watch(productsVariantSelectionProvider);
 
     if (productVariantsState.isLoading) {
       return const FullScreenLoader();
@@ -65,6 +66,7 @@ class _PrintProductVariantsScreen
                 itemCount: productVariants.length,
                 itemBuilder: (_, i) {
                   final producVariant = productVariants[i];
+                  producVariant.nombreProducto = widget.name;
                   final producVariantSelection =
                       productVariantsSelection.firstWhereOrNull((s) =>
                           s.idProductoVariante ==
@@ -114,9 +116,10 @@ class _ProductVariantCard extends ConsumerWidget {
               child: Checkbox(
                 value: isSelected,
                 onChanged: (_) {
-                  ref.read(productsVariantSelectionProvider.notifier).toggleSelection(
-                      producVariant.idProducto,
-                      producVariant.idProductoVariante!);
+                  ref
+                      .read(productsVariantSelectionProvider.notifier)
+                      .toggleSelection(producVariant.idProducto,
+                          producVariant.idProductoVariante!, producVariant);
                 },
               ),
             ),
@@ -192,8 +195,10 @@ class _ProductVariantCard extends ConsumerWidget {
                       fontSize: 16)),
               onChanged: (val) {
                 final cantidad = int.tryParse(val) ?? 1;
-                ref.read(productsVariantSelectionProvider.notifier).updateCantidad(
-                    producVariant.idProductoVariante!, cantidad);
+                ref
+                    .read(productsVariantSelectionProvider.notifier)
+                    .updateCantidad(
+                        producVariant.idProductoVariante!, cantidad);
               },
             ),
           ),

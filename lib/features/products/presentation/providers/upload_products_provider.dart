@@ -21,12 +21,10 @@ class UploadProductNotifier extends StateNotifier<UploadProductState> {
     try {
       state = UploadProductState(isLoading: true, success: false);
       await productRepository.saveBulk(file);
-      state = state.copyWith(isLoading: true, success: true);
+      state = state.copyWith(isLoading: false, success: true);
     } catch (e) {
       state = state.copyWith(
-          isLoading: true,
-          success: false,
-          errorMessage: e.toString());
+          isLoading: false, success: false, errorMessage: e.toString());
     }
   }
 
@@ -35,7 +33,7 @@ class UploadProductNotifier extends StateNotifier<UploadProductState> {
       await productRepository.downloadTemplateProducts();
     } catch (e) {
       state = state.copyWith(
-          isLoading: true, success: false, errorMessage: "Error al descargar");
+          isLoading: false, success: false, errorMessage: "Error al descargar");
     }
   }
 }
@@ -46,7 +44,7 @@ class UploadProductState {
   final String errorMessage;
 
   UploadProductState(
-      {this.isLoading = true, this.success = false, this.errorMessage = ''});
+      {this.isLoading = false, this.success = false, this.errorMessage = ''});
 
   UploadProductState copyWith(
           {bool? isLoading, bool? success, String? errorMessage}) =>

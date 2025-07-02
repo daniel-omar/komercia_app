@@ -125,12 +125,24 @@ class _ProductVariantsScreenState extends ConsumerState<ProductVariantsScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(widget.nameProduct.toUpperCase(),
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                // Text(widget.nameProduct.toUpperCase(),
+                //     style: const TextStyle(fontWeight: FontWeight.bold)),
                 const Spacer(),
-                IconButton(
-                  tooltip: "Eliminar materiales",
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                  ),
+                  label: Text(
+                    _isSelectionMode ? "Cancelar ajuste" : "Ajustar cantidad",
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                  ),
                   icon: Icon(
                     _isSelectionMode ? Icons.close : Icons.delete_outline,
                     size: 30,
@@ -284,8 +296,10 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
                         ? (_) {
                             ref
                                 .read(productsVariantSelectionProvider.notifier)
-                                .toggleSelection(producVariant.idProducto,
-                                    producVariant.idProductoVariante!);
+                                .toggleSelection(
+                                    producVariant.idProducto,
+                                    producVariant.idProductoVariante!,
+                                    producVariant);
                           }
                         : null,
                   ),

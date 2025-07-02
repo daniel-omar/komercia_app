@@ -15,6 +15,7 @@ import 'package:komercia_app/features/products/presentation/providers/product_va
 import 'package:komercia_app/features/products/presentation/providers/products_inventory_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/upload_products_provider.dart';
+import 'package:komercia_app/features/shared/infrastructure/maps/general.map.dart';
 import 'package:komercia_app/features/shared/widgets/full_screen_loader.dart';
 
 import 'package:permission_handler/permission_handler.dart';
@@ -150,6 +151,16 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     super.dispose();
   }
 
+  void onViewproductsVariantSelection() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+      ),
+      builder: (_) => const ViewProductsVariantSelectionSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final productCategoriesState = ref.watch(productCategoriesProvider);
@@ -205,6 +216,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         }
       },
     );
+
+    final uploadProductsState = ref.watch(uploadProductsProvider);
 
     return !productCategoriesState.isLoading
         ? Scaffold(
@@ -413,52 +426,79 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                 ],
               ),
             ),
-            bottomNavigationBar: _isSelectionMode && selectedCount > 0
+            bottomNavigationBar: _isSelectionMode
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.print),
-                        label: Text('Generar etiquetas ($selectedCount)'),
-                        onPressed: () async {
-                          // Lógica para imprimir
-                          List<ProductVariant> productsVariants = [];
-                          for (var i = 0;
-                              i < productVariantsSelection.length;
-                              i++) {
-                            final productVariantSelection =
-                                productVariantsSelection[i];
-                            productsVariants.add(ProductVariant(
-                                idProducto: productVariantSelection.idProducto,
-                                idProductoVariante:
-                                    productVariantSelection.idProductoVariante,
-                                idTalla: 0,
-                                idColor: 0,
-                                cantidad: productVariantSelection.cantidad));
-                          }
+                      if (selectedCount > 0) ...[
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 6),
+                          ),
+                          icon: const Icon(
+                            Icons.print,
+                            size: 30,
+                          ),
+                          label: Text('Generar etiquetas ($selectedCount)'),
+                          onPressed: productsState.isLoading
+                              ? null
+                              : () async {
+                                  // Lógica para imprimir
+                                  List<ProductVariant> productsVariants = [];
+                                  for (var i = 0;
+                                      i < productVariantsSelection.length;
+                                      i++) {
+                                    final productVariantSelection =
+                                        productVariantsSelection[i];
+                                    productsVariants.add(ProductVariant(
+                                        idProducto:
+                                            productVariantSelection.idProducto,
+                                        idProductoVariante:
+                                            productVariantSelection
+                                                .idProductoVariante,
+                                        idTalla: 0,
+                                        idColor: 0,
+                                        cantidad:
+                                            productVariantSelection.cantidad));
+                                  }
 
-                          await ref
-                              .read(
-                                  productsProvider(selectedCategoryId).notifier)
-                              .downloadTags(productsVariants);
+                                  await ref
+                                      .read(productsProvider(selectedCategoryId)
+                                          .notifier)
+                                      .downloadTags(productsVariants);
 
-                          await ref
-                              .read(
-                                  productsProvider(selectedCategoryId).notifier)
-                              .getByFilters(selectedCategoryId);
+                                  await ref
+                                      .read(productsProvider(selectedCategoryId)
+                                          .notifier)
+                                      .getByFilters(selectedCategoryId);
 
-                          setState(() {
-                            _isSelectionMode = !_isSelectionMode;
-                            if (!_isSelectionMode) {
-                              // Limpiar selección cuando salgas del modo selección
-                              ref
-                                  .read(
-                                      productsVariantSelectionProvider.notifier)
-                                  .clear();
-                            }
-                          });
-                        },
-                      )
+                                  setState(
+                                    () {
+                                      _isSelectionMode = !_isSelectionMode;
+                                      if (!_isSelectionMode) {
+                                        // Limpiar selección cuando salgas del modo selección
+                                        ref
+                                            .read(
+                                                productsVariantSelectionProvider
+                                                    .notifier)
+                                            .clear();
+                                      }
+                                    },
+                                  );
+                                },
+                        ),
+                        ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 6),
+                            ),
+                            icon: null,
+                            label: const Text('Visualizar seleccionados'),
+                            onPressed: () {
+                              onViewproductsVariantSelection();
+                            }),
+                      ]
                     ],
                   )
                 : (ref
@@ -485,9 +525,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                             },
                           ),
                           ElevatedButton.icon(
-                            onPressed: () {
-                              uploadFileProducts();
-                            },
+                            onPressed: uploadProductsState.isLoading
+                                ? null
+                                : () {
+                                    uploadFileProducts();
+                                  },
                             icon: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: const BoxDecoration(
@@ -675,7 +717,7 @@ class _ProductList extends ConsumerWidget {
                 size: 100,
               ),
               SizedBox(height: 12),
-              Text('No tienes registros creados en esta fecha.')
+              Text('No tienes registros creados.')
             ],
           ),
         ),
@@ -848,6 +890,231 @@ class _ProductCard extends ConsumerWidget {
               onSelectProductVariants(idProduct, name);
             }
           },
+        ),
+      ),
+    );
+  }
+}
+
+class ViewProductsVariantSelectionSheet extends ConsumerStatefulWidget {
+  const ViewProductsVariantSelectionSheet({super.key});
+
+  @override
+  ConsumerState<ViewProductsVariantSelectionSheet> createState() =>
+      _ViewProductsVariantSelectionSheetState();
+}
+
+class _ViewProductsVariantSelectionSheetState
+    extends ConsumerState<ViewProductsVariantSelectionSheet> {
+  @override
+  Widget build(BuildContext context) {
+    final productVariantsSelection =
+        ref.watch(productsVariantSelectionProvider);
+
+    return FractionallySizedBox(
+      widthFactor: 1.0,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 25,
+          bottom: MediaQuery.of(context).viewInsets.bottom +
+              20, // <-- clave para mover con teclado
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: ListView.builder(
+                itemCount: productVariantsSelection.length,
+                itemBuilder: (_, i) {
+                  final producVariantSelection = productVariantsSelection[i];
+
+                  return _ProductVariantCard(
+                      producVariantSelection: producVariantSelection);
+                },
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductVariantCard extends ConsumerStatefulWidget {
+  final ProductVariantSelection producVariantSelection;
+
+  const _ProductVariantCard({super.key, required this.producVariantSelection});
+
+  @override
+  ConsumerState<_ProductVariantCard> createState() =>
+      _ProductVariantCardState();
+}
+
+class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
+  late final TextEditingController quantityController;
+
+  @override
+  void initState() {
+    quantityController = TextEditingController(
+      text: widget.producVariantSelection.cantidad.toString(),
+    );
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    quantityController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final producVariantSelection = widget.producVariantSelection;
+    final producVariant = producVariantSelection.productVariant;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Colors.blueGrey, width: 1)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(width: 5),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              tooltip: 'Eliminar',
+              onPressed: () async {
+                ref
+                    .read(productsVariantSelectionProvider.notifier)
+                    .remove(producVariantSelection.idProductoVariante);
+              },
+              color: Colors.white, // color del ícono
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.all<Color>(Colors.red),
+                padding: WidgetStateProperty.all<EdgeInsets>(
+                    const EdgeInsets.all(8)),
+                shape: WidgetStateProperty.all(
+                  RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 5),
+            // Información del producto
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (producVariant.codigoProductoVariante != null) ...[
+                    Row(
+                      children: [
+                        const Text('Codigo: '),
+                        SelectableText(
+                          producVariant.codigoProductoVariante!,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Text('Nombre: '),
+                        SelectableText(
+                          producVariant.nombreProducto!,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          producVariant.talla!.codigoTalla,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      const Text(
+                        "::",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: producVariant.color!.idColor !=
+                                  colorsMap["Predeterminado"]!
+                              ? producVariant.color!.color
+                              : null,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          producVariant.color!.codigoColor,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color:
+                                producVariant.color!.color.computeLuminance() <
+                                            0.5 &&
+                                        producVariant.color!.idColor !=
+                                            colorsMap["Predeterminado"]!
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 4),
+
+            SizedBox(
+              width: 45,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    producVariantSelection.cantidad.toString(),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
+                  )
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

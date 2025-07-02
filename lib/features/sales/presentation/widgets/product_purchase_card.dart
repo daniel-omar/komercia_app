@@ -218,7 +218,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
                         color: Colors.white, // color del ícono
                         style: ButtonStyle(
                           backgroundColor:
-                              WidgetStateProperty.all<Color>(Colors.black),
+                              WidgetStateProperty.all<Color>(Colors.red),
                           padding: WidgetStateProperty.all<EdgeInsets>(
                               const EdgeInsets.all(8)),
                           shape: WidgetStateProperty.all(
