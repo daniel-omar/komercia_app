@@ -184,6 +184,11 @@ class _ProductVariantsScreenState extends ConsumerState<ProductVariantsScreen> {
             if (_isSelectionMode) ...[
               const SizedBox(height: 10),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                ),
                 onPressed: productVariantsSelection.isEmpty
                     ? null
                     : () {
@@ -191,7 +196,10 @@ class _ProductVariantsScreenState extends ConsumerState<ProductVariantsScreen> {
                       },
                 child: const Text(
                   'Reajustar cantidades',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
                 ),
               ),
             ]

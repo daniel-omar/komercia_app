@@ -79,9 +79,21 @@ class PaymentTypeBottomSheet extends ConsumerWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.close),
+                IconButton(
+                  icon: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                    decoration: const BoxDecoration(
+                      color: Colors.red, // Fondo del icono
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white, // Color del ícono
+                      size: 25,
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
@@ -274,9 +286,21 @@ class _ConceptBottomSheetState extends ConsumerState<ConceptBottomSheet> {
                       color: Colors.green),
                 ),
                 const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.close),
+                IconButton(
+                  icon: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                    decoration: const BoxDecoration(
+                      color: Colors.red, // Fondo del icono
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white, // Color del ícono
+                      size: 25,
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),

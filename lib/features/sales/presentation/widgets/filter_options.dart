@@ -83,6 +83,11 @@ class FilterOptions extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 TextButton(
+                  style: TextButton.styleFrom(
+                    side: const BorderSide(
+                        color: Colors.blue,
+                        width: 2), // Add border color and width
+                  ),
                   onPressed: () {
                     ref.read(filterProvider.notifier).reset();
                     // Navigator.pop(context);
@@ -93,6 +98,11 @@ class FilterOptions extends ConsumerWidget {
                   ),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                  ),
                   onPressed: () {
                     final fecha = ref.read(dateFilterProvider).periodSelect!;
                     final filtros = ref.read(filterProvider);
@@ -107,7 +117,10 @@ class FilterOptions extends ConsumerWidget {
                   },
                   child: const Text(
                     'Filtrar',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16),
                   ),
                 ),
               ],

@@ -428,19 +428,35 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
             ),
             bottomNavigationBar: _isSelectionMode
                 ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       if (selectedCount > 0) ...[
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 6),
+                                horizontal: 4, vertical: 5),
                           ),
-                          icon: const Icon(
-                            Icons.print,
-                            size: 30,
+                          icon: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 5),
+                            decoration: const BoxDecoration(
+                              color: Colors.white, // Fondo del icono
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.upload_file,
+                              color: Colors.green, // Color del ícono
+                              size: 25,
+                            ),
                           ),
-                          label: Text('Generar etiquetas ($selectedCount)'),
+                          label: Text(
+                            'Generar etiquetas ($selectedCount)',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14),
+                          ),
                           onPressed: productsState.isLoading
                               ? null
                               : () async {
@@ -490,11 +506,28 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         ),
                         ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.lightBlue,
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 6),
+                                  horizontal: 4, vertical: 5),
                             ),
-                            icon: null,
-                            label: const Text('Visualizar seleccionados'),
+                            icon: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 5),
+                              decoration: const BoxDecoration(
+                                color: Colors.white, // Fondo del icono
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.view_agenda,
+                                color: Colors.green, // Color del ícono
+                                size: 25,
+                              ),
+                            ),
+                            label: const Text('Ver seleccionados',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14)),
                             onPressed: () {
                               onViewproductsVariantSelection();
                             }),
@@ -841,6 +874,20 @@ class _ProductCard extends ConsumerWidget {
                   ),
                 ],
               ),
+              if (isSelectionMode) ...[
+                Row(
+                  children: [
+                    const Text('Cantidad actual: '),
+                    Text(
+                      stock.toString(),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: stock < 0 ? Colors.red : Colors.black,
+                          fontSize: 16),
+                    ),
+                  ],
+                ),
+              ]
             ],
           ),
           trailing: SizedBox(
@@ -915,16 +962,38 @@ class _ViewProductsVariantSelectionSheetState
       widthFactor: 1.0,
       child: SingleChildScrollView(
         padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 25,
+          left: 10,
+          right: 10,
+          top: 10,
           bottom: MediaQuery.of(context).viewInsets.bottom +
-              20, // <-- clave para mover con teclado
+              10, // <-- clave para mover con teclado
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Spacer(),
+                IconButton(
+                  icon: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                    decoration: const BoxDecoration(
+                      color: Colors.red, // Fondo del icono
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white, // Color del ícono
+                      size: 25,
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.5,
               child: ListView.builder(
@@ -982,11 +1051,11 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Colors.blueGrey, width: 1)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(width: 5),
+            const SizedBox(width: 3),
             IconButton(
               icon: const Icon(Icons.delete),
               tooltip: 'Eliminar',
@@ -1006,7 +1075,7 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
                 ),
               ),
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: 3),
             // Información del producto
             Expanded(
               child: Column(
@@ -1098,10 +1167,10 @@ class _ProductVariantCardState extends ConsumerState<_ProductVariantCard> {
               ),
             ),
 
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
 
             SizedBox(
-              width: 45,
+              width: 30,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
