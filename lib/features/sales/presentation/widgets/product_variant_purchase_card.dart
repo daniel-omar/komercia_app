@@ -179,76 +179,87 @@ class _ProductVariantPurcharseCardState
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                // textAlign: TextAlign.start,
-                                widget.productVariant.nombreProducto ?? "",
-                                style: styleField,
+                              Flexible(
+                                // O también puedes usar Expanded si quieres que ocupe todo el ancho disponible
+                                child: Text(
+                                  widget.productVariant.nombreProducto ?? "",
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                  style: styleField,
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ],
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.grey,
-                                    width: 1,
+                          if (!(widget.productVariant.talla!.codigoTalla ==
+                                  "PDT" &&
+                              widget.productVariant.color!.codigoColor ==
+                                  "PDT")) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.grey,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    widget.productVariant.talla!.nombreTalla,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: Colors.black87,
+                                    ),
                                   ),
                                 ),
-                                child: Text(
-                                  widget.productVariant.talla!.nombreTalla,
-                                  style: const TextStyle(
+                                const Text(
+                                  "::",
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 15,
+                                    fontSize: 16,
                                     color: Colors.black87,
                                   ),
                                 ),
-                              ),
-                              const Text(
-                                "::",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: widget.productVariant.color!.idColor !=
-                                          colorsMap["Predeterminado"]!
-                                      ? widget.productVariant.color!.color
-                                      : null,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.grey,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  widget.productVariant.color!.nombreColor,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: widget.productVariant.color!.color
-                                                    .computeLuminance() <
-                                                0.5 &&
-                                            widget.productVariant.color!
-                                                    .idColor !=
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        widget.productVariant.color!.idColor !=
                                                 colorsMap["Predeterminado"]!
-                                        ? Colors.white
-                                        : Colors.black,
+                                            ? widget.productVariant.color!.color
+                                            : null,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.grey,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    widget.productVariant.color!.nombreColor,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: widget.productVariant.color!.color
+                                                      .computeLuminance() <
+                                                  0.5 &&
+                                              widget.productVariant.color!
+                                                      .idColor !=
+                                                  colorsMap["Predeterminado"]!
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          )
+                              ],
+                            ),
+                          ]
                         ],
                       ),
                     )

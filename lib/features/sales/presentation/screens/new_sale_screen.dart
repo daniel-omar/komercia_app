@@ -74,6 +74,7 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
 
     if (!mounted || codigoProducto == null) return;
 
+    _codigoController.text = codigoProducto;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final productVariant = await findProductVariant(codigoProducto, context);
@@ -230,10 +231,18 @@ class NewSaleScreenState extends ConsumerState<NewSaleScreen> {
             children: [
               const SizedBox(width: 10),
               Expanded(
-                child: TextField(
-                  decoration: const InputDecoration(
+                child: TextFormField(
+                  decoration: InputDecoration(
                     labelText: 'Código del Producto',
-                    // border: OutlineInputBorder(),
+                    suffixIcon: _codigoController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _codigoController.clear();
+                              // setState si estás en un StatefulWidget para refrescar
+                            },
+                          )
+                        : null,
                   ),
                   controller: _codigoController,
                 ),

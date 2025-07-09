@@ -274,156 +274,179 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
             //     const SizedBox(width: 20),
             //   ],
             // ),
-            body: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection:
-                        Axis.horizontal, // Establece la dirección horizontal
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _SummaryCard(
-                            title: 'Productos',
-                            value: (products.length.toString())),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        _SummaryCard(
-                            title: 'Productos disponibles',
-                            value: (products
-                                .fold(
-                                    0,
-                                    (previousValue, producto) =>
-                                        previousValue +
-                                        (producto.cantidadDisponible ?? 0))
-                                .toString())),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        if (ref
-                            .read(menusProvider.notifier)
-                            .tienePermisoEdicion("/products", "Modificar")) ...[
+            body: GestureDetector(
+              onTap: () {
+                FocusScope.of(context).unfocus(); // <-- Desenfoca el TextField
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection:
+                          Axis.horizontal, // Establece la dirección horizontal
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
                           _SummaryCard(
-                              title: 'Costo total',
-                              value: 'S/ ${purcharsePriceTotal.toString()}'),
-                        ]
+                              title: 'Productos',
+                              value: (products.length.toString())),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          _SummaryCard(
+                              title: 'Productos disponibles',
+                              value: (products
+                                  .fold(
+                                      0,
+                                      (previousValue, producto) =>
+                                          previousValue +
+                                          (producto.cantidadDisponible ?? 0))
+                                  .toString())),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          if (ref
+                              .read(menusProvider.notifier)
+                              .tienePermisoEdicion(
+                                  "/products", "Modificar")) ...[
+                            _SummaryCard(
+                                title: 'Costo total',
+                                value: 'S/ ${purcharsePriceTotal.toString()}'),
+                          ]
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 5,
+                        ),
+                        Expanded(
+                          child: Row(children: [
+                            ChoiceChip(
+                              label: const Text("Activos"),
+                              selected: _isActive,
+                              onSelected: (_) {
+                                setState(() {
+                                  _isActive = !_isActive;
+                                });
+                                ref
+                                    .read(productsProvider(selectedCategoryId)
+                                        .notifier)
+                                    .updateActive(_isActive);
+                                ref
+                                    .watch(productsProvider(selectedCategoryId)
+                                        .notifier)
+                                    .getByFilters(selectedCategoryId);
+                              },
+                              selectedColor: Colors.green.shade300,
+                            ),
+                            const SizedBox(
+                              width: 6,
+                            ),
+                            ChoiceChip(
+                              label: const Text("Inactivos"),
+                              selected: !_isActive,
+                              onSelected: (_) {
+                                setState(() {
+                                  _isActive = !_isActive;
+                                });
+                                ref
+                                    .read(productsProvider(selectedCategoryId)
+                                        .notifier)
+                                    .updateActive(_isActive);
+                                ref
+                                    .watch(productsProvider(selectedCategoryId)
+                                        .notifier)
+                                    .getByFilters(selectedCategoryId);
+                              },
+                              selectedColor: Colors.red.shade300,
+                            )
+                          ]), // Ocupa todo el espacio disponible
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const SizedBox(
-                        width: 5,
-                      ),
-                      Expanded(
-                        child: Row(children: [
-                          ChoiceChip(
-                            label: const Text("Activos"),
-                            selected: _isActive,
-                            onSelected: (_) {
-                              setState(() {
-                                _isActive = !_isActive;
-                              });
-                              ref
-                                  .read(productsProvider(selectedCategoryId)
-                                      .notifier)
-                                  .updateActive(_isActive);
-                              ref
-                                  .watch(productsProvider(selectedCategoryId)
-                                      .notifier)
-                                  .getByFilters(selectedCategoryId);
-                            },
-                            selectedColor: Colors.green.shade300,
-                          ),
-                          const SizedBox(
-                            width: 6,
-                          ),
-                          ChoiceChip(
-                            label: const Text("Inactivos"),
-                            selected: !_isActive,
-                            onSelected: (_) {
-                              setState(() {
-                                _isActive = !_isActive;
-                              });
-                              ref
-                                  .read(productsProvider(selectedCategoryId)
-                                      .notifier)
-                                  .updateActive(_isActive);
-                              ref
-                                  .watch(productsProvider(selectedCategoryId)
-                                      .notifier)
-                                  .getByFilters(selectedCategoryId);
-                            },
-                            selectedColor: Colors.red.shade300,
-                          )
-                        ]), // Ocupa todo el espacio disponible
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child:
-                            _ProductCategorySelector(), // Ocupa todo el espacio disponible
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: SizedBox(
-                          width: 280,
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: (value) {
-                              setState(() {
-                                _searchQuery = value.toLowerCase().trim();
-                              });
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'Buscar producto por nombre...',
-                              prefixIcon: const Icon(Icons.search),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child:
+                              _ProductCategorySelector(), // Ocupa todo el espacio disponible
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          child: SizedBox(
+                            width: 310,
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: (value) {
+                                setState(() {
+                                  _searchQuery = value.toLowerCase().trim();
+                                });
+                              },
+                              decoration: InputDecoration(
+                                hintText: 'Buscar producto por nombre...',
+                                prefixIcon: const Icon(Icons.search),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                suffixIcon: _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          setState(() {
+                                            _searchQuery = "";
+                                          });
+                                        },
+                                      )
+                                    : null,
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: Icon(
-                          _isSelectionMode ? Icons.close : Icons.print,
-                          size: 30,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isSelectionMode = !_isSelectionMode;
-                            if (!_isSelectionMode) {
-                              // Limpiar selección cuando salgas del modo selección
-                              ref
-                                  .read(
-                                      productsVariantSelectionProvider.notifier)
-                                  .clear();
-                            }
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  if (!productsState.isLoading)
-                    _ProductList(
-                        products: filteredProducts,
-                        isSelectionMode: _isSelectionMode,
-                        onSelectProduct: onSelectProduct,
-                        onSelectProductVariants: onSelectProductVariants),
-                ],
+                        const Spacer(),
+                        if (ref
+                            .read(menusProvider.notifier)
+                            .tienePermisoEdicion("/products", "Modificar")) ...[
+                          IconButton(
+                            icon: Icon(
+                              _isSelectionMode ? Icons.close : Icons.print,
+                              size: 30,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isSelectionMode = !_isSelectionMode;
+                                if (!_isSelectionMode) {
+                                  // Limpiar selección cuando salgas del modo selección
+                                  ref
+                                      .read(productsVariantSelectionProvider
+                                          .notifier)
+                                      .clear();
+                                }
+                              });
+                            },
+                          ),
+                        ]
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    if (!productsState.isLoading)
+                      _ProductList(
+                          products: filteredProducts,
+                          isSelectionMode: _isSelectionMode,
+                          onSelectProduct: onSelectProduct,
+                          onSelectProductVariants: onSelectProductVariants),
+                  ],
+                ),
               ),
             ),
             bottomNavigationBar: _isSelectionMode

@@ -278,14 +278,36 @@ class _SalesList extends ConsumerWidget {
                 side: const BorderSide(color: Colors.blueGrey, width: 1)),
             child: ListTile(
               leading: const Icon(Icons.card_giftcard, color: Colors.green),
-              title: Text(sale.concepto),
+              title: sale.concepto != "" ? Text(sale.concepto) : null,
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                      '${sale.tipoPago!.nombreTipoPago} • ${sale.fechaRegistro} • ${sale.horaRegistro}'),
-                  Text(
-                      'Vendedor: ${sale.usuarioRegistro.nombre} ${sale.usuarioRegistro.apellidoPaterno}'),
+                  Text('${sale.fechaRegistro} • ${sale.horaRegistro}'),
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(color: Colors.black, fontSize: 14),
+                      children: [
+                        const TextSpan(text: 'Método de pago: '),
+                        TextSpan(
+                          text: sale.tipoPago!.nombreTipoPago,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(color: Colors.black, fontSize: 14),
+                      children: [
+                        const TextSpan(text: 'Vendedor: '),
+                        TextSpan(
+                          text:
+                              '${sale.usuarioRegistro.nombre} ${sale.usuarioRegistro.apellidoPaterno}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               trailing: Text(

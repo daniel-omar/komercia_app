@@ -241,14 +241,19 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
                                   Text(
                                     saleDetail.producto.nombreProducto,
                                     style: const TextStyle(
-                                        fontSize: 15,
+                                        fontSize: 17,
                                         fontWeight: FontWeight.w600),
                                   ),
                                   Text('${saleDetail.cantidad} und',
-                                      style: const TextStyle(fontSize: 15)),
-                                  Text(
-                                      '${saleDetail.talla!.nombreTalla} / ${saleDetail.color!.nombreColor}',
-                                      style: const TextStyle(fontSize: 15)),
+                                      style: const TextStyle(fontSize: 16)),
+                                  if (!(saleDetail.talla!.codigoTalla ==
+                                          "PDT" &&
+                                      saleDetail.color!.codigoColor ==
+                                          "PDT")) ...[
+                                    Text(
+                                        '${saleDetail.talla!.nombreTalla} / ${saleDetail.color!.nombreColor}',
+                                        style: const TextStyle(fontSize: 15)),
+                                  ]
                                 ],
                               ),
                               trailing: Column(
@@ -260,7 +265,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
                                     style: const TextStyle(fontSize: 17),
                                   ),
                                   Text(
-                                    'Precio U. S/ ${saleDetail.precio}',
+                                    'P.U. S/ ${saleDetail.precio}',
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                 ],
@@ -281,23 +286,6 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Column(
-                //   children: const [
-                //     Icon(Icons.receipt_long, color: Colors.grey),
-                //     Text('Comprobante'),
-                //   ],
-                // ),
-                // Column(
-                //   children: [
-                //     IconButton(
-                //       onPressed: () {},
-                //       icon:
-                //           const Icon(Icons.edit, size: 40, color: Colors.black),
-                //     ),
-                //     const Text('Editar'),
-                //   ],
-                // ),
-
                 if (ref
                     .read(menusProvider.notifier)
                     .tienePermisoEdicion("/sale_detail", "Eliminar"))

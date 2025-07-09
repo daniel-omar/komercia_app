@@ -230,6 +230,7 @@ class _ProductPurcharseCardState extends ConsumerState<ProductPurcharseCard> {
                       const SizedBox(width: 8),
                       Text(
                         textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
                         widget.product.nombreProducto,
                         style: styleField,
                       ),

@@ -9,15 +9,21 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Accesos directos',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          _MenuHome()
-        ],
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus(); // <-- Desenfoca el TextField
+      },
+      behavior: HitTestBehavior.opaque,
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Accesos directos',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            _MenuHome()
+          ],
+        ),
       ),
     );
   }
