@@ -157,6 +157,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
       ),
+      isScrollControlled: true,
       builder: (_) => const ViewProductsVariantSelectionSheet(),
     );
   }
@@ -382,9 +383,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     Row(
                       children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 4.5),
                           child: SizedBox(
-                            width: 310,
+                            width: 290,
                             child: TextField(
                               controller: _searchController,
                               onChanged: (value) {
@@ -395,6 +396,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               decoration: InputDecoration(
                                 hintText: 'Buscar producto por nombre...',
                                 prefixIcon: const Icon(Icons.search),
+                                prefixIconConstraints: const BoxConstraints(
+                                  minWidth: 35,
+                                  minHeight: 30,
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -835,7 +840,12 @@ class _ProductCard extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Colors.blueGrey, width: 1)),
+          side: BorderSide(
+              color: isSelectionMode && selecteds.isNotEmpty
+                  ? Colors.green
+                  : Colors.blueGrey,
+              width: isSelectionMode && selecteds.isNotEmpty ? 2 : 1)),
+      elevation: isSelectionMode && selecteds.isNotEmpty ? 4 : 1,
       child: Slidable(
         key: ValueKey(idProduct), // Clave única por item
         endActionPane: ref
@@ -866,9 +876,11 @@ class _ProductCard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: isSelectionMode
-                ? const Icon(
+                ? Icon(
                     Icons.print,
-                    color: Colors.deepOrange,
+                    color: isSelectionMode && selecteds.isNotEmpty
+                        ? Colors.green
+                        : Colors.blueGrey,
                     size: 35,
                   )
                 : Icon(
@@ -928,12 +940,12 @@ class _ProductCard extends ConsumerWidget {
                       fontSize: 12),
                 ),
                 if (isSelectionMode) ...[
-                  Text(
+                  const Text(
                     'Items seleccionados',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: stock < 0 ? Colors.red : Colors.black,
+                        color: Colors.black,
                         fontSize: 12),
                   )
                 ] else ...[
@@ -980,8 +992,10 @@ class _ViewProductsVariantSelectionSheetState
   Widget build(BuildContext context) {
     final productVariantsSelection =
         ref.watch(productsVariantSelectionProvider);
+    final heightList = MediaQuery.of(context).size.height * 0.6;
 
     return FractionallySizedBox(
+      heightFactor: 0.7,
       widthFactor: 1.0,
       child: SingleChildScrollView(
         padding: EdgeInsets.only(
@@ -1018,7 +1032,7 @@ class _ViewProductsVariantSelectionSheetState
               ],
             ),
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.5,
+              height: heightList,
               child: ListView.builder(
                 itemCount: productVariantsSelection.length,
                 itemBuilder: (_, i) {
@@ -1028,6 +1042,9 @@ class _ViewProductsVariantSelectionSheetState
                       producVariantSelection: producVariantSelection);
                 },
               ),
+            ),
+            const SizedBox(
+              height: 5,
             )
           ],
         ),
