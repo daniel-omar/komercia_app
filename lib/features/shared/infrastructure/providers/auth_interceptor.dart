@@ -25,8 +25,9 @@ class AuthInterceptor implements Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final isUnauthorized = err.response?.statusCode == 401;
     final isRefreshing = err.requestOptions.extra["retry"] == true;
+    final isLogin = err.requestOptions.path.contains("auth/login");
 
-    if (isUnauthorized && !isRefreshing) {
+    if (isUnauthorized && !isRefreshing && !isLogin) {
       try {
         final refreshToken =
             await keyValueStorageService.getValue<String>('refresh_token');

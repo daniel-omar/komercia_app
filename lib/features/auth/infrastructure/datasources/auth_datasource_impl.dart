@@ -55,9 +55,9 @@ class AuthDataSourceImpl extends AuthDataSource {
       if (e.type == DioExceptionType.connectionTimeout) {
         throw CustomError('Revisar conexión a internet');
       }
-      throw Exception();
+      throw Exception(e);
     } catch (e) {
-      throw Exception();
+      throw Exception(e);
     }
   }
 

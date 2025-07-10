@@ -165,8 +165,8 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
   @override
   Widget build(BuildContext context) {
     final loginForm = ref.watch(loginFormProvider);
-    emailController.text = loginForm.email.value;
-    passwordController.text = loginForm.password.value;
+    // emailController.text = loginForm.email.value;
+    // passwordController.text = loginForm.password.value;
 
     ref.listen(authProvider, (previous, next) {
       if (next.errorMessage.isEmpty) return;
