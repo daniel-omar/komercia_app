@@ -15,6 +15,8 @@ import 'package:komercia_app/features/products/presentation/providers/product_va
 import 'package:komercia_app/features/products/presentation/providers/products_inventory_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/products_provider.dart';
 import 'package:komercia_app/features/products/presentation/providers/upload_products_provider.dart';
+import 'package:komercia_app/features/sales/presentation/providers/sale_submission_provider.dart';
+import 'package:komercia_app/features/sales/presentation/providers/sales_provider.dart';
 import 'package:komercia_app/features/shared/infrastructure/maps/general.map.dart';
 import 'package:komercia_app/features/shared/widgets/full_screen_loader.dart';
 
@@ -217,6 +219,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         }
       },
     );
+
+    ref.listen<SaleSubmissionState>(saleSubmissionProvider, (previous, next) {
+      if (!next.isSaving && next.success) {
+        // ignore: unused_result
+        ref.refresh(productsProvider(selectedCategoryId));
+      }
+    });
 
     final uploadProductsState = ref.watch(uploadProductsProvider);
 
